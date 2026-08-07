@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warm Springs Cellars — Wine Club | Sonoma County, EST. 1982</title>
+<meta name="description" content="Join the Warm Springs Cellars allocation list. Limited to 1,000 cases of single-vineyard wines from Sonoma Valley and Russian River Valley. EST. 1982.">
+<style>
+:root {
+  --c-bg: #f4efe8;
+  --c-bg-alt: #ece5db;
+  --c-surface: #ffffff;
+  --c-text: #1a0f14;
+  --c-text-secondary: #5e4a52;
+  --c-text-muted: #8a7680;
+  --c-accent: #5c3a6e;
+  --c-accent-light: #7b5a8e;
+  --c-gold: #b8993e;
+  --c-gold-dim: #a08535;
+  --c-wine: #3d1f2e;
+  --c-wine-light: #5a3346;
+  --c-border: #d4ccc3;
+  --c-card-bg: #faf7f3;
+  --c-hero-overlay: rgba(26, 15, 20, 0.92);
+  --c-hero-text: #f0ece6;
+  --c-hero-muted: #b8aaa0;
+  --c-divider: #c4b8ad;
+  --c-input-bg: #ffffff;
+  --c-input-border: #c4b8ad;
+  --c-footer-bg: #1a0f14;
+  --c-footer-text: #b8aaa0;
+  --shadow-card: 0 1px 3px rgba(26,15,20,0.06), 0 6px 20px rgba(26,15,20,0.04);
+  --shadow-card-hover: 0 2px 8px rgba(26,15,20,0.1), 0 12px 32px rgba(26,15,20,0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-bg: #110b0e;
+    --c-bg-alt: #1a1114;
+    --c-surface: #221820;
+    --c-text: #ede6e0;
+    --c-text-secondary: #b8a8ae;
+    --c-text-muted: #7a6a72;
+    --c-accent: #9b7aaf;
+    --c-accent-light: #b896cc;
+    --c-gold: #d4b456;
+    --c-gold-dim: #b8993e;
+    --c-wine: #2d1a24;
+    --c-wine-light: #3d2832;
+    --c-border: #2e2228;
+    --c-card-bg: #1e1418;
+    --c-hero-overlay: rgba(10, 6, 8, 0.94);
+    --c-hero-text: #ede6e0;
+    --c-hero-muted: #8a7a72;
+    --c-divider: #2e2228;
+    --c-input-bg: #1a1114;
+    --c-input-border: #3d2832;
+    --c-footer-bg: #0a0608;
+    --c-footer-text: #7a6a72;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 6px 20px rgba(0,0,0,0.15);
+    --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.2);
+  }
+}
+
+:root[data-theme="dark"] {
+  --c-bg: #110b0e;
+  --c-bg-alt: #1a1114;
+  --c-surface: #221820;
+  --c-text: #ede6e0;
+  --c-text-secondary: #b8a8ae;
+  --c-text-muted: #7a6a72;
+  --c-accent: #9b7aaf;
+  --c-accent-light: #b896cc;
+  --c-gold: #d4b456;
+  --c-gold-dim: #b8993e;
+  --c-wine: #2d1a24;
+  --c-wine-light: #3d2832;
+  --c-border: #2e2228;
+  --c-card-bg: #1e1418;
+  --c-hero-overlay: rgba(10, 6, 8, 0.94);
+  --c-hero-text: #ede6e0;
+  --c-hero-muted: #8a7a72;
+  --c-divider: #2e2228;
+  --c-input-bg: #1a1114;
+  --c-input-border: #3d2832;
+  --c-footer-bg: #0a0608;
+  --c-footer-text: #7a6a72;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 6px 20px rgba(0,0,0,0.15);
+  --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Optima', 'Candara', 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.serif {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', 'Times New Roman', serif;
+}
+
+/* ─── NAV ─── */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 1.25rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.4s, backdrop-filter 0.4s;
+}
+
+.nav.scrolled {
+  background: var(--c-hero-overlay);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.nav-logo {
+  color: var(--c-hero-text);
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.nav-logo span {
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 1rem;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--c-hero-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover { color: var(--c-hero-text); }
+
+/* ─── HERO ─── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--c-wine);
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(92,58,110,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 60%, rgba(61,31,46,0.3) 0%, transparent 50%),
+    linear-gradient(180deg, #1a0f14 0%, #2d1a24 50%, #1a0f14 100%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  padding: 2rem;
+}
+
+.hero-est {
+  font-size: 0.7rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--c-hero-muted);
+  margin-bottom: 2.5rem;
+}
+
+.hero-logo-mark {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 2rem;
+  opacity: 0.85;
+}
+
+.hero h1 {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 400;
+  color: var(--c-hero-text);
+  line-height: 1.15;
+  text-wrap: balance;
+  margin-bottom: 0.3rem;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--c-gold);
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--c-hero-muted);
+  margin-top: 1.5rem;
+  line-height: 1.7;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-cta {
+  margin-top: 2.5rem;
+  display: inline-block;
+  padding: 0.9rem 2.8rem;
+  border: 1px solid var(--c-gold-dim);
+  color: var(--c-gold);
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: all 0.35s;
+}
+
+.hero-cta:hover {
+  background: var(--c-gold);
+  color: var(--c-wine);
+  border-color: var(--c-gold);
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--c-hero-muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  opacity: 0.6;
+  animation: gentle-bob 3s ease-in-out infinite;
+}
+
+@keyframes gentle-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
+
+/* ─── SECTIONS ─── */
+.section {
+  padding: 6rem 2rem;
+}
+
+.section-inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.section-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  font-weight: 400;
+  line-height: 1.2;
+  text-wrap: balance;
+  margin-bottom: 1.5rem;
+  color: var(--c-text);
+}
+
+.section-prose {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--c-text-secondary);
+  max-width: 600px;
+}
+
+/* ─── PHILOSOPHY ─── */
+.philosophy {
+  background: var(--c-bg);
+}
+
+.philosophy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  margin-top: 3rem;
+}
+
+.philosophy-visual {
+  position: relative;
+  aspect-ratio: 3/4;
+  background: var(--c-wine);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.philosophy-visual-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(92,58,110,0.2) 0%, transparent 70%),
+    linear-gradient(180deg, #1a0f14 0%, #2d1a24 100%);
+}
+
+.stat-stack {
+  text-align: center;
+}
+
+.stat-number {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 5rem;
+  font-weight: 400;
+  color: var(--c-gold);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-hero-muted);
+  margin-top: 0.5rem;
+}
+
+.stat-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--c-hero-muted);
+  margin: 2rem auto;
+  opacity: 0.3;
+}
+
+.philosophy-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.detail-item {
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--c-border);
+}
+
+.detail-item h3 {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+  color: var(--c-text);
+}
+
+.detail-item p {
+  font-size: 0.9rem;
+  color: var(--c-text-secondary);
+  line-height: 1.7;
+}
+
+/* ─── WINES ─── */
+.wines {
+  background: var(--c-bg-alt);
+}
+
+.wines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.wine-card {
+  background: var(--c-card-bg);
+  border: 1px solid var(--c-border);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.wine-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.wine-vintage {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: var(--c-accent);
+  line-height: 1;
+}
+
+.wine-name {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  margin-top: 1rem;
+  color: var(--c-text);
+}
+
+.wine-origin {
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-top: 0.75rem;
+}
+
+.wine-notes {
+  font-size: 0.9rem;
+  color: var(--c-text-secondary);
+  margin-top: 1.25rem;
+  line-height: 1.7;
+  font-style: italic;
+}
+
+.wine-divider {
+  width: 30px;
+  height: 1px;
+  background: var(--c-divider);
+  margin: 1.25rem auto;
+}
+
+.wine-production {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+/* ─── ALLOCATIONS ─── */
+.allocations {
+  background: var(--c-bg);
+}
+
+.allocations-intro {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 3.5rem;
+}
+
+.allocations-intro .section-prose {
+  margin: 0 auto;
+}
+
+.tier-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.tier-card {
+  border: 1px solid var(--c-border);
+  padding: 3rem 2.5rem;
+  position: relative;
+  background: var(--c-card-bg);
+  transition: border-color 0.3s;
+}
+
+.tier-card:hover {
+  border-color: var(--c-accent);
+}
+
+.tier-card.featured {
+  border-color: var(--c-gold-dim);
+}
+
+.tier-card.featured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--c-gold-dim), var(--c-gold), var(--c-gold-dim));
+}
+
+.tier-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+  margin-bottom: 0.75rem;
+}
+
+.tier-card.featured .tier-label {
+  color: var(--c-gold);
+}
+
+.tier-name {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--c-text);
+  margin-bottom: 0.5rem;
+}
+
+.tier-desc {
+  font-size: 0.9rem;
+  color: var(--c-text-secondary);
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.tier-details {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.tier-details li {
+  font-size: 0.85rem;
+  color: var(--c-text-secondary);
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.tier-details li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 1px;
+  background: var(--c-accent);
+}
+
+.tier-card.featured .tier-details li::before {
+  background: var(--c-gold-dim);
+}
+
+.tier-price {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.1rem;
+  color: var(--c-text);
+  margin-bottom: 1.5rem;
+}
+
+.tier-price small {
+  font-family: 'Optima', 'Candara', system-ui, sans-serif;
+  font-size: 0.7rem;
+  color: var(--c-text-muted);
+  letter-spacing: 0.05em;
+}
+
+.tier-cta {
+  display: block;
+  width: 100%;
+  padding: 0.85rem;
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--c-accent);
+  color: var(--c-accent);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+
+.tier-cta:hover {
+  background: var(--c-accent);
+  color: var(--c-surface);
+}
+
+.tier-card.featured .tier-cta {
+  border-color: var(--c-gold-dim);
+  color: var(--c-gold);
+}
+
+.tier-card.featured .tier-cta:hover {
+  background: var(--c-gold);
+  color: var(--c-wine);
+}
+
+/* ─── EXPERIENCE ─── */
+.experience {
+  background: var(--c-wine);
+  color: var(--c-hero-text);
+}
+
+.experience .section-eyebrow {
+  color: var(--c-gold-dim);
+}
+
+.experience .section-title {
+  color: var(--c-hero-text);
+}
+
+.experience .section-prose {
+  color: var(--c-hero-muted);
+}
+
+.exp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  margin-top: 3.5rem;
+}
+
+.exp-item {
+  padding: 2rem 0;
+  border-top: 1px solid rgba(184,170,160,0.15);
+}
+
+.exp-item h3 {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--c-hero-text);
+  margin-bottom: 0.75rem;
+}
+
+.exp-item p {
+  font-size: 0.85rem;
+  color: var(--c-hero-muted);
+  line-height: 1.75;
+}
+
+.exp-season {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-gold-dim);
+  margin-bottom: 0.5rem;
+}
+
+/* ─── TESTIMONIALS ─── */
+.testimonials {
+  background: var(--c-bg-alt);
+}
+
+.testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.testimonial {
+  padding: 2rem;
+  border-left: 2px solid var(--c-accent);
+  background: var(--c-card-bg);
+}
+
+.testimonial blockquote {
+  font-size: 0.95rem;
+  color: var(--c-text-secondary);
+  line-height: 1.8;
+  font-style: italic;
+  margin-bottom: 1.25rem;
+}
+
+.testimonial cite {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+  letter-spacing: 0.05em;
+}
+
+.testimonial cite strong {
+  color: var(--c-text);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+/* ─── FAQ ─── */
+.faq {
+  background: var(--c-bg);
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 3rem;
+  margin-top: 3rem;
+}
+
+.faq-item {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.faq-item h3 {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--c-text);
+  margin-bottom: 0.5rem;
+}
+
+.faq-item p {
+  font-size: 0.85rem;
+  color: var(--c-text-secondary);
+  line-height: 1.7;
+}
+
+/* ─── JOIN FORM ─── */
+.join {
+  background: var(--c-wine);
+  color: var(--c-hero-text);
+  text-align: center;
+}
+
+.join .section-eyebrow {
+  color: var(--c-gold-dim);
+}
+
+.join .section-title {
+  color: var(--c-hero-text);
+}
+
+.join .section-prose {
+  color: var(--c-hero-muted);
+  margin: 0 auto 3rem;
+}
+
+.join-form {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.join-form input,
+.join-form select,
+.join-form textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(184,170,160,0.2);
+  color: var(--c-hero-text);
+  transition: border-color 0.3s;
+  appearance: none;
+}
+
+.join-form input::placeholder,
+.join-form textarea::placeholder {
+  color: var(--c-hero-muted);
+  opacity: 0.6;
+}
+
+.join-form input:focus,
+.join-form select:focus,
+.join-form textarea:focus {
+  outline: none;
+  border-color: var(--c-gold-dim);
+}
+
+.join-form select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23b8aaa0' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.join-form select option {
+  background: var(--c-wine);
+  color: var(--c-hero-text);
+}
+
+.join-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.join-submit {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-family: inherit;
+  background: var(--c-gold);
+  color: var(--c-wine);
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-weight: 600;
+}
+
+.join-submit:hover {
+  background: var(--c-gold-dim);
+}
+
+.join-note {
+  font-size: 0.72rem;
+  color: var(--c-hero-muted);
+  opacity: 0.6;
+  margin-top: 0.5rem;
+}
+
+/* ─── FOOTER ─── */
+.footer {
+  background: var(--c-footer-bg);
+  color: var(--c-footer-text);
+  padding: 3rem 2rem;
+}
+
+.footer-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.footer-brand {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--c-hero-muted);
+}
+
+.footer-brand span {
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+.footer-legal {
+  font-size: 0.7rem;
+  color: var(--c-footer-text);
+  margin-top: 0.75rem;
+  line-height: 1.7;
+  max-width: 320px;
+}
+
+.footer-contact {
+  text-align: right;
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+
+.footer-contact a {
+  color: var(--c-hero-muted);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-contact a:hover {
+  color: var(--c-gold);
+}
+
+.footer-bottom {
+  max-width: 960px;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(184,170,160,0.1);
+  text-align: center;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--c-footer-text);
+  opacity: 0.5;
+}
+
+/* ─── AGE GATE ─── */
+.age-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26,15,20,0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.age-gate.hidden { display: none; }
+
+.age-gate-inner {
+  text-align: center;
+  max-width: 380px;
+  padding: 2rem;
+}
+
+.age-gate-inner h2 {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--c-hero-text);
+  margin-bottom: 0.75rem;
+}
+
+.age-gate-inner p {
+  font-size: 0.85rem;
+  color: var(--c-hero-muted);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.age-btns {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.age-btn {
+  padding: 0.8rem 2.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--c-gold-dim);
+  transition: all 0.3s;
+}
+
+.age-btn-yes {
+  background: var(--c-gold);
+  color: var(--c-wine);
+  border-color: var(--c-gold);
+}
+
+.age-btn-yes:hover {
+  background: var(--c-gold-dim);
+}
+
+.age-btn-no {
+  background: transparent;
+  color: var(--c-hero-muted);
+}
+
+.age-btn-no:hover {
+  border-color: var(--c-hero-muted);
+  color: var(--c-hero-text);
+}
+
+/* ─── MOBILE ─── */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+
+  .philosophy-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .philosophy-visual { max-height: 300px; }
+
+  .tier-grid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+  }
+
+  .exp-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .faq-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-contact { text-align: center; }
+
+  .section { padding: 4rem 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll { animation: none; }
+}
+
+/* ─── FOCUS ─── */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--c-gold);
+  outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+
+<!-- AGE VERIFICATION GATE -->
+<div class="age-gate" id="ageGate">
+  <div class="age-gate-inner">
+    <h2 class="serif">Welcome</h2>
+    <p>You must be of legal drinking age to enter this site.</p>
+    <div class="age-btns">
+      <button class="age-btn age-btn-yes" onclick="document.getElementById('ageGate').classList.add('hidden')">I am 21+</button>
+      <button class="age-btn age-btn-no" onclick="window.location.href='https://www.responsibility.org/'">I am not</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="nav" id="mainNav">
+  <a href="#" class="nav-logo">Warm Springs <span>Cellars</span></a>
+  <ul class="nav-links">
+    <li><a href="#philosophy">Our Story</a></li>
+    <li><a href="#wines">The Wines</a></li>
+    <li><a href="#allocations">Allocation</a></li>
+    <li><a href="#experience">Members</a></li>
+    <li><a href="#join">Request Access</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <p class="hero-est">Est. 1982 &middot; Sonoma County, California</p>
+    <svg class="hero-logo-mark" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#b8aaa0" stroke-width="1" fill="none" opacity="0.4"/>
+      <rect x="26" y="36" width="28" height="32" rx="14" stroke="#b8aaa0" stroke-width="1" fill="none" opacity="0.5"/>
+      <line x1="40" y1="36" x2="40" y2="68" stroke="#b8aaa0" stroke-width="0.75" opacity="0.3"/>
+      <path d="M26 48H54" stroke="#b8aaa0" stroke-width="0.75" opacity="0.3"/>
+      <circle cx="40" cy="18" r="4" stroke="#b8aaa0" stroke-width="0.75" fill="none" opacity="0.4"/>
+    </svg>
+    <h1>A Thousand Cases.<br><em>Your Allocation Awaits.</em></h1>
+    <p class="hero-sub">Single-vineyard wines from Sonoma Valley and Russian River Valley, crafted in limited production and reserved exclusively for our members.</p>
+    <a href="#join" class="hero-cta">Request Your Allocation</a>
+  </div>
+  <a href="#philosophy" class="hero-scroll">Discover</a>
+</section>
+
+<!-- PHILOSOPHY -->
+<section class="section philosophy" id="philosophy">
+  <div class="section-inner">
+    <div class="philosophy-grid">
+      <div>
+        <p class="section-eyebrow">Our Philosophy</p>
+        <h2 class="section-title">Small by Design,<br>Not by Accident</h2>
+        <p class="section-prose">Since 1982, Warm Springs Cellars has chosen restraint over scale. We farm select vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
+        <div class="philosophy-details" style="margin-top: 2.5rem;">
+          <div class="detail-item">
+            <h3 class="serif">Single-Vineyard Focus</h3>
+            <p>Each wine tells the story of one vineyard, one season. Wolf Run in Sonoma Valley for our Cabernet Sauvignon. ElieO in Russian River Valley for our Pinot Noir.</p>
+          </div>
+          <div class="detail-item">
+            <h3 class="serif">Winemaker Direct</h3>
+            <p>No middlemen, no retail shelves. Every bottle travels from our cellar to your table. Our members know the hands that made their wine.</p>
+          </div>
+          <div class="detail-item">
+            <h3 class="serif">Four Decades of Craft</h3>
+            <p>Forty years of learning Sonoma's soils, microclimates, and rhythms have taught us when to act and when to wait. That patience lives in every glass.</p>
+          </div>
+        </div>
+      </div>
+      <div class="philosophy-visual">
+        <div class="philosophy-visual-inner">
+          <div class="stat-stack">
+            <div class="stat-number">1,000</div>
+            <div class="stat-label">Cases Produced Annually</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-stack">
+            <div class="stat-number" style="font-size: 3rem;">1982</div>
+            <div class="stat-label">Year Established</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-stack">
+            <div class="stat-number" style="font-size: 3rem;">2</div>
+            <div class="stat-label">Vineyard Sources</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WINES -->
+<section class="section wines" id="wines">
+  <div class="section-inner">
+    <p class="section-eyebrow">Current Releases</p>
+    <h2 class="section-title">The Wines</h2>
+    <p class="section-prose">Two wines. Two vineyards. Each vintage a singular expression of place and season.</p>
+    <div class="wines-grid">
+      <div class="wine-card">
+        <div class="wine-vintage">2019</div>
+        <h3 class="wine-name">Cabernet Sauvignon</h3>
+        <p class="wine-origin">Wolf Run Vineyard &middot; Sonoma Valley</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">Dark cassis and dried violets open to a palate of black cherry, espresso, and graphite. Twenty-two months in French oak gave this wine its architecture; the volcanic soils of Wolf Run gave it its soul.</p>
+        <div class="wine-divider"></div>
+        <p class="wine-production">480 cases produced</p>
+      </div>
+      <div class="wine-card">
+        <div class="wine-vintage">2021</div>
+        <h3 class="wine-name">Pinot Noir</h3>
+        <p class="wine-origin">ElieO Vineyard &middot; Russian River Valley</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">Ripe Bing cherry and wild strawberry meet hints of forest floor and baking spice. Whole-cluster fermentation adds a savory spine. Delicate yet persistent, this is Russian River at its most transparent.</p>
+        <div class="wine-divider"></div>
+        <p class="wine-production">520 cases produced</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ALLOCATIONS -->
+<section class="section allocations" id="allocations">
+  <div class="section-inner">
+    <div class="allocations-intro">
+      <p class="section-eyebrow">Membership</p>
+      <h2 class="section-title">Your Allocation</h2>
+      <p class="section-prose">Two paths to the cellar. Both offer wines unavailable anywhere else. Choose the depth of access that suits your table.</p>
+    </div>
+    <div class="tier-grid">
+      <div class="tier-card">
+        <p class="tier-label">Allocation</p>
+        <h3 class="tier-name serif">The Cellar Door</h3>
+        <p class="tier-desc">Our core allocation. Receive both current releases twice a year, every spring and fall.</p>
+        <ul class="tier-details">
+          <li>4 bottles per shipment (2 of each wine)</li>
+          <li>Two shipments annually (Spring &amp; Fall)</li>
+          <li>15% discount on all reorders</li>
+          <li>Complimentary tasting for two guests</li>
+          <li>Priority access to new releases</li>
+          <li>Member-only event invitations</li>
+        </ul>
+        <p class="tier-price">From $180 <small>per shipment</small></p>
+        <a href="#join" class="tier-cta">Request This Allocation</a>
+      </div>
+      <div class="tier-card featured">
+        <p class="tier-label">Inner Circle</p>
+        <h3 class="tier-name serif">The Founder's Reserve</h3>
+        <p class="tier-desc">For those who want everything the cellar offers, including wines we never release publicly.</p>
+        <ul class="tier-details">
+          <li>6 bottles per shipment (includes library wines)</li>
+          <li>Two shipments annually (Spring &amp; Fall)</li>
+          <li>20% discount on all purchases</li>
+          <li>Private tasting for four guests</li>
+          <li>Annual harvest dinner with the winemaker</li>
+          <li>First access to single-barrel selections</li>
+          <li>Complimentary shipping on all orders</li>
+        </ul>
+        <p class="tier-price">From $340 <small>per shipment</small></p>
+        <a href="#join" class="tier-cta">Request This Allocation</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="section experience" id="experience">
+  <div class="section-inner">
+    <p class="section-eyebrow">The Member Experience</p>
+    <h2 class="section-title">Beyond the Bottle</h2>
+    <p class="section-prose">Membership is an invitation into the life of the winery. Every season brings a new reason to gather.</p>
+    <div class="exp-grid">
+      <div class="exp-item">
+        <p class="exp-season">Spring</p>
+        <h3 class="serif">Barrel Tasting Weekend</h3>
+        <p>Walk the cellar with our winemaker and taste the vintage still in barrel. Shape your palate for what's to come.</p>
+      </div>
+      <div class="exp-item">
+        <p class="exp-season">Summer</p>
+        <h3 class="serif">Vineyard Dinner</h3>
+        <p>A long table set between the rows at Wolf Run. Library wines paired with a guest chef's multi-course menu under the Sonoma sky.</p>
+      </div>
+      <div class="exp-item">
+        <p class="exp-season">Fall</p>
+        <h3 class="serif">Harvest Day</h3>
+        <p>Pick alongside our crew at dawn, then crush, press, and taste the first juice of the vintage. The winemaker's year begins here.</p>
+      </div>
+      <div class="exp-item">
+        <p class="exp-season">Winter</p>
+        <h3 class="serif">Library Tasting</h3>
+        <p>A private session exploring older vintages from the archive. Discover how our wines evolve with time in bottle.</p>
+      </div>
+      <div class="exp-item">
+        <p class="exp-season">Year-Round</p>
+        <h3 class="serif">Private Visits</h3>
+        <p>Schedule a personal appointment at the estate. No crowds, no rush. Just you, the wines, and the story behind them.</p>
+      </div>
+      <div class="exp-item">
+        <p class="exp-season">Year-Round</p>
+        <h3 class="serif">Winemaker Access</h3>
+        <p>A direct line to the person who made your wine. Ask about the vintage, food pairings, or cellaring. This is your winery.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section testimonials" id="testimonials">
+  <div class="section-inner">
+    <p class="section-eyebrow">From Our Members</p>
+    <h2 class="section-title">In Their Words</h2>
+    <div class="testimonial-grid">
+      <div class="testimonial">
+        <blockquote>"I've been on the list since 2015. Every shipment feels like a gift from someone who knows my palate. The harvest dinner alone is worth membership."</blockquote>
+        <cite>
+          <strong>Margaret L.</strong>
+          Founder's Reserve Member, San Francisco
+        </cite>
+      </div>
+      <div class="testimonial">
+        <blockquote>"After years of big-name Napa clubs, Warm Springs reminded me why I fell in love with wine. The scale is human. The wines are extraordinary."</blockquote>
+        <cite>
+          <strong>David &amp; Karen R.</strong>
+          Cellar Door Members, Portland
+        </cite>
+      </div>
+      <div class="testimonial">
+        <blockquote>"The 2019 Cabernet is the best wine I've had from Sonoma Valley. Period. I'm grateful to have access to something this limited."</blockquote>
+        <cite>
+          <strong>James T.</strong>
+          Cellar Door Member, Los Angeles
+        </cite>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section faq" id="faq">
+  <div class="section-inner">
+    <p class="section-eyebrow">Questions</p>
+    <h2 class="section-title">Frequently Asked</h2>
+    <div class="faq-grid">
+      <div class="faq-item">
+        <h3 class="serif">How does the allocation work?</h3>
+        <p>You'll receive two shipments per year, in spring and fall. Each shipment is curated based on your chosen tier. We notify you in advance with the option to customize quantities before we charge and ship.</p>
+      </div>
+      <div class="faq-item">
+        <h3 class="serif">Where do you ship?</h3>
+        <p>We ship to all states where direct-to-consumer wine shipping is permitted. Currently, we ship to 44 states. Contact us to confirm availability in your state.</p>
+      </div>
+      <div class="faq-item">
+        <h3 class="serif">Is there a commitment?</h3>
+        <p>We ask for a minimum commitment of two shipments (one year). After that, you may cancel anytime with 30 days' notice before the next scheduled shipment.</p>
+      </div>
+      <div class="faq-item">
+        <h3 class="serif">Can I visit the winery?</h3>
+        <p>Members enjoy private, by-appointment visits at the estate. We welcome you and up to two guests (four for Founder's Reserve members). Please book at least one week in advance.</p>
+      </div>
+      <div class="faq-item">
+        <h3 class="serif">Can I give a membership as a gift?</h3>
+        <p>Yes. Gift allocations are available for both tiers. We'll include a personalized card with the first shipment. Contact us for details.</p>
+      </div>
+      <div class="faq-item">
+        <h3 class="serif">How is wine shipped?</h3>
+        <p>All wines ship via temperature-controlled carriers. During summer months, we use insulated packaging and may hold shipments if temperatures are extreme. An adult signature is required.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOIN / APPLICATION -->
+<section class="section join" id="join">
+  <div class="section-inner">
+    <p class="section-eyebrow">Join the List</p>
+    <h2 class="section-title serif">Request Your Allocation</h2>
+    <p class="section-prose">Space on our list is limited by what we produce. Submit your request below and we'll be in touch within 48 hours.</p>
+    <form class="join-form" onsubmit="handleSubmit(event)">
+      <div class="form-row">
+        <input type="text" name="first" placeholder="First Name" required>
+        <input type="text" name="last" placeholder="Last Name" required>
+      </div>
+      <input type="email" name="email" placeholder="Email Address" required>
+      <input type="tel" name="phone" placeholder="Phone Number">
+      <div class="form-row">
+        <input type="text" name="city" placeholder="City">
+        <select name="state" required>
+          <option value="" disabled selected>State</option>
+          <option>Alabama</option><option>Alaska</option><option>Arizona</option>
+          <option>Arkansas</option><option>California</option><option>Colorado</option>
+          <option>Connecticut</option><option>Delaware</option><option>Florida</option>
+          <option>Georgia</option><option>Hawaii</option><option>Idaho</option>
+          <option>Illinois</option><option>Indiana</option><option>Iowa</option>
+          <option>Kansas</option><option>Kentucky</option><option>Louisiana</option>
+          <option>Maine</option><option>Maryland</option><option>Massachusetts</option>
+          <option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
+          <option>Missouri</option><option>Montana</option><option>Nebraska</option>
+          <option>Nevada</option><option>New Hampshire</option><option>New Jersey</option>
+          <option>New Mexico</option><option>New York</option><option>North Carolina</option>
+          <option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
+          <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option>
+          <option>South Carolina</option><option>South Dakota</option><option>Tennessee</option>
+          <option>Texas</option><option>Utah</option><option>Vermont</option>
+          <option>Virginia</option><option>Washington</option><option>West Virginia</option>
+          <option>Wisconsin</option><option>Wyoming</option>
+        </select>
+      </div>
+      <select name="tier" required>
+        <option value="" disabled selected>Preferred Allocation</option>
+        <option value="cellar">The Cellar Door — 4 bottles, twice yearly</option>
+        <option value="founders">The Founder's Reserve — 6 bottles, twice yearly</option>
+      </select>
+      <select name="referral">
+        <option value="" disabled selected>How did you hear about us?</option>
+        <option>Friend or Family</option>
+        <option>Restaurant or Wine Bar</option>
+        <option>Wine Event or Festival</option>
+        <option>Social Media</option>
+        <option>Press or Publication</option>
+        <option>Other</option>
+      </select>
+      <textarea name="note" placeholder="Anything else you'd like us to know? (Optional)"></textarea>
+      <button type="submit" class="join-submit">Submit Request</button>
+      <p class="join-note">You must be 21 years of age or older. Submitting a request does not guarantee allocation.</p>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <p class="footer-brand">Warm Springs <span>Cellars</span></p>
+      <p class="footer-legal">
+        Warm Springs Cellars &middot; Sonoma County, California<br>
+        EST. 1982 &middot; All wines produced and bottled on estate.<br><br>
+        &copy; 2026 Warm Springs Cellars. All rights reserved.<br>
+        You must be 21+ to purchase. Please drink responsibly.
+      </p>
+    </div>
+    <div class="footer-contact">
+      <a href="mailto:club@warmspringscellars.com">club@warmspringscellars.com</a><br>
+      <a href="tel:+17075551982">(707) 555-1982</a><br>
+      <span style="font-size:0.75rem;color:var(--c-footer-text);">By appointment only</span>
+    </div>
+  </div>
+  <p class="footer-bottom">Warm Springs Cellars &middot; Sonoma County, California</p>
+</footer>
+
+<script>
+// Nav scroll effect
+const nav = document.getElementById('mainNav');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// Form
+function handleSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('.join-submit');
+  btn.textContent = 'Request Submitted';
+  btn.style.background = 'transparent';
+  btn.style.border = '1px solid var(--c-gold-dim)';
+  btn.style.color = '#d4b456';
+  btn.disabled = true;
+  form.querySelectorAll('input, select, textarea').forEach(el => el.disabled = true);
+}
+</script>
+
+</body>
+</html>
