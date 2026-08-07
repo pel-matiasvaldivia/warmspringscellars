@@ -7,83 +7,89 @@
 <meta name="description" content="Join the Warm Springs Cellars allocation list. Limited to 1,000 cases of single-vineyard wines from Sonoma Valley and Russian River Valley. Founded by Robert Rex & Cecilia Valdivia. EST. 1982.">
 <style>
 :root {
-  --c-bg: #f4efe8;
-  --c-bg-alt: #ece5db;
+  --c-bg: #faf8f5;
+  --c-bg-alt: #f3eeea;
+  --c-bg-warm: #f7f2ed;
   --c-surface: #ffffff;
-  --c-text: #1a0f14;
-  --c-text-secondary: #5e4a52;
-  --c-text-muted: #8a7680;
-  --c-accent: #5c3a6e;
-  --c-accent-light: #7b5a8e;
-  --c-gold: #b8993e;
-  --c-gold-dim: #a08535;
-  --c-wine: #3d1f2e;
-  --c-wine-light: #5a3346;
-  --c-wine-deep: #1a0f14;
-  --c-border: #d4ccc3;
-  --c-card-bg: #faf7f3;
-  --c-hero-overlay: rgba(26, 15, 20, 0.92);
-  --c-hero-text: #f0ece6;
-  --c-hero-muted: #b8aaa0;
-  --c-divider: #c4b8ad;
-  --c-footer-bg: #0e0709;
-  --c-footer-text: #b8aaa0;
-  --shadow-card: 0 1px 3px rgba(26,15,20,0.06), 0 6px 20px rgba(26,15,20,0.04);
-  --shadow-card-hover: 0 2px 8px rgba(26,15,20,0.1), 0 12px 32px rgba(26,15,20,0.06);
+  --c-text: #2c1e24;
+  --c-text-secondary: #5c4650;
+  --c-text-muted: #9a8890;
+  --c-wine: #722f3a;
+  --c-wine-light: #8b3d4a;
+  --c-wine-deep: #5a1f2a;
+  --c-wine-pale: #f0e3e6;
+  --c-wine-bg: #fdf6f7;
+  --c-gold: #a38840;
+  --c-gold-dim: #8b7535;
+  --c-border: #e2d8d0;
+  --c-border-light: #ede6e0;
+  --c-card-bg: #ffffff;
+  --c-hero-bg: var(--c-wine);
+  --c-hero-text: #faf8f5;
+  --c-hero-muted: #d4b8be;
+  --c-divider: #ddd2ca;
+  --c-footer-bg: #2c1e24;
+  --c-footer-text: #b8a0a6;
+  --shadow-card: 0 1px 4px rgba(114,47,58,0.05), 0 4px 16px rgba(114,47,58,0.03);
+  --shadow-card-hover: 0 2px 8px rgba(114,47,58,0.08), 0 10px 28px rgba(114,47,58,0.05);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --c-bg: #110b0e;
-    --c-bg-alt: #1a1114;
-    --c-surface: #221820;
+    --c-bg: #1a1215;
+    --c-bg-alt: #221920;
+    --c-bg-warm: #1e1518;
+    --c-surface: #2a2025;
     --c-text: #ede6e0;
-    --c-text-secondary: #b8a8ae;
-    --c-text-muted: #7a6a72;
-    --c-accent: #9b7aaf;
-    --c-accent-light: #b896cc;
-    --c-gold: #d4b456;
-    --c-gold-dim: #b8993e;
-    --c-wine: #2d1a24;
-    --c-wine-light: #3d2832;
-    --c-wine-deep: #0e0709;
-    --c-border: #2e2228;
-    --c-card-bg: #1e1418;
-    --c-hero-overlay: rgba(10, 6, 8, 0.94);
+    --c-text-secondary: #c0b0b6;
+    --c-text-muted: #86747a;
+    --c-wine: #a8505e;
+    --c-wine-light: #c06878;
+    --c-wine-deep: #8b3d4a;
+    --c-wine-pale: #2e1e24;
+    --c-wine-bg: #241a1e;
+    --c-gold: #c4a44e;
+    --c-gold-dim: #a38840;
+    --c-border: #3a2c32;
+    --c-border-light: #302428;
+    --c-card-bg: #241a1e;
+    --c-hero-bg: #3a1e28;
     --c-hero-text: #ede6e0;
-    --c-hero-muted: #8a7a72;
-    --c-divider: #2e2228;
-    --c-footer-bg: #060305;
-    --c-footer-text: #7a6a72;
-    --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 6px 20px rgba(0,0,0,0.15);
-    --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.2);
+    --c-hero-muted: #9a7a82;
+    --c-divider: #3a2c32;
+    --c-footer-bg: #0e080a;
+    --c-footer-text: #86747a;
+    --shadow-card: 0 1px 4px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.25), 0 10px 28px rgba(0,0,0,0.15);
   }
 }
 
 :root[data-theme="dark"] {
-  --c-bg: #110b0e;
-  --c-bg-alt: #1a1114;
-  --c-surface: #221820;
+  --c-bg: #1a1215;
+  --c-bg-alt: #221920;
+  --c-bg-warm: #1e1518;
+  --c-surface: #2a2025;
   --c-text: #ede6e0;
-  --c-text-secondary: #b8a8ae;
-  --c-text-muted: #7a6a72;
-  --c-accent: #9b7aaf;
-  --c-accent-light: #b896cc;
-  --c-gold: #d4b456;
-  --c-gold-dim: #b8993e;
-  --c-wine: #2d1a24;
-  --c-wine-light: #3d2832;
-  --c-wine-deep: #0e0709;
-  --c-border: #2e2228;
-  --c-card-bg: #1e1418;
-  --c-hero-overlay: rgba(10, 6, 8, 0.94);
+  --c-text-secondary: #c0b0b6;
+  --c-text-muted: #86747a;
+  --c-wine: #a8505e;
+  --c-wine-light: #c06878;
+  --c-wine-deep: #8b3d4a;
+  --c-wine-pale: #2e1e24;
+  --c-wine-bg: #241a1e;
+  --c-gold: #c4a44e;
+  --c-gold-dim: #a38840;
+  --c-border: #3a2c32;
+  --c-border-light: #302428;
+  --c-card-bg: #241a1e;
+  --c-hero-bg: #3a1e28;
   --c-hero-text: #ede6e0;
-  --c-hero-muted: #8a7a72;
-  --c-divider: #2e2228;
-  --c-footer-bg: #060305;
-  --c-footer-text: #7a6a72;
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 6px 20px rgba(0,0,0,0.15);
-  --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.2);
+  --c-hero-muted: #9a7a82;
+  --c-divider: #3a2c32;
+  --c-footer-bg: #0e080a;
+  --c-footer-text: #86747a;
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.25), 0 10px 28px rgba(0,0,0,0.15);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -104,30 +110,35 @@ body {
 /* ─── NAV ─── */
 .nav {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   z-index: 100;
   padding: 1.25rem 2.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background 0.4s, backdrop-filter 0.4s;
+  transition: background 0.4s, box-shadow 0.4s;
 }
 
 .nav.scrolled {
-  background: rgba(14, 7, 9, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--c-bg);
+  box-shadow: 0 1px 8px rgba(114,47,58,0.06);
 }
 
+.nav.at-hero .nav-logo { color: var(--c-hero-text); }
+.nav.at-hero .nav-links a { color: var(--c-hero-muted); }
+.nav.at-hero .nav-links a:hover { color: var(--c-hero-text); }
+
+.nav.scrolled .nav-logo { color: var(--c-wine); }
+.nav.scrolled .nav-links a { color: var(--c-text-muted); }
+.nav.scrolled .nav-links a:hover { color: var(--c-wine); }
+
 .nav-logo {
-  color: var(--c-hero-text);
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
   font-size: 1.1rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   text-decoration: none;
+  transition: color 0.3s;
 }
 
 .nav-logo span {
@@ -144,17 +155,14 @@ body {
 }
 
 .nav-links a {
-  color: var(--c-hero-muted);
   text-decoration: none;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: color 0.3s;
 }
 
-.nav-links a:hover { color: var(--c-hero-text); }
-
-/* ─── HERO (full-screen video-style, Deerfield-inspired) ─── */
+/* ─── HERO ─── */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -162,27 +170,38 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+  background: var(--c-hero-bg);
   overflow: hidden;
 }
 
 .hero-bg {
   position: absolute;
   inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.15) 0%, transparent 50%),
+    linear-gradient(170deg, #8b3d4a 0%, #722f3a 35%, #5a1f2a 70%, #3d1520 100%);
 }
 
-.hero-bg canvas {
+/* Cellar exterior photo, faded into the hero */
+.hero-photo {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  display: block;
+  object-fit: cover;
+  object-position: center 55%;
+  opacity: 0.34;
+  mix-blend-mode: luminosity;
+  filter: saturate(0.5) contrast(1.05);
 }
 
-.hero-overlay {
+.hero-veil {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 25% 35%, rgba(92,58,110,0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 75% 65%, rgba(61,31,46,0.18) 0%, transparent 45%),
-    linear-gradient(180deg, rgba(14,7,9,0.4) 0%, rgba(14,7,9,0.15) 40%, rgba(14,7,9,0.6) 100%);
+    linear-gradient(180deg, rgba(61,21,32,0.72) 0%, rgba(90,31,42,0.45) 40%, rgba(61,21,32,0.85) 100%),
+    radial-gradient(ellipse at 50% 45%, transparent 0%, rgba(61,21,32,0.55) 100%);
 }
 
 .hero-content {
@@ -196,16 +215,15 @@ body {
   font-size: 0.65rem;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: var(--c-gold);
+  color: var(--c-hero-muted);
   margin-bottom: 2rem;
-  opacity: 0.9;
 }
 
 .hero-logo-mark {
-  width: 90px;
-  height: 90px;
+  width: 85px;
+  height: 85px;
   margin: 0 auto 2.5rem;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .hero h1 {
@@ -219,7 +237,7 @@ body {
 
 .hero h1 em {
   font-style: italic;
-  color: var(--c-gold);
+  color: rgba(255,255,255,0.7);
 }
 
 .hero-sub {
@@ -233,31 +251,31 @@ body {
 }
 
 .hero-founders {
-  margin-top: 1.5rem;
-  font-size: 0.72rem;
+  margin-top: 1.25rem;
+  font-size: 0.7rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--c-hero-muted);
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .hero-cta {
   margin-top: 2.5rem;
   display: inline-block;
   padding: 0.95rem 3rem;
-  border: 1px solid var(--c-gold-dim);
-  color: var(--c-gold);
+  background: var(--c-hero-text);
+  color: var(--c-wine);
   text-decoration: none;
   font-size: 0.72rem;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
+  font-weight: 600;
   transition: all 0.35s;
 }
 
 .hero-cta:hover {
-  background: var(--c-gold);
-  color: #1a0f14;
-  border-color: var(--c-gold);
+  background: rgba(255,255,255,0.9);
+  transform: translateY(-1px);
 }
 
 .hero-scroll {
@@ -281,14 +299,13 @@ body {
 
 /* ─── SECTIONS ─── */
 .section { padding: 7rem 2rem; }
-
 .section-inner { max-width: 1020px; margin: 0 auto; }
 
 .section-eyebrow {
   font-size: 0.62rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: var(--c-accent);
+  color: var(--c-wine);
   margin-bottom: 1rem;
 }
 
@@ -311,31 +328,34 @@ body {
 
 /* ─── FOUNDERS ─── */
 .founders {
-  background: var(--c-wine-deep);
-  color: var(--c-hero-text);
+  background: var(--c-bg);
   padding: 7rem 2rem;
 }
 
-.founders .section-eyebrow { color: var(--c-gold-dim); }
-.founders .section-title { color: var(--c-hero-text); }
+.founders-intro {
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto 4rem;
+}
+
+.founders-intro .section-prose { margin: 0 auto; }
 
 .founders-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
-  margin-top: 3.5rem;
 }
 
 .founder-card {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 
 .founder-photo {
   width: 100%;
   aspect-ratio: 4/5;
-  background: var(--c-wine);
+  background: var(--c-wine-pale);
   position: relative;
   overflow: hidden;
 }
@@ -349,22 +369,22 @@ body {
   justify-content: center;
   gap: 1rem;
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(92,58,110,0.15) 0%, transparent 70%),
-    linear-gradient(180deg, var(--c-wine) 0%, var(--c-wine-deep) 100%);
+    radial-gradient(ellipse at 50% 40%, rgba(114,47,58,0.06) 0%, transparent 70%),
+    linear-gradient(180deg, var(--c-wine-pale) 0%, var(--c-bg-alt) 100%);
 }
 
 .founder-photo-placeholder svg {
-  width: 60px;
-  height: 60px;
-  opacity: 0.25;
+  width: 50px;
+  height: 50px;
+  opacity: 0.2;
 }
 
 .founder-photo-placeholder span {
   font-size: 0.6rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--c-hero-muted);
-  opacity: 0.4;
+  color: var(--c-text-muted);
+  opacity: 0.5;
 }
 
 .founder-photo img {
@@ -372,51 +392,100 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.9s cubic-bezier(0.2,0.8,0.2,1);
+}
+
+.founder-card:hover .founder-photo img { transform: scale(1.03); }
+
+/* ─── TEAM BAND (group photo) ─── */
+.team-band {
+  position: relative;
+  min-height: 62vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--c-wine-deep, #3d1520);
+}
+
+.team-band img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.team-band-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20,8,12,0.25) 0%, rgba(20,8,12,0.15) 45%, rgba(20,8,12,0.88) 100%);
+}
+
+.team-band-caption {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 0 1.5rem 3.5rem;
+  max-width: 640px;
+}
+
+.team-band-caption p {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: clamp(1.15rem, 2.4vw, 1.6rem);
+  font-style: italic;
+  line-height: 1.5;
+  color: #faf8f5;
+  margin-bottom: 0.9rem;
+}
+
+.team-band-caption span {
+  font-size: 0.62rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #d4b8be;
 }
 
 .founder-info h3 {
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
   font-size: 1.5rem;
   font-weight: 400;
-  color: var(--c-hero-text);
-  margin-bottom: 0.25rem;
+  color: var(--c-text);
 }
 
 .founder-role {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: var(--c-gold-dim);
-  margin-bottom: 1.25rem;
+  color: var(--c-wine);
+  margin-bottom: 1rem;
+  margin-top: 0.2rem;
 }
 
 .founder-bio {
   font-size: 0.9rem;
-  color: var(--c-hero-muted);
+  color: var(--c-text-secondary);
   line-height: 1.8;
 }
 
-.founder-bio p + p {
-  margin-top: 1rem;
-}
+.founder-bio p + p { margin-top: 1rem; }
 
-/* ─── VIDEO SECTION ─── */
+/* ─── VIDEO ─── */
 .video-section {
-  background: var(--c-wine);
+  background: var(--c-bg-alt);
   padding: 5rem 2rem;
   text-align: center;
 }
-
-.video-section .section-eyebrow { color: var(--c-gold-dim); }
-.video-section .section-title { color: var(--c-hero-text); }
 
 .video-container {
   max-width: 800px;
   margin: 2.5rem auto 0;
   position: relative;
   aspect-ratio: 16/9;
-  background: var(--c-wine-deep);
+  background: var(--c-wine-pale);
   overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
 .video-container iframe {
@@ -434,22 +503,16 @@ body {
   justify-content: center;
   gap: 1.5rem;
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(92,58,110,0.1) 0%, transparent 70%),
-    linear-gradient(180deg, var(--c-wine) 0%, var(--c-wine-deep) 100%);
+    radial-gradient(ellipse at 50% 50%, rgba(114,47,58,0.08) 0%, transparent 70%),
+    linear-gradient(180deg, var(--c-wine-pale) 0%, var(--c-bg-alt) 100%);
   cursor: pointer;
   transition: background 0.3s;
 }
 
-.video-placeholder:hover {
-  background:
-    radial-gradient(ellipse at 50% 50%, rgba(92,58,110,0.2) 0%, transparent 70%),
-    linear-gradient(180deg, var(--c-wine) 0%, var(--c-wine-deep) 100%);
-}
-
 .play-btn {
-  width: 72px;
-  height: 72px;
-  border: 2px solid var(--c-gold-dim);
+  width: 68px;
+  height: 68px;
+  border: 2px solid var(--c-wine);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -458,32 +521,62 @@ body {
 }
 
 .video-placeholder:hover .play-btn {
-  border-color: var(--c-gold);
+  background: var(--c-wine);
   transform: scale(1.05);
 }
 
-.play-btn svg {
-  width: 24px;
-  height: 24px;
-  margin-left: 3px;
-}
+.play-btn svg { width: 22px; height: 22px; margin-left: 3px; }
+
+.video-placeholder:hover .play-btn svg path { fill: var(--c-hero-text); }
 
 .video-placeholder span {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--c-hero-muted);
+  color: var(--c-text-muted);
 }
 
 .video-caption {
   font-size: 0.8rem;
-  color: var(--c-hero-muted);
+  color: var(--c-text-muted);
   margin-top: 1.5rem;
   font-style: italic;
 }
 
+/* ─── QUOTE INTERLUDE ─── */
+.quote-interlude {
+  background: var(--c-wine-pale);
+  padding: 5rem 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.quote-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.quote-inner blockquote {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: clamp(1.3rem, 2.8vw, 1.9rem);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--c-wine-deep);
+  line-height: 1.55;
+}
+
+.quote-inner cite {
+  display: block;
+  margin-top: 1.5rem;
+  font-style: normal;
+  font-size: 0.68rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--c-wine);
+}
+
 /* ─── PHILOSOPHY ─── */
-.philosophy { background: var(--c-bg); }
+.philosophy { background: var(--c-bg-warm); }
 
 .philosophy-grid {
   display: grid;
@@ -508,8 +601,8 @@ body {
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(92,58,110,0.2) 0%, transparent 70%),
-    linear-gradient(180deg, #1a0f14 0%, #2d1a24 100%);
+    radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.04) 0%, transparent 70%),
+    linear-gradient(180deg, #8b3d4a 0%, #5a1f2a 100%);
 }
 
 .stat-stack { text-align: center; }
@@ -518,24 +611,23 @@ body {
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
   font-size: 5rem;
   font-weight: 400;
-  color: var(--c-gold);
+  color: rgba(255,255,255,0.9);
   line-height: 1;
 }
 
 .stat-label {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--c-hero-muted);
+  color: rgba(255,255,255,0.5);
   margin-top: 0.5rem;
 }
 
 .stat-divider {
   width: 40px;
   height: 1px;
-  background: var(--c-hero-muted);
+  background: rgba(255,255,255,0.2);
   margin: 2rem auto;
-  opacity: 0.3;
 }
 
 .philosophy-details {
@@ -546,7 +638,7 @@ body {
 
 .detail-item {
   padding-left: 1.5rem;
-  border-left: 1px solid var(--c-border);
+  border-left: 2px solid var(--c-wine);
 }
 
 .detail-item h3 {
@@ -563,52 +655,8 @@ body {
   line-height: 1.7;
 }
 
-/* ─── CAVE INTERLUDE ─── */
-.cave-interlude {
-  background: var(--c-wine-deep);
-  padding: 6rem 2rem;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.cave-interlude::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(92,58,110,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 100%, rgba(61,31,46,0.12) 0%, transparent 50%);
-}
-
-.cave-quote {
-  position: relative;
-  z-index: 1;
-  max-width: 680px;
-  margin: 0 auto;
-}
-
-.cave-quote blockquote {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  font-style: italic;
-  font-weight: 400;
-  color: var(--c-hero-text);
-  line-height: 1.5;
-}
-
-.cave-quote cite {
-  display: block;
-  margin-top: 1.5rem;
-  font-style: normal;
-  font-size: 0.7rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--c-gold-dim);
-}
-
 /* ─── WINES ─── */
-.wines { background: var(--c-bg-alt); }
+.wines { background: var(--c-bg); }
 
 .wines-grid {
   display: grid;
@@ -619,7 +667,7 @@ body {
 
 .wine-card {
   background: var(--c-card-bg);
-  border: 1px solid var(--c-border);
+  border: 1px solid var(--c-border-light);
   padding: 2.5rem 2rem;
   text-align: center;
   transition: box-shadow 0.3s, transform 0.3s;
@@ -634,7 +682,7 @@ body {
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
   font-size: 2.5rem;
   font-weight: 400;
-  color: var(--c-accent);
+  color: var(--c-wine);
   line-height: 1;
 }
 
@@ -647,7 +695,7 @@ body {
 }
 
 .wine-origin {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--c-text-muted);
@@ -670,14 +718,14 @@ body {
 }
 
 .wine-production {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--c-text-muted);
 }
 
 /* ─── ALLOCATIONS ─── */
-.allocations { background: var(--c-bg); }
+.allocations { background: var(--c-bg-alt); }
 
 .allocations-intro {
   text-align: center;
@@ -700,30 +748,33 @@ body {
   padding: 3rem 2.5rem;
   position: relative;
   background: var(--c-card-bg);
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.tier-card:hover { border-color: var(--c-accent); }
+.tier-card:hover {
+  border-color: var(--c-wine-light);
+  box-shadow: var(--shadow-card);
+}
 
-.tier-card.featured { border-color: var(--c-gold-dim); }
+.tier-card.featured { border-color: var(--c-wine); }
 
 .tier-card.featured::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--c-gold-dim), var(--c-gold), var(--c-gold-dim));
+  height: 3px;
+  background: linear-gradient(90deg, var(--c-wine-light), var(--c-wine), var(--c-wine-light));
 }
 
 .tier-label {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--c-accent);
+  color: var(--c-wine-light);
   margin-bottom: 0.75rem;
 }
 
-.tier-card.featured .tier-label { color: var(--c-gold); }
+.tier-card.featured .tier-label { color: var(--c-wine); }
 
 .tier-name {
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
@@ -759,11 +810,11 @@ body {
   content: '';
   position: absolute;
   left: 0; top: 0.55em;
-  width: 6px; height: 1px;
-  background: var(--c-accent);
+  width: 6px; height: 2px;
+  background: var(--c-wine-light);
 }
 
-.tier-card.featured .tier-details li::before { background: var(--c-gold-dim); }
+.tier-card.featured .tier-details li::before { background: var(--c-wine); }
 
 .tier-price {
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
@@ -776,7 +827,6 @@ body {
   font-family: 'Optima', 'Candara', system-ui, sans-serif;
   font-size: 0.7rem;
   color: var(--c-text-muted);
-  letter-spacing: 0.05em;
 }
 
 .tier-cta {
@@ -784,12 +834,12 @@ body {
   width: 100%;
   padding: 0.85rem;
   text-align: center;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   text-decoration: none;
-  border: 1px solid var(--c-accent);
-  color: var(--c-accent);
+  border: 1px solid var(--c-wine-light);
+  color: var(--c-wine);
   background: transparent;
   cursor: pointer;
   transition: all 0.3s;
@@ -797,18 +847,18 @@ body {
 }
 
 .tier-cta:hover {
-  background: var(--c-accent);
-  color: var(--c-surface);
+  background: var(--c-wine);
+  color: var(--c-hero-text);
 }
 
 .tier-card.featured .tier-cta {
-  border-color: var(--c-gold-dim);
-  color: var(--c-gold);
+  background: var(--c-wine);
+  color: var(--c-hero-text);
+  border-color: var(--c-wine);
 }
 
 .tier-card.featured .tier-cta:hover {
-  background: var(--c-gold);
-  color: var(--c-wine);
+  background: var(--c-wine-deep);
 }
 
 /* ─── EXPERIENCE ─── */
@@ -817,7 +867,7 @@ body {
   color: var(--c-hero-text);
 }
 
-.experience .section-eyebrow { color: var(--c-gold-dim); }
+.experience .section-eyebrow { color: rgba(255,255,255,0.5); }
 .experience .section-title { color: var(--c-hero-text); }
 .experience .section-prose { color: var(--c-hero-muted); }
 
@@ -830,7 +880,7 @@ body {
 
 .exp-item {
   padding: 2rem 0;
-  border-top: 1px solid rgba(184,170,160,0.12);
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 .exp-item h3 {
@@ -848,15 +898,15 @@ body {
 }
 
 .exp-season {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: var(--c-gold-dim);
+  color: rgba(255,255,255,0.45);
   margin-bottom: 0.5rem;
 }
 
 /* ─── TESTIMONIALS ─── */
-.testimonials { background: var(--c-bg-alt); }
+.testimonials { background: var(--c-bg-warm); }
 
 .testimonial-grid {
   display: grid;
@@ -867,8 +917,9 @@ body {
 
 .testimonial {
   padding: 2rem;
-  border-left: 2px solid var(--c-accent);
+  border-left: 3px solid var(--c-wine);
   background: var(--c-card-bg);
+  box-shadow: var(--shadow-card);
 }
 
 .testimonial blockquote {
@@ -881,9 +932,8 @@ body {
 
 .testimonial cite {
   font-style: normal;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--c-text-muted);
-  letter-spacing: 0.05em;
 }
 
 .testimonial cite strong {
@@ -905,7 +955,7 @@ body {
 
 .faq-item {
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--c-border-light);
 }
 
 .faq-item h3 {
@@ -922,15 +972,15 @@ body {
   line-height: 1.7;
 }
 
-/* ─── JOIN FORM ─── */
+/* ─── JOIN ─── */
 .join {
-  background: var(--c-wine-deep);
+  background: var(--c-wine);
   color: var(--c-hero-text);
   text-align: center;
   padding: 7rem 2rem;
 }
 
-.join .section-eyebrow { color: var(--c-gold-dim); }
+.join .section-eyebrow { color: rgba(255,255,255,0.5); }
 .join .section-title { color: var(--c-hero-text); }
 .join .section-prose { color: var(--c-hero-muted); margin: 0 auto 3rem; }
 
@@ -955,8 +1005,8 @@ body {
   padding: 0.85rem 1rem;
   font-size: 0.85rem;
   font-family: inherit;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(184,170,160,0.18);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
   color: var(--c-hero-text);
   transition: border-color 0.3s;
   appearance: none;
@@ -965,25 +1015,25 @@ body {
 .join-form input::placeholder,
 .join-form textarea::placeholder {
   color: var(--c-hero-muted);
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .join-form input:focus,
 .join-form select:focus,
 .join-form textarea:focus {
   outline: none;
-  border-color: var(--c-gold-dim);
+  border-color: rgba(255,255,255,0.4);
 }
 
 .join-form select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23b8aaa0' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23d4b8be' stroke-width='1.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
 }
 
 .join-form select option {
-  background: #1a0f14;
+  background: var(--c-wine-deep);
   color: var(--c-hero-text);
 }
 
@@ -999,18 +1049,20 @@ body {
   letter-spacing: 0.25em;
   text-transform: uppercase;
   font-family: inherit;
-  background: var(--c-gold);
-  color: #1a0f14;
+  background: var(--c-hero-text);
+  color: var(--c-wine);
   border: none;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
   font-weight: 600;
 }
 
-.join-submit:hover { background: var(--c-gold-dim); }
+.join-submit:hover {
+  background: rgba(255,255,255,0.9);
+}
 
 .join-note {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--c-hero-muted);
   opacity: 0.5;
   margin-top: 0.5rem;
@@ -1036,30 +1088,22 @@ body {
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
   font-size: 0.95rem;
   letter-spacing: 0.1em;
-  color: var(--c-hero-muted);
+  color: rgba(255,255,255,0.6);
 }
 
-.footer-brand span {
-  font-style: italic;
-  letter-spacing: 0.02em;
-}
+.footer-brand span { font-style: italic; letter-spacing: 0.02em; }
 
 .footer-legal {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: var(--c-footer-text);
   margin-top: 0.75rem;
   line-height: 1.7;
+  opacity: 0.7;
 }
 
-.footer-center {
-  text-align: center;
-}
+.footer-center { text-align: center; }
 
-.footer-center svg {
-  width: 40px;
-  height: 40px;
-  opacity: 0.3;
-}
+.footer-center svg { width: 36px; height: 36px; opacity: 0.2; }
 
 .footer-contact {
   text-align: right;
@@ -1068,42 +1112,39 @@ body {
 }
 
 .footer-contact a {
-  color: var(--c-hero-muted);
+  color: rgba(255,255,255,0.5);
   text-decoration: none;
   transition: color 0.3s;
 }
 
-.footer-contact a:hover { color: var(--c-gold); }
+.footer-contact a:hover { color: rgba(255,255,255,0.8); }
 
 .footer-bottom {
   max-width: 1020px;
   margin: 2rem auto 0;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(184,170,160,0.08);
+  border-top: 1px solid rgba(255,255,255,0.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   letter-spacing: 0.1em;
   color: var(--c-footer-text);
   opacity: 0.5;
 }
 
-.footer-social {
-  display: flex;
-  gap: 1.5rem;
-}
+.footer-social { display: flex; gap: 1.5rem; }
 
 .footer-social a {
   color: var(--c-footer-text);
   text-decoration: none;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   transition: color 0.3s;
 }
 
-.footer-social a:hover { color: var(--c-gold); }
+.footer-social a:hover { color: rgba(255,255,255,0.8); }
 
 /* ─── AGE GATE ─── */
 .age-gate {
@@ -1113,7 +1154,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(14, 7, 9, 0.97);
+  background: rgba(250,248,245,0.97);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -1130,7 +1171,7 @@ body {
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
   font-size: 1.6rem;
   font-weight: 400;
-  color: var(--c-hero-text);
+  color: var(--c-text);
   margin-bottom: 0.5rem;
 }
 
@@ -1138,22 +1179,18 @@ body {
   font-size: 0.6rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--c-gold-dim);
+  color: var(--c-wine);
   margin-bottom: 1.5rem;
 }
 
-.age-gate-inner p {
+.age-gate-inner > p {
   font-size: 0.85rem;
-  color: var(--c-hero-muted);
+  color: var(--c-text-secondary);
   margin-bottom: 2rem;
   line-height: 1.6;
 }
 
-.age-btns {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
+.age-btns { display: flex; gap: 1rem; justify-content: center; }
 
 .age-btn {
   padding: 0.8rem 2.5rem;
@@ -1162,81 +1199,86 @@ body {
   text-transform: uppercase;
   font-family: inherit;
   cursor: pointer;
-  border: 1px solid var(--c-gold-dim);
   transition: all 0.3s;
 }
 
 .age-btn-yes {
-  background: var(--c-gold);
-  color: #1a0f14;
-  border-color: var(--c-gold);
+  background: var(--c-wine);
+  color: #fff;
+  border: 1px solid var(--c-wine);
 }
 
-.age-btn-yes:hover { background: var(--c-gold-dim); }
+.age-btn-yes:hover { background: var(--c-wine-deep); }
 
 .age-btn-no {
   background: transparent;
-  color: var(--c-hero-muted);
+  color: var(--c-text-muted);
+  border: 1px solid var(--c-border);
 }
 
 .age-btn-no:hover {
-  border-color: var(--c-hero-muted);
-  color: var(--c-hero-text);
+  border-color: var(--c-text-muted);
+  color: var(--c-text);
 }
 
 /* ─── MOBILE ─── */
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .nav { padding: 1rem 1.5rem; }
-
   .founders-grid { grid-template-columns: 1fr; gap: 3rem; }
-
   .philosophy-grid { grid-template-columns: 1fr; gap: 2.5rem; }
   .philosophy-visual { max-height: 320px; }
-
   .tier-grid { grid-template-columns: 1fr; max-width: 420px; }
-
   .exp-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-
   .faq-grid { grid-template-columns: 1fr; }
-
   .form-row { grid-template-columns: 1fr; }
-
   .footer-inner { grid-template-columns: 1fr; text-align: center; }
   .footer-contact { text-align: center; }
   .footer-center { display: none; }
   .footer-bottom { flex-direction: column; gap: 0.75rem; }
-
   .section { padding: 4.5rem 1.5rem; }
   .founders { padding: 4.5rem 1.5rem; }
 }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .age-gate {
+    background: rgba(26,18,21,0.97);
+  }
+  :root:not([data-theme="light"]) .age-gate-inner h2 { color: var(--c-text); }
+  :root:not([data-theme="light"]) .age-gate-inner > p { color: var(--c-text-secondary); }
+  :root:not([data-theme="light"]) .age-btn-no { color: var(--c-text-muted); border-color: var(--c-border); }
+}
+
+:root[data-theme="dark"] .age-gate { background: rgba(26,18,21,0.97); }
+:root[data-theme="dark"] .age-gate-inner h2 { color: var(--c-text); }
+:root[data-theme="dark"] .age-gate-inner > p { color: var(--c-text-secondary); }
+:root[data-theme="dark"] .age-btn-no { color: var(--c-text-muted); border-color: var(--c-border); }
 
 @media (prefers-reduced-motion: reduce) {
   .hero-scroll { animation: none; }
 }
 
-/* ─── FOCUS ─── */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--c-gold);
+  outline: 2px solid var(--c-wine);
   outline-offset: 2px;
 }
 </style>
 </head>
 <body>
 
-<!-- AGE VERIFICATION GATE -->
+<!-- AGE VERIFICATION -->
 <div class="age-gate" id="ageGate">
   <div class="age-gate-inner">
-    <svg width="50" height="50" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:1.5rem;opacity:0.6;">
-      <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#b8993e" stroke-width="1" fill="none"/>
-      <rect x="26" y="36" width="28" height="32" rx="14" stroke="#b8993e" stroke-width="1" fill="none"/>
-      <line x1="40" y1="36" x2="40" y2="68" stroke="#b8993e" stroke-width="0.75" opacity="0.5"/>
-      <path d="M26 48H54" stroke="#b8993e" stroke-width="0.75" opacity="0.5"/>
-      <circle cx="40" cy="18" r="4" stroke="#b8993e" stroke-width="0.75" fill="none"/>
+    <svg width="50" height="50" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:1.5rem;opacity:0.5;">
+      <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#722f3a" stroke-width="1" fill="none"/>
+      <rect x="26" y="36" width="28" height="32" rx="14" stroke="#722f3a" stroke-width="1" fill="none"/>
+      <line x1="40" y1="36" x2="40" y2="68" stroke="#722f3a" stroke-width="0.75" opacity="0.5"/>
+      <path d="M26 48H54" stroke="#722f3a" stroke-width="0.75" opacity="0.5"/>
+      <circle cx="40" cy="18" r="4" stroke="#722f3a" stroke-width="0.75" fill="none"/>
     </svg>
     <h2 class="serif">Welcome</h2>
     <p class="age-gate-brand">Warm Springs Cellars</p>
@@ -1249,7 +1291,7 @@ textarea:focus-visible {
 </div>
 
 <!-- NAVIGATION -->
-<nav class="nav" id="mainNav">
+<nav class="nav at-hero" id="mainNav">
   <a href="#" class="nav-logo">Warm Springs <span>Cellars</span></a>
   <ul class="nav-links">
     <li><a href="#founders">Our Winemakers</a></li>
@@ -1261,20 +1303,20 @@ textarea:focus-visible {
   </ul>
 </nav>
 
-<!-- HERO — Animated cellar atmosphere (replaces static gradient with canvas) -->
-<section class="hero">
-  <div class="hero-bg">
-    <canvas id="heroCanvas"></canvas>
-  </div>
-  <div class="hero-overlay"></div>
+<!-- HERO -->
+<section class="hero" id="heroSection">
+  <div class="hero-bg"></div>
+  <img class="hero-photo" src="images/cellar-exterior.jpg" alt="" aria-hidden="true"
+       onerror="this.style.display='none'">
+  <div class="hero-veil"></div>
   <div class="hero-content">
     <p class="hero-est">Est. 1982 &middot; Kenwood, Sonoma Valley</p>
     <svg class="hero-logo-mark" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#b8aaa0" stroke-width="1" fill="none" opacity="0.5"/>
-      <rect x="26" y="36" width="28" height="32" rx="14" stroke="#b8aaa0" stroke-width="1" fill="none" opacity="0.6"/>
-      <line x1="40" y1="36" x2="40" y2="68" stroke="#b8aaa0" stroke-width="0.75" opacity="0.35"/>
-      <path d="M26 48H54" stroke="#b8aaa0" stroke-width="0.75" opacity="0.35"/>
-      <circle cx="40" cy="18" r="4" stroke="#b8aaa0" stroke-width="0.75" fill="none" opacity="0.5"/>
+      <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#fff" stroke-width="1" fill="none" opacity="0.4"/>
+      <rect x="26" y="36" width="28" height="32" rx="14" stroke="#fff" stroke-width="1" fill="none" opacity="0.5"/>
+      <line x1="40" y1="36" x2="40" y2="68" stroke="#fff" stroke-width="0.75" opacity="0.25"/>
+      <path d="M26 48H54" stroke="#fff" stroke-width="0.75" opacity="0.25"/>
+      <circle cx="40" cy="18" r="4" stroke="#fff" stroke-width="0.75" fill="none" opacity="0.4"/>
     </svg>
     <h1>A Thousand Cases.<br><em>Your Allocation Awaits.</em></h1>
     <p class="hero-sub">Single-vineyard wines from Sonoma Valley and Russian River Valley. Handcrafted in limited production by Robert Rex &amp; Cecilia Valdivia. Reserved exclusively for our members.</p>
@@ -1284,21 +1326,25 @@ textarea:focus-visible {
   <a href="#founders" class="hero-scroll">Discover</a>
 </section>
 
-<!-- FOUNDERS — Robert Rex & Cecilia Valdivia -->
+<!-- FOUNDERS -->
 <section class="founders" id="founders">
   <div class="section-inner">
-    <p class="section-eyebrow">The Winemakers</p>
-    <h2 class="section-title">Two Paths, One Cellar</h2>
+    <div class="founders-intro">
+      <p class="section-eyebrow">The Winemakers</p>
+      <h2 class="section-title">Two Paths, One Cellar</h2>
+      <p class="section-prose">A chemist from Iowa and a winemaker from Argentina. Bound by a shared conviction: that great wine is made in the vineyard, finished with patience, and shared with the few who truly appreciate it.</p>
+    </div>
     <div class="founders-grid">
 
-      <!-- Robert Rex -->
       <div class="founder-card">
         <div class="founder-photo">
-          <!-- Replace with: <img src="images/robert-rex.jpg" alt="Robert Rex, Founder & Winemaker"> -->
-          <div class="founder-photo-placeholder">
+          <img src="images/robert-rex.jpg" alt="Robert Rex, Founder &amp; Winemaker" loading="lazy"
+               style="object-position: center 30%;"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="founder-photo-placeholder" style="display:none;">
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="30" cy="22" r="10" stroke="#b8aaa0" stroke-width="1" fill="none"/>
-              <path d="M10 55C10 42 18 34 30 34C42 34 50 42 50 55" stroke="#b8aaa0" stroke-width="1" fill="none"/>
+              <circle cx="30" cy="22" r="10" stroke="#722f3a" stroke-width="1" fill="none"/>
+              <path d="M10 55C10 42 18 34 30 34C42 34 50 42 50 55" stroke="#722f3a" stroke-width="1" fill="none"/>
             </svg>
             <span>Photo: Robert Rex</span>
           </div>
@@ -1313,14 +1359,15 @@ textarea:focus-visible {
         </div>
       </div>
 
-      <!-- Cecilia Valdivia -->
       <div class="founder-card">
         <div class="founder-photo">
-          <!-- Replace with: <img src="images/cecilia-valdivia.jpg" alt="Cecilia Valdivia, Co-Founder & Winemaker"> -->
-          <div class="founder-photo-placeholder">
+          <img src="images/cecilia-valdivia.jpg" alt="Cecilia Valdivia, Co-Founder &amp; Winemaker" loading="lazy"
+               style="object-position: center 35%;"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="founder-photo-placeholder" style="display:none;">
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="30" cy="22" r="10" stroke="#b8aaa0" stroke-width="1" fill="none"/>
-              <path d="M10 55C10 42 18 34 30 34C42 34 50 42 50 55" stroke="#b8aaa0" stroke-width="1" fill="none"/>
+              <circle cx="30" cy="22" r="10" stroke="#722f3a" stroke-width="1" fill="none"/>
+              <path d="M10 55C10 42 18 34 30 34C42 34 50 42 50 55" stroke="#722f3a" stroke-width="1" fill="none"/>
             </svg>
             <span>Photo: Cecilia Valdivia</span>
           </div>
@@ -1339,18 +1386,27 @@ textarea:focus-visible {
   </div>
 </section>
 
-<!-- VIDEO — Cecilia Valdivia Feature -->
+<!-- TEAM BAND -->
+<section class="team-band" id="team">
+  <img src="images/team.jpg" alt="Cecilia Valdivia and Robert Rex with the Warm Springs Cellars team" loading="lazy"
+       onerror="this.closest('.team-band').style.display='none';">
+  <div class="team-band-veil"></div>
+  <div class="team-band-caption">
+    <p>&ldquo;A thousand cases. Two winemakers. One harvest at a time.&rdquo;</p>
+    <span>The Warm Springs Cellars Team</span>
+  </div>
+</section>
+
+<!-- VIDEO -->
 <section class="video-section" id="video">
   <div class="section-inner">
-    <p class="section-eyebrow">Watch</p>
-    <h2 class="section-title" style="color: var(--c-hero-text);">Meet Our Winemakers</h2>
+    <p class="section-eyebrow" style="color: var(--c-wine);">Watch</p>
+    <h2 class="section-title">Meet Our Winemakers</h2>
     <div class="video-container">
-      <!-- YouTube embed: Cecilia Valdivia, Deerfield Ranch Winery Winemaker -->
-      <!-- Video ID: NLGzPgrd4AU — Replace iframe src when deploying with proper embed URL -->
       <div class="video-placeholder" id="videoPlaceholder" onclick="loadVideo()">
         <div class="play-btn">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 5v14l11-7L8 5z" fill="#b8993e"/>
+            <path d="M8 5v14l11-7L8 5z" fill="#722f3a"/>
           </svg>
         </div>
         <span>Play Video</span>
@@ -1360,9 +1416,9 @@ textarea:focus-visible {
   </div>
 </section>
 
-<!-- CAVE INTERLUDE -->
-<section class="cave-interlude">
-  <div class="cave-quote">
+<!-- QUOTE INTERLUDE -->
+<section class="quote-interlude">
+  <div class="quote-inner">
     <blockquote>&ldquo;We don't make wine for everyone. We make it for the few who understand that the best things in life are worth waiting for.&rdquo;</blockquote>
     <cite>Robert Rex & Cecilia Valdivia</cite>
   </div>
@@ -1592,7 +1648,7 @@ textarea:focus-visible {
   </div>
 </section>
 
-<!-- JOIN / APPLICATION -->
+<!-- JOIN -->
 <section class="join" id="join">
   <div class="section-inner">
     <p class="section-eyebrow">Join the List</p>
@@ -1665,9 +1721,9 @@ textarea:focus-visible {
     </div>
     <div class="footer-center">
       <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#b8aaa0" stroke-width="1" fill="none"/>
-        <rect x="26" y="36" width="28" height="32" rx="14" stroke="#b8aaa0" stroke-width="1" fill="none"/>
-        <circle cx="40" cy="18" r="4" stroke="#b8aaa0" stroke-width="0.75" fill="none"/>
+        <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#fff" stroke-width="1" fill="none"/>
+        <rect x="26" y="36" width="28" height="32" rx="14" stroke="#fff" stroke-width="1" fill="none"/>
+        <circle cx="40" cy="18" r="4" stroke="#fff" stroke-width="0.75" fill="none"/>
       </svg>
     </div>
     <div class="footer-contact">
@@ -1686,80 +1742,23 @@ textarea:focus-visible {
 </footer>
 
 <script>
-// Animated cave-like background on hero canvas
-(function() {
-  const canvas = document.getElementById('heroCanvas');
-  const ctx = canvas.getContext('2d');
-  let w, h, particles = [];
-
-  function resize() {
-    w = canvas.width = canvas.offsetWidth;
-    h = canvas.height = canvas.offsetHeight;
-  }
-
-  function init() {
-    resize();
-    particles = [];
-    for (let i = 0; i < 40; i++) {
-      particles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: Math.random() * 1.5 + 0.5,
-        vx: (Math.random() - 0.5) * 0.15,
-        vy: (Math.random() - 0.5) * 0.1 - 0.05,
-        alpha: Math.random() * 0.15 + 0.03
-      });
-    }
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, w, h);
-
-    const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, '#0e0709');
-    g.addColorStop(0.35, '#1a0f14');
-    g.addColorStop(0.6, '#2d1a24');
-    g.addColorStop(1, '#0e0709');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-
-    const rg = ctx.createRadialGradient(w * 0.5, h * 0.45, 0, w * 0.5, h * 0.45, w * 0.5);
-    rg.addColorStop(0, 'rgba(92,58,110,0.06)');
-    rg.addColorStop(1, 'transparent');
-    ctx.fillStyle = rg;
-    ctx.fillRect(0, 0, w, h);
-
-    for (const p of particles) {
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0) p.x = w;
-      if (p.x > w) p.x = 0;
-      if (p.y < 0) p.y = h;
-      if (p.y > h) p.y = 0;
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(184,170,160,${p.alpha})`;
-      ctx.fill();
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  init();
-  draw();
-  window.addEventListener('resize', () => { resize(); });
-
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    particles.forEach(p => { p.vx = 0; p.vy = 0; });
-  }
-})();
-
-// Nav scroll effect
+// Nav: hero vs scrolled state
 const nav = document.getElementById('mainNav');
-window.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', window.scrollY > 60);
-}, { passive: true });
+const hero = document.getElementById('heroSection');
+
+function updateNav() {
+  const heroBottom = hero.getBoundingClientRect().bottom;
+  if (heroBottom <= 60) {
+    nav.classList.add('scrolled');
+    nav.classList.remove('at-hero');
+  } else {
+    nav.classList.remove('scrolled');
+    nav.classList.add('at-hero');
+  }
+}
+
+window.addEventListener('scroll', updateNav, { passive: true });
+updateNav();
 
 // Smooth scroll
 document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -1770,7 +1769,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 
-// Video loader
+// Video
 function loadVideo() {
   const container = document.querySelector('.video-container');
   container.innerHTML = '<iframe src="https://www.youtube.com/embed/NLGzPgrd4AU?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
@@ -1783,8 +1782,8 @@ function handleSubmit(e) {
   const btn = form.querySelector('.join-submit');
   btn.textContent = 'Request Submitted — Thank You';
   btn.style.background = 'transparent';
-  btn.style.border = '1px solid rgba(184,153,62,0.5)';
-  btn.style.color = '#d4b456';
+  btn.style.border = '1px solid rgba(255,255,255,0.3)';
+  btn.style.color = 'rgba(255,255,255,0.8)';
   btn.disabled = true;
   form.querySelectorAll('input, select, textarea').forEach(el => el.disabled = true);
 }
