@@ -397,80 +397,6 @@ body {
 
 .founder-card:hover .founder-photo img { transform: scale(1.03); }
 
-/* ─── TEAM BAND (group photo) ─── */
-.team-band {
-  position: relative;
-  min-height: 62vh;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  overflow: hidden;
-  background: var(--c-wine-deep, #3d1520);
-}
-
-.team-band img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 40%;
-}
-
-.team-band-veil {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(20,8,12,0.25) 0%, rgba(20,8,12,0.15) 45%, rgba(20,8,12,0.88) 100%);
-}
-
-.team-band-caption {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 0 1.5rem 3.5rem;
-  max-width: 640px;
-}
-
-.team-band-caption p {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
-  font-size: clamp(1.15rem, 2.4vw, 1.6rem);
-  font-style: italic;
-  line-height: 1.5;
-  color: #faf8f5;
-  margin-bottom: 0.9rem;
-}
-
-.team-band-caption span {
-  font-size: 0.62rem;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: #d4b8be;
-}
-
-.founder-info h3 {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--c-text);
-}
-
-.founder-role {
-  font-size: 0.62rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--c-wine);
-  margin-bottom: 1rem;
-  margin-top: 0.2rem;
-}
-
-.founder-bio {
-  font-size: 0.9rem;
-  color: var(--c-text-secondary);
-  line-height: 1.8;
-}
-
-.founder-bio p + p { margin-top: 1rem; }
-
 /* ─── VIDEO ─── */
 .video-section {
   background: var(--c-bg-alt);
@@ -507,6 +433,10 @@ body {
     linear-gradient(180deg, var(--c-wine-pale) 0%, var(--c-bg-alt) 100%);
   cursor: pointer;
   transition: background 0.3s;
+  width: 100%;
+  border: 0;
+  font-family: inherit;
+  padding: 0;
 }
 
 .play-btn {
@@ -1002,15 +932,21 @@ body {
 .join-form select,
 .join-form textarea {
   width: 100%;
-  padding: 0.85rem 1rem;
+  /* Top padding leaves room for the label once it floats up. */
+  padding: 1.5rem 1rem 0.55rem;
   font-size: 0.85rem;
   font-family: inherit;
+  text-align: left;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.15);
   color: var(--c-hero-text);
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, background 0.3s;
   appearance: none;
 }
+
+.join-form input:hover,
+.join-form select:hover,
+.join-form textarea:hover { background: rgba(255,255,255,0.12); }
 
 .join-form input::placeholder,
 .join-form textarea::placeholder {
@@ -1030,6 +966,7 @@ body {
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
+  cursor: pointer;
 }
 
 .join-form select option {
@@ -1039,7 +976,7 @@ body {
 
 .join-form textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 96px;
 }
 
 .join-submit {
@@ -1266,6 +1203,430 @@ textarea:focus-visible {
   outline: 2px solid var(--c-wine);
   outline-offset: 2px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   MOTION & INTERACTION
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Scroll progress ─── */
+.progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--c-wine) 0%, var(--c-gold) 100%);
+  z-index: 120;
+  pointer-events: none;
+}
+
+/* ─── Scroll reveal ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* ─── Hero entrance & parallax ─── */
+.hero-content > * {
+  opacity: 0;
+  animation: hero-in 1.1s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.hero-content > *:nth-child(1) { animation-delay: 0.15s; }
+.hero-content > *:nth-child(2) { animation-delay: 0.28s; }
+.hero-content > *:nth-child(3) { animation-delay: 0.41s; }
+.hero-content > *:nth-child(4) { animation-delay: 0.54s; }
+.hero-content > *:nth-child(5) { animation-delay: 0.65s; }
+.hero-content > *:nth-child(6) { animation-delay: 0.76s; }
+
+@keyframes hero-in {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Age gate holds the hero animation until the visitor is through it. */
+body.gated .hero-content > * { animation-play-state: paused; }
+
+.hero-photo { will-change: transform; }
+
+/* ─── Nav: active link, mobile menu ─── */
+.nav-links a {
+  position: relative;
+  padding-bottom: 3px;
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 50% 50%;
+  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.nav-links a:hover::after,
+.nav-links a.is-active::after { transform: scaleX(1); }
+
+.nav-toggle {
+  display: none;
+  width: 42px;
+  height: 42px;
+  margin: -9px -9px -9px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  color: inherit;
+}
+
+.nav-toggle span {
+  position: absolute;
+  left: 11px;
+  width: 20px;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.2s;
+}
+
+.nav-toggle span:nth-child(1) { top: 15px; }
+.nav-toggle span:nth-child(2) { top: 21px; }
+.nav-toggle span:nth-child(3) { top: 27px; }
+
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.nav.at-hero .nav-toggle { color: var(--c-hero-text); }
+.nav.scrolled .nav-toggle { color: var(--c-wine); }
+
+.mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: var(--c-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s, visibility 0.4s;
+}
+
+.mobile-menu.open { opacity: 1; visibility: visible; }
+
+.mobile-menu a {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.6rem;
+  color: var(--c-text);
+  text-decoration: none;
+  padding: 0.55rem 1rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s, transform 0.45s, color 0.25s;
+}
+
+.mobile-menu.open a { opacity: 1; transform: none; }
+.mobile-menu.open a:nth-child(1) { transition-delay: 0.08s; }
+.mobile-menu.open a:nth-child(2) { transition-delay: 0.14s; }
+.mobile-menu.open a:nth-child(3) { transition-delay: 0.20s; }
+.mobile-menu.open a:nth-child(4) { transition-delay: 0.26s; }
+.mobile-menu.open a:nth-child(5) { transition-delay: 0.32s; }
+.mobile-menu.open a:nth-child(6) { transition-delay: 0.38s; }
+.mobile-menu a:hover { color: var(--c-wine); }
+
+.mobile-menu-rule {
+  width: 40px;
+  height: 1px;
+  background: var(--c-divider);
+  margin: 1.25rem 0;
+}
+
+body.menu-open { overflow: hidden; }
+
+/* Over the open menu the nav is on a light ground, whatever it was before. */
+body.menu-open .nav { background: var(--c-bg); }
+body.menu-open .nav .nav-logo,
+body.menu-open .nav .nav-toggle { color: var(--c-wine); }
+
+/* The last link is the primary action — give it the weight of one. */
+.mobile-menu a:last-of-type {
+  font-size: 0.72rem;
+  font-family: 'Optima', 'Candara', 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-wine);
+  border: 1px solid var(--c-wine);
+  padding: 0.85rem 2.25rem;
+  margin-top: 0.25rem;
+}
+
+.mobile-menu a:last-of-type:hover { background: var(--c-wine); color: var(--c-bg); }
+
+/* ─── FAQ accordion ─── */
+.faq-item {
+  border-bottom: 1px solid var(--c-border-light);
+}
+
+.faq-q {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.35rem 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.05rem;
+  color: var(--c-text);
+  transition: color 0.25s;
+}
+
+.faq-q:hover { color: var(--c-wine); }
+
+.faq-icon {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  margin-top: 0.45rem;
+  position: relative;
+}
+
+.faq-icon::before,
+.faq-icon::after {
+  content: "";
+  position: absolute;
+  background: var(--c-wine);
+  transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s;
+}
+
+.faq-icon::before { top: 6px; left: 0; width: 13px; height: 1px; }
+.faq-icon::after  { left: 6px; top: 0; width: 1px; height: 13px; }
+
+.faq-q[aria-expanded="true"] .faq-icon::after { transform: rotate(90deg); opacity: 0; }
+
+.faq-a {
+  overflow: hidden;
+  height: 0;
+  transition: height 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.faq-a > p {
+  padding: 0 2.5rem 1.5rem 0;
+  color: var(--c-text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+
+/* ─── Form: floating labels, validation, success ─── */
+.field {
+  position: relative;
+}
+
+.field > label {
+  position: absolute;
+  left: 1rem;
+  top: 1.05rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--c-hero-muted);
+  pointer-events: none;
+  transform-origin: 0 0;
+  transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.25s;
+}
+
+.field > label small {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.field.is-filled > label,
+.field:focus-within > label {
+  transform: translateY(-0.62rem) scale(0.74);
+}
+
+.field:focus-within > label { color: var(--c-hero-text); }
+
+.field.has-error > label { color: #e8a0a8; }
+.field.has-error input,
+.field.has-error select,
+.field.has-error textarea { border-bottom-color: #e8a0a8; }
+
+.field-error {
+  display: block;
+  text-align: left;
+  padding-left: 1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: #e8a0a8;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: height 0.25s, opacity 0.25s;
+}
+
+.field.has-error .field-error { height: 1.15rem; opacity: 1; }
+
+.join-submit {
+  position: relative;
+  overflow: hidden;
+}
+
+.join-submit[data-busy="true"] { pointer-events: none; opacity: 0.75; }
+
+.join-success {
+  display: none;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  animation: hero-in 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.join-success.show { display: block; }
+
+.join-success svg {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 1.5rem;
+}
+
+.join-success svg circle,
+.join-success svg path {
+  stroke: var(--c-hero-text);
+  stroke-width: 1.25;
+  fill: none;
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
+  animation: draw 0.9s 0.15s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.join-success svg path { animation-delay: 0.55s; }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+.join-success h3 {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.7rem;
+  color: var(--c-hero-text);
+  margin-bottom: 0.85rem;
+}
+
+.join-success p {
+  color: var(--c-hero-muted);
+  max-width: 420px;
+  margin: 0 auto;
+  line-height: 1.75;
+}
+
+/* ─── Back to top ─── */
+.to-top {
+  position: fixed;
+  right: 1.75rem;
+  bottom: 1.75rem;
+  z-index: 90;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-wine);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity 0.35s, transform 0.35s, visibility 0.35s, background 0.25s;
+}
+
+.to-top.show { opacity: 1; visibility: visible; transform: none; }
+.to-top:hover { background: var(--c-wine-bg); }
+.to-top svg { width: 15px; height: 15px; }
+
+/* ─── Card micro-interactions ─── */
+.wine-card,
+.tier-card,
+.exp-item,
+.testimonial {
+  transition:
+    transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+    border-color 0.45s;
+}
+
+.wine-card:hover,
+.tier-card:hover,
+.testimonial:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.exp-item:hover { transform: translateY(-3px); }
+
+.tier-cta,
+.hero-cta,
+.join-submit,
+.age-btn { transition: transform 0.3s cubic-bezier(0.22,0.61,0.36,1), background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+
+.tier-cta:hover,
+.join-submit:hover:not([data-busy="true"]) { transform: translateY(-2px); }
+
+.tier-cta:active,
+.hero-cta:active,
+.join-submit:active { transform: translateY(0); }
+
+/* The tier the visitor picked, carried into the form. */
+.field.is-prefilled select { color: var(--c-hero-text); }
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(163,136,64,0.45); }
+  100% { box-shadow: 0 0 0 14px rgba(163,136,64,0); }
+}
+
+.pulse { animation: pulse-ring 1.1s ease-out 2; }
+
+@media (max-width: 768px) {
+  .nav-toggle { display: block; }
+  .to-top { right: 1rem; bottom: 1rem; }
+}
+
+/* ─── Reduced motion: keep the state changes, drop the movement ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+  .hero-content > * { opacity: 1; animation: none; }
+  .hero-photo { transform: none !important; }
+  .progress-bar { display: none; }
+  .wine-card:hover,
+  .tier-card:hover,
+  .testimonial:hover,
+  .exp-item:hover { transform: none; }
+}
 </style>
 </head>
 <body>
@@ -1284,11 +1645,13 @@ textarea:focus-visible {
     <p class="age-gate-brand">Warm Springs Cellars</p>
     <p>You must be of legal drinking age to enter this site.</p>
     <div class="age-btns">
-      <button class="age-btn age-btn-yes" onclick="document.getElementById('ageGate').classList.add('hidden')">I am 21+</button>
-      <button class="age-btn age-btn-no" onclick="window.location.href='https://www.responsibility.org/'">I am not</button>
+      <button class="age-btn age-btn-yes" id="ageYes">I am 21+</button>
+      <button class="age-btn age-btn-no" id="ageNo">I am not</button>
     </div>
   </div>
 </div>
+
+<div class="progress-bar" id="progressBar" aria-hidden="true"></div>
 
 <!-- NAVIGATION -->
 <nav class="nav at-hero" id="mainNav">
@@ -1301,7 +1664,20 @@ textarea:focus-visible {
     <li><a href="#experience">Members</a></li>
     <li><a href="#join">Request Access</a></li>
   </ul>
+  <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu">
+  <a href="#founders">Our Winemakers</a>
+  <a href="#philosophy">Story</a>
+  <a href="#wines">Wines</a>
+  <a href="#allocations">Allocation</a>
+  <a href="#experience">Members</a>
+  <div class="mobile-menu-rule"></div>
+  <a href="#join">Request Access</a>
+</div>
 
 <!-- HERO -->
 <section class="hero" id="heroSection">
@@ -1386,31 +1762,20 @@ textarea:focus-visible {
   </div>
 </section>
 
-<!-- TEAM BAND -->
-<section class="team-band" id="team">
-  <img src="images/team.jpeg" alt="Cecilia Valdivia and Robert Rex with the Warm Springs Cellars team" loading="lazy"
-       onerror="this.closest('.team-band').style.display='none';">
-  <div class="team-band-veil"></div>
-  <div class="team-band-caption">
-    <p>&ldquo;A thousand cases. Two winemakers. One harvest at a time.&rdquo;</p>
-    <span>The Warm Springs Cellars Team</span>
-  </div>
-</section>
-
 <!-- VIDEO -->
 <section class="video-section" id="video">
   <div class="section-inner">
     <p class="section-eyebrow" style="color: var(--c-wine);">Watch</p>
     <h2 class="section-title">Meet Our Winemakers</h2>
     <div class="video-container">
-      <div class="video-placeholder" id="videoPlaceholder" onclick="loadVideo()">
+      <button class="video-placeholder" id="videoPlaceholder" aria-label="Play the winemaker interview">
         <div class="play-btn">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 5v14l11-7L8 5z" fill="#722f3a"/>
           </svg>
         </div>
         <span>Play Video</span>
-      </div>
+      </button>
     </div>
     <p class="video-caption">Cecilia Valdivia on craft, intuition, and the pursuit of clean winemaking in Sonoma Valley.</p>
   </div>
@@ -1450,17 +1815,17 @@ textarea:focus-visible {
       <div class="philosophy-visual">
         <div class="philosophy-visual-inner">
           <div class="stat-stack">
-            <div class="stat-number">1,000</div>
+            <div class="stat-number" data-count="1000" data-format="comma">1,000</div>
             <div class="stat-label">Cases Produced Annually</div>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-stack">
-            <div class="stat-number" style="font-size: 3rem;">1982</div>
+            <div class="stat-number" style="font-size: 3rem;" data-count="1982" data-format="plain">1982</div>
             <div class="stat-label">Year Established</div>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-stack">
-            <div class="stat-number" style="font-size: 3rem;">2</div>
+            <div class="stat-number" style="font-size: 3rem;" data-count="2">2</div>
             <div class="stat-label">Vineyard Sources</div>
           </div>
         </div>
@@ -1520,7 +1885,7 @@ textarea:focus-visible {
           <li>Member-only event invitations</li>
         </ul>
         <p class="tier-price">From $180 <small>per shipment</small></p>
-        <a href="#join" class="tier-cta">Request This Allocation</a>
+        <a href="#join" class="tier-cta" data-tier="cellar">Request This Allocation</a>
       </div>
       <div class="tier-card featured">
         <p class="tier-label">Inner Circle</p>
@@ -1536,7 +1901,7 @@ textarea:focus-visible {
           <li>Complimentary shipping on all orders</li>
         </ul>
         <p class="tier-price">From $340 <small>per shipment</small></p>
-        <a href="#join" class="tier-cta">Request This Allocation</a>
+        <a href="#join" class="tier-cta" data-tier="founders">Request This Allocation</a>
       </div>
     </div>
   </div>
@@ -1620,29 +1985,59 @@ textarea:focus-visible {
     <p class="section-eyebrow">Questions</p>
     <h2 class="section-title">Frequently Asked</h2>
     <div class="faq-grid">
-      <div class="faq-item">
-        <h3 class="serif">How does the allocation work?</h3>
-        <p>You'll receive two shipments per year, in spring and fall. Each shipment is curated by Robert and Cecilia based on your chosen tier. We notify you in advance with the option to customize quantities.</p>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a1" id="faq-q1">
+          <span>How does the allocation work?</span>
+          <span class="faq-icon" aria-hidden="true"></span>
+        </button>
+        <div class="faq-a" id="faq-a1" role="region" aria-labelledby="faq-q1">
+          <p>You'll receive two shipments per year, in spring and fall. Each shipment is curated by Robert and Cecilia based on your chosen tier. We notify you in advance with the option to customize quantities.</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <h3 class="serif">Where do you ship?</h3>
-        <p>We ship to all states where direct-to-consumer wine shipping is permitted. Currently, we ship to 44 states. Contact us to confirm availability in your state.</p>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a2" id="faq-q2">
+          <span>Where do you ship?</span>
+          <span class="faq-icon" aria-hidden="true"></span>
+        </button>
+        <div class="faq-a" id="faq-a2" role="region" aria-labelledby="faq-q2">
+          <p>We ship to all states where direct-to-consumer wine shipping is permitted. Currently, we ship to 44 states. Contact us to confirm availability in your state.</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <h3 class="serif">Is there a commitment?</h3>
-        <p>We ask for a minimum commitment of two shipments (one year). After that, you may cancel anytime with 30 days' notice before the next scheduled shipment.</p>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a3" id="faq-q3">
+          <span>Is there a commitment?</span>
+          <span class="faq-icon" aria-hidden="true"></span>
+        </button>
+        <div class="faq-a" id="faq-a3" role="region" aria-labelledby="faq-q3">
+          <p>We ask for a minimum commitment of two shipments (one year). After that, you may cancel anytime with 30 days' notice before the next scheduled shipment.</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <h3 class="serif">Can I visit the winery?</h3>
-        <p>Members enjoy private, by-appointment visits at the estate and our cellar cave. We welcome you and up to two guests (four for Founder's Reserve members).</p>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a4" id="faq-q4">
+          <span>Can I visit the winery?</span>
+          <span class="faq-icon" aria-hidden="true"></span>
+        </button>
+        <div class="faq-a" id="faq-a4" role="region" aria-labelledby="faq-q4">
+          <p>Members enjoy private, by-appointment visits at the estate and our cellar cave. We welcome you and up to two guests (four for Founder's Reserve members).</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <h3 class="serif">What makes your wines "clean"?</h3>
-        <p>Robert's chemistry background informs our approach: minimal intervention, low sulfites, no additives. Our wines are crafted to be pure expressions of fruit and place &mdash; nothing artificial, nothing hidden.</p>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a5" id="faq-q5">
+          <span>What makes your wines "clean"?</span>
+          <span class="faq-icon" aria-hidden="true"></span>
+        </button>
+        <div class="faq-a" id="faq-a5" role="region" aria-labelledby="faq-q5">
+          <p>Robert's chemistry background informs our approach: minimal intervention, low sulfites, no additives. Our wines are crafted to be pure expressions of fruit and place &mdash; nothing artificial, nothing hidden.</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <h3 class="serif">How is wine shipped?</h3>
-        <p>All wines ship via temperature-controlled carriers. During summer months, we use insulated packaging and may hold shipments if temperatures are extreme. An adult signature is required.</p>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a6" id="faq-q6">
+          <span>How is wine shipped?</span>
+          <span class="faq-icon" aria-hidden="true"></span>
+        </button>
+        <div class="faq-a" id="faq-a6" role="region" aria-labelledby="faq-q6">
+          <p>All wines ship via temperature-controlled carriers. During summer months, we use insulated packaging and may hold shipments if temperatures are extreme. An adult signature is required.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -1654,18 +2049,39 @@ textarea:focus-visible {
     <p class="section-eyebrow">Join the List</p>
     <h2 class="section-title serif">Request Your Allocation</h2>
     <p class="section-prose">Space on our list is limited by what we produce. Submit your request below and Robert or Cecilia will be in touch within 48 hours.</p>
-    <form class="join-form" onsubmit="handleSubmit(event)">
+    <form class="join-form" id="joinForm" novalidate>
       <div class="form-row">
-        <input type="text" name="first" placeholder="First Name" required>
-        <input type="text" name="last" placeholder="Last Name" required>
+        <div class="field">
+          <input type="text" id="f-first" name="first" placeholder=" " required autocomplete="given-name">
+          <label for="f-first">First Name</label>
+          <span class="field-error" aria-live="polite"></span>
+        </div>
+        <div class="field">
+          <input type="text" id="f-last" name="last" placeholder=" " required autocomplete="family-name">
+          <label for="f-last">Last Name</label>
+          <span class="field-error" aria-live="polite"></span>
+        </div>
       </div>
-      <input type="email" name="email" placeholder="Email Address" required>
-      <input type="tel" name="phone" placeholder="Phone Number">
+      <div class="field">
+        <input type="email" id="f-email" name="email" placeholder=" " required autocomplete="email">
+        <label for="f-email">Email Address</label>
+        <span class="field-error" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <input type="tel" id="f-phone" name="phone" placeholder=" " autocomplete="tel">
+        <label for="f-phone">Phone Number <small>(optional)</small></label>
+        <span class="field-error" aria-live="polite"></span>
+      </div>
       <div class="form-row">
-        <input type="text" name="city" placeholder="City">
-        <select name="state" required>
-          <option value="" disabled selected>State</option>
-          <option>Alabama</option><option>Alaska</option><option>Arizona</option>
+        <div class="field">
+          <input type="text" id="f-city" name="city" placeholder=" " autocomplete="address-level2">
+          <label for="f-city">City</label>
+          <span class="field-error" aria-live="polite"></span>
+        </div>
+        <div class="field">
+          <select id="f-state" name="state" required autocomplete="address-level1">
+            <option value="" disabled selected></option>
+            <option>Alabama</option><option>Alaska</option><option>Arizona</option>
           <option>Arkansas</option><option>California</option><option>Colorado</option>
           <option>Connecticut</option><option>Delaware</option><option>Florida</option>
           <option>Georgia</option><option>Hawaii</option><option>Idaho</option>
@@ -1682,27 +2098,50 @@ textarea:focus-visible {
           <option>Texas</option><option>Utah</option><option>Vermont</option>
           <option>Virginia</option><option>Washington</option><option>West Virginia</option>
           <option>Wisconsin</option><option>Wyoming</option>
-        </select>
+          </select>
+          <label for="f-state">State</label>
+          <span class="field-error" aria-live="polite"></span>
+        </div>
       </div>
-      <select name="tier" required>
-        <option value="" disabled selected>Preferred Allocation</option>
-        <option value="cellar">The Cellar Door — 4 bottles, twice yearly</option>
-        <option value="founders">The Founder's Reserve — 6 bottles, twice yearly</option>
-      </select>
-      <select name="referral">
-        <option value="" disabled selected>How did you hear about us?</option>
-        <option>Friend or Family</option>
-        <option>Restaurant or Wine Bar</option>
-        <option>Wine Event or Festival</option>
-        <option>Social Media</option>
-        <option>Press or Publication</option>
-        <option>Deerfield Ranch Winery</option>
-        <option>Other</option>
-      </select>
-      <textarea name="note" placeholder="Anything else you'd like us to know? (Optional)"></textarea>
+      <div class="field" id="tierField">
+        <select id="f-tier" name="tier" required>
+          <option value="" disabled selected></option>
+          <option value="cellar">The Cellar Door &mdash; 4 bottles, twice yearly</option>
+          <option value="founders">The Founder's Reserve &mdash; 6 bottles, twice yearly</option>
+        </select>
+        <label for="f-tier">Preferred Allocation</label>
+        <span class="field-error" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <select id="f-referral" name="referral">
+          <option value="" disabled selected></option>
+          <option>Friend or Family</option>
+          <option>Restaurant or Wine Bar</option>
+          <option>Wine Event or Festival</option>
+          <option>Social Media</option>
+          <option>Press or Publication</option>
+          <option>Deerfield Ranch Winery</option>
+          <option>Other</option>
+        </select>
+        <label for="f-referral">How did you hear about us? <small>(optional)</small></label>
+        <span class="field-error" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <textarea id="f-note" name="note" placeholder=" "></textarea>
+        <label for="f-note">Anything else you'd like us to know? <small>(optional)</small></label>
+      </div>
       <button type="submit" class="join-submit">Submit Request</button>
       <p class="join-note">You must be 21 years of age or older. Submitting a request does not guarantee allocation.</p>
     </form>
+
+    <div class="join-success" id="joinSuccess" role="status" aria-live="polite">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="24" cy="24" r="21" style="--len: 132"/>
+        <path d="M15 24.5l6.5 6.5L33 18" style="--len: 30"/>
+      </svg>
+      <h3>Your request is with us</h3>
+      <p id="joinSuccessMsg">Robert or Cecilia will be in touch within 48 hours. Watch your inbox &mdash; and keep an eye on the spam folder, just in case.</p>
+    </div>
   </div>
 </section>
 
@@ -1741,52 +2180,385 @@ textarea:focus-visible {
   </div>
 </footer>
 
+<button class="to-top" id="toTop" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 19V5M12 5l-7 7M12 5l7 7" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
 <script>
-// Nav: hero vs scrolled state
-const nav = document.getElementById('mainNav');
-const hero = document.getElementById('heroSection');
+(function () {
+  'use strict';
 
-function updateNav() {
-  const heroBottom = hero.getBoundingClientRect().bottom;
-  if (heroBottom <= 60) {
-    nav.classList.add('scrolled');
-    nav.classList.remove('at-hero');
-  } else {
-    nav.classList.remove('scrolled');
-    nav.classList.add('at-hero');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $  = function (sel, root) { return (root || document).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+
+  /* ─── Age gate ───────────────────────────────────────────
+     Remember the answer for the session so a reload doesn't
+     ask again, and hold the hero animation until it clears. */
+  var ageGate = $('#ageGate');
+  var VERIFIED = 'wsc-age-verified';
+
+  function storage(fn, fallback) {
+    try { return fn(); } catch (e) { return fallback; }   // private mode / blocked storage
   }
-}
 
-window.addEventListener('scroll', updateNav, { passive: true });
-updateNav();
+  if (storage(function () { return sessionStorage.getItem(VERIFIED); }, null)) {
+    ageGate.classList.add('hidden');
+  } else {
+    document.body.classList.add('gated');
+  }
 
-// Smooth scroll
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const t = document.querySelector(a.getAttribute('href'));
-    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function acceptAge() {
+    storage(function () { return sessionStorage.setItem(VERIFIED, '1'); });
+    ageGate.classList.add('hidden');
+    document.body.classList.remove('gated');
+    var cta = $('.hero-cta');
+    if (cta) cta.focus({ preventScroll: true });
+  }
+
+  $('#ageYes').addEventListener('click', acceptAge);
+  $('#ageNo').addEventListener('click', function () {
+    window.location.href = 'https://www.responsibility.org/';
   });
-});
 
-// Video
-function loadVideo() {
-  const container = document.querySelector('.video-container');
-  container.innerHTML = '<iframe src="https://www.youtube.com/embed/NLGzPgrd4AU?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
-}
+  /* ─── Nav state, active section, progress bar ─── */
+  var nav = $('#mainNav');
+  var hero = $('#heroSection');
+  var heroPhoto = $('.hero-photo');
+  var heroContent = $('.hero-content');
+  var progress = $('#progressBar');
+  var toTop = $('#toTop');
+  var navLinks = $$('.nav-links a[href^="#"]');
+  var sections = navLinks
+    .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+    .filter(Boolean);
 
-// Form
-function handleSubmit(e) {
-  e.preventDefault();
-  const form = e.target;
-  const btn = form.querySelector('.join-submit');
-  btn.textContent = 'Request Submitted — Thank You';
-  btn.style.background = 'transparent';
-  btn.style.border = '1px solid rgba(255,255,255,0.3)';
-  btn.style.color = 'rgba(255,255,255,0.8)';
-  btn.disabled = true;
-  form.querySelectorAll('input, select, textarea').forEach(el => el.disabled = true);
-}
+  var ticking = false;
+
+  function onScroll() {
+    var y = window.scrollY || window.pageYOffset;
+    var heroBottom = hero.getBoundingClientRect().bottom;
+
+    nav.classList.toggle('scrolled', heroBottom <= 60);
+    nav.classList.toggle('at-hero', heroBottom > 60);
+
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(y / max, 1) : 0) + ')';
+
+    toTop.classList.toggle('show', y > window.innerHeight * 1.2);
+
+    // Hero parallax: the cellar photo drifts slower than the page,
+    // and the headline fades as it leaves.
+    if (!reduced && heroBottom > 0) {
+      heroPhoto.style.transform = 'translate3d(0,' + (y * 0.18) + 'px,0) scale(1.06)';
+      heroContent.style.opacity = String(Math.max(0, 1 - y / (window.innerHeight * 0.75)));
+    }
+
+    // Active nav link = the last section whose top has passed the nav.
+    var current = null;
+    for (var k = 0; k < sections.length; k++) {
+      if (sections[k].getBoundingClientRect().top <= 120) current = sections[k].id;
+    }
+    navLinks.forEach(function (a) {
+      a.classList.toggle('is-active', a.getAttribute('href') === '#' + current);
+    });
+
+    sweepReveals();
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; window.requestAnimationFrame(onScroll); }
+  }, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  onScroll();
+
+  /* ─── Mobile menu ─── */
+  var toggle = $('#navToggle');
+  var menu = $('#mobileMenu');
+
+  function setMenu(open) {
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    menu.classList.toggle('open', open);
+    document.body.classList.toggle('menu-open', open);
+    if (open) {
+      var first = menu.querySelector('a');
+      if (first) window.setTimeout(function () { first.focus(); }, 120);
+    }
+  }
+
+  toggle.addEventListener('click', function () {
+    setMenu(toggle.getAttribute('aria-expanded') !== 'true');
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+      setMenu(false);
+      toggle.focus();
+    }
+  });
+
+  /* ─── Smooth scroll, offset for the fixed nav ─── */
+  function scrollToTarget(target) {
+    var top = target.getBoundingClientRect().top + window.scrollY - 64;
+    window.scrollTo({ top: Math.max(top, 0), behavior: reduced ? 'auto' : 'smooth' });
+  }
+
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    var href = a.getAttribute('href');
+
+    e.preventDefault();
+    if (menu.classList.contains('open')) setMenu(false);
+
+    if (href === '#') {
+      window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+      return;
+    }
+
+    var target = document.querySelector(href);
+    if (!target) return;
+    scrollToTarget(target);
+
+    // A tier CTA carries the visitor's choice into the form.
+    var tier = a.getAttribute('data-tier');
+    if (tier) preselectTier(tier);
+  });
+
+  toTop.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  });
+
+  /* ─── Scroll reveal ─── */
+  var revealTargets = $$([
+    '.founder-card', '.section-eyebrow', '.section-title', '.section-prose',
+    '.detail-item', '.philosophy-visual', '.wine-card', '.tier-card',
+    '.exp-item', '.testimonial', '.faq-item', '.video-container',
+    '.quote-inner', '.join-form'
+  ].join(','));
+
+  revealTargets.forEach(function (el) { el.classList.add('reveal'); });
+
+  // Safety net. An observer miss — a hidden ancestor, a layout shift, a
+  // browser quirk — would leave content invisible forever, so anything that
+  // has clearly entered the viewport is shown regardless of the observer.
+  function sweepReveals() {
+    if (!revealTargets) return;   // first onScroll() runs before this is assigned
+    for (var i = revealTargets.length - 1; i >= 0; i--) {
+      var el = revealTargets[i];
+      if (el.classList.contains('is-visible')) { revealTargets.splice(i, 1); continue; }
+      var rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        el.classList.add('is-visible');
+        revealTargets.splice(i, 1);
+      }
+    }
+  }
+
+  if (reduced || !('IntersectionObserver' in window)) {
+    revealTargets.forEach(function (el) { el.classList.add('is-visible'); });
+  } else {
+    // Stagger siblings so grids cascade instead of snapping in as a block.
+    var seen = new WeakMap();
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var parent = el.parentElement;
+        var n = seen.get(parent) || 0;
+        seen.set(parent, n + 1);
+        el.style.setProperty('--reveal-delay', Math.min(n, 5) * 90 + 'ms');
+        el.classList.add('is-visible');
+        io.unobserve(el);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+    revealTargets.forEach(function (el) { io.observe(el); });
+    sweepReveals();
+  }
+
+  /* ─── Stat count-up ─── */
+  var stats = $$('[data-count]');
+
+  function countUp(el) {
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    var format = el.getAttribute('data-format');
+    var start = format === 'plain' ? Math.max(target - 60, 0) : 0;   // years shouldn't spin from zero
+    var duration = 1400;
+    var t0 = null;
+
+    function frame(t) {
+      if (t0 === null) t0 = t;
+      var p = Math.min((t - t0) / duration, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      var value = Math.round(start + (target - start) * eased);
+      el.textContent = format === 'comma' ? value.toLocaleString('en-US') : String(value);
+      if (p < 1) window.requestAnimationFrame(frame);
+    }
+    window.requestAnimationFrame(frame);
+  }
+
+  if (!reduced && 'IntersectionObserver' in window) {
+    var statIo = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        countUp(entry.target);
+        statIo.unobserve(entry.target);
+      });
+    }, { threshold: 0.6 });
+    stats.forEach(function (el) { statIo.observe(el); });
+  }
+
+  /* ─── FAQ accordion ───────────────────────────────────────
+     Animate to the measured height, then release to auto so
+     the panel reflows if the window is resized. */
+  $$('.faq-q').forEach(function (btn) {
+    var panel = document.getElementById(btn.getAttribute('aria-controls'));
+
+    btn.addEventListener('click', function () {
+      var open = btn.getAttribute('aria-expanded') === 'true';
+
+      if (open) {
+        panel.style.height = panel.scrollHeight + 'px';
+        void panel.offsetHeight;
+        panel.style.height = '0px';
+        btn.setAttribute('aria-expanded', 'false');
+      } else {
+        panel.style.height = panel.scrollHeight + 'px';
+        btn.setAttribute('aria-expanded', 'true');
+        panel.addEventListener('transitionend', function once(e) {
+          if (e.propertyName !== 'height') return;
+          panel.style.height = 'auto';
+          panel.removeEventListener('transitionend', once);
+        });
+      }
+    });
+  });
+
+  /* ─── Video ─── */
+  var videoPlaceholder = $('#videoPlaceholder');
+  if (videoPlaceholder) {
+    videoPlaceholder.addEventListener('click', function () {
+      var container = $('.video-container');
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube.com/embed/NLGzPgrd4AU?autoplay=1&rel=0';
+      frame.setAttribute('allow', 'autoplay; encrypted-media');
+      frame.setAttribute('allowfullscreen', '');
+      frame.setAttribute('title', 'Cecilia Valdivia on winemaking');
+      container.innerHTML = '';
+      container.appendChild(frame);
+    });
+  }
+
+  /* ─── Form ─── */
+  var form = $('#joinForm');
+  var success = $('#joinSuccess');
+  var tierField = $('#tierField');
+
+  function fieldOf(input) { return input.closest('.field'); }
+
+  function syncFilled(input) {
+    var field = fieldOf(input);
+    if (field) field.classList.toggle('is-filled', input.value !== '');
+  }
+
+  function messageFor(input) {
+    if (!input.value && input.required) return 'This field is required.';
+    if (input.type === 'email' && input.value && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.value)) {
+      return 'Please enter a valid email address.';
+    }
+    if (input.type === 'tel' && input.value && input.value.replace(/\D/g, '').length < 7) {
+      return 'Please enter a valid phone number.';
+    }
+    return '';
+  }
+
+  function validate(input, show) {
+    var field = fieldOf(input);
+    if (!field) return true;
+    var msg = messageFor(input);
+    var slot = $('.field-error', field);
+
+    if (msg && show) {
+      field.classList.add('has-error');
+      if (slot) slot.textContent = msg;
+      input.setAttribute('aria-invalid', 'true');
+    } else {
+      field.classList.remove('has-error');
+      if (slot) slot.textContent = '';
+      input.removeAttribute('aria-invalid');
+    }
+    return !msg;
+  }
+
+  var controls = $$('input, select, textarea', form);
+
+  controls.forEach(function (input) {
+    syncFilled(input);
+
+    input.addEventListener('input', function () {
+      syncFilled(input);
+      // Clear an error as soon as it's fixed, but don't nag mid-typing.
+      if (fieldOf(input).classList.contains('has-error')) validate(input, true);
+    });
+    input.addEventListener('change', function () { syncFilled(input); validate(input, true); });
+    input.addEventListener('blur', function () { if (input.value) validate(input, true); });
+  });
+
+  function preselectTier(tier) {
+    var select = $('#f-tier');
+    if (!select) return;
+    select.value = tier;
+    syncFilled(select);
+    validate(select, false);
+    tierField.classList.add('is-prefilled');
+    if (!reduced) {
+      tierField.classList.remove('pulse');
+      void tierField.offsetWidth;   // restart the animation
+      tierField.classList.add('pulse');
+    }
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    var firstBad = null;
+    controls.forEach(function (input) {
+      if (!validate(input, true) && !firstBad) firstBad = input;
+    });
+
+    if (firstBad) {
+      scrollToTarget(fieldOf(firstBad));
+      firstBad.focus({ preventScroll: true });
+      return;
+    }
+
+    var btn = $('.join-submit', form);
+    btn.setAttribute('data-busy', 'true');
+    btn.textContent = 'Sending…';
+
+    // No backend yet: acknowledge locally, and personalise the confirmation.
+    window.setTimeout(function () {
+      var name = ($('#f-first').value || '').trim();
+      var tier = $('#f-tier');
+      var tierName = tier.options[tier.selectedIndex].textContent.split('—')[0].trim();
+
+      $('#joinSuccessMsg').textContent =
+        (name ? name + ', your' : 'Your') + ' request for ' + tierName +
+        ' is with Robert and Cecilia. They will be in touch within 48 hours — ' +
+        'keep an eye on your spam folder, just in case.';
+
+      form.style.display = 'none';
+      success.classList.add('show');
+      scrollToTarget(success);
+    }, 700);
+  });
+})();
 </script>
 
 </body>

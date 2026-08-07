@@ -8,7 +8,7 @@ index.html      the whole site — markup, styles and scripts in one file
 images/         winery photography (see images/README.md)
 nginx.conf      server config: listens on 8080 inside the container
 Dockerfile      nginx:1.27-alpine + the site, running unprivileged
-docker-compose.yml   pulls the published image, publishes host port 8585
+docker-compose.yml   pulls the published image, publishes host port 8086
 .github/workflows/docker.yml   builds and pushes to GHCR
 ```
 
@@ -29,14 +29,14 @@ cd warmspringscellars
 docker compose up -d
 ```
 
-Only **8585** is published, mapped to nginx on 8080 inside the container. Put
+Only **8086** is published, mapped to nginx on 8080 inside the container. Put
 Nginx Proxy Manager in front of it:
 
 | NPM field       | Value                                    |
 | --------------- | ---------------------------------------- |
 | Scheme          | `http`                                   |
 | Forward host    | the VPS IP, or `warmspringscellars` if you attach it to NPM's docker network |
-| Forward port    | `8585` (or `8080` when sharing a network) |
+| Forward port    | `8086` (or `8080` when sharing a network) |
 | Websockets      | off                                      |
 | Block exploits  | on                                       |
 
@@ -51,13 +51,13 @@ echo "$GHCR_TOKEN" | docker login ghcr.io -u <your-github-user> --password-stdin
 
 ### If NPM runs on this same host
 
-Publishing `8585` on all interfaces means the site is directly reachable on
+Publishing `8086` on all interfaces means the site is directly reachable on
 that port, bypassing the proxy. Either bind it to loopback in
 `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "127.0.0.1:8585:8080"
+  - "127.0.0.1:8086:8080"
 ```
 
 …or drop `ports` entirely, attach both containers to a shared network, and

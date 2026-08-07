@@ -5,10 +5,10 @@ services:
     restart: unless-stopped
 
     # Only port published. Nginx Proxy Manager terminates TLS and forwards here.
-    # Bind to the loopback if NPM runs on this same host, so 8585 is not
-    # reachable from the outside: "127.0.0.1:8585:8080".
+    # Bind to the loopback if NPM runs on this same host, so 8086 is not
+    # reachable from the outside: "127.0.0.1:8086:8080".
     ports:
-      - "8585:8080"
+      - "8086:8080"
 
     read_only: true
     tmpfs:
