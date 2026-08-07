@@ -397,82 +397,6 @@ body {
 
 .founder-card:hover .founder-photo img { transform: scale(1.03); }
 
-/* ─── VIDEO ─── */
-.video-section {
-  background: var(--c-bg-alt);
-  padding: 5rem 2rem;
-  text-align: center;
-}
-
-.video-container {
-  max-width: 800px;
-  margin: 2.5rem auto 0;
-  position: relative;
-  aspect-ratio: 16/9;
-  background: var(--c-wine-pale);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-}
-
-.video-container iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-.video-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  background:
-    radial-gradient(ellipse at 50% 50%, rgba(114,47,58,0.08) 0%, transparent 70%),
-    linear-gradient(180deg, var(--c-wine-pale) 0%, var(--c-bg-alt) 100%);
-  cursor: pointer;
-  transition: background 0.3s;
-  width: 100%;
-  border: 0;
-  font-family: inherit;
-  padding: 0;
-}
-
-.play-btn {
-  width: 68px;
-  height: 68px;
-  border: 2px solid var(--c-wine);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-}
-
-.video-placeholder:hover .play-btn {
-  background: var(--c-wine);
-  transform: scale(1.05);
-}
-
-.play-btn svg { width: 22px; height: 22px; margin-left: 3px; }
-
-.video-placeholder:hover .play-btn svg path { fill: var(--c-hero-text); }
-
-.video-placeholder span {
-  font-size: 0.68rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
-}
-
-.video-caption {
-  font-size: 0.8rem;
-  color: var(--c-text-muted);
-  margin-top: 1.5rem;
-  font-style: italic;
-}
-
 /* ─── QUOTE INTERLUDE ─── */
 .quote-interlude {
   background: var(--c-wine-pale);
@@ -588,24 +512,97 @@ body {
 /* ─── WINES ─── */
 .wines { background: var(--c-bg); }
 
-.wines-grid {
+.wines-rows {
+  margin-top: 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5.5rem;
+}
+
+.wine-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2.5rem;
-  margin-top: 3rem;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 4rem;
+  align-items: center;
+  text-align: left;
 }
 
-.wine-card {
-  background: var(--c-card-bg);
-  border: 1px solid var(--c-border-light);
-  padding: 2.5rem 2rem;
-  text-align: center;
-  transition: box-shadow 0.3s, transform 0.3s;
+/* The second bottle mirrors the first so the eye zig-zags down the page. */
+.wine-row.reverse .wine-stage { order: 2; }
+.wine-row.reverse .wine-body  { order: 1; }
+
+.wine-stage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 460px;
+  padding-bottom: 1.5rem;
 }
 
-.wine-card:hover {
-  box-shadow: var(--shadow-card-hover);
-  transform: translateY(-2px);
+/* Soft light pooling behind the glass, and the shadow it casts. */
+.wine-stage::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 340px;
+  height: 340px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--c-wine-pale) 0%, transparent 68%);
+  opacity: 0.9;
+}
+
+.wine-stage::after {
+  content: "";
+  position: absolute;
+  bottom: 1.2rem;
+  left: 50%;
+  width: 190px;
+  height: 20px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(44,30,36,0.28) 0%, transparent 72%);
+  transition: width 0.55s cubic-bezier(0.22,0.61,0.36,1), opacity 0.55s;
+}
+
+.wine-bottle {
+  position: relative;
+  z-index: 1;
+  height: 460px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 26px rgba(44,30,36,0.22));
+  transition: transform 0.65s cubic-bezier(0.22,0.61,0.36,1);
+}
+
+.wine-row:hover .wine-bottle { transform: translateY(-10px); }
+.wine-row:hover .wine-stage::after { width: 210px; opacity: 0.75; }
+
+/* In dark mode a near-black bottle on a near-black ground disappears. Swap the
+   pooled light for a warm halo and drop the cast shadow, which reads as
+   nothing there anyway. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .wine-stage::before {
+    background: radial-gradient(circle, rgba(214,168,180,0.16) 0%, transparent 66%);
+  }
+  :root:not([data-theme="light"]) .wine-stage::after {
+    background: radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 72%);
+  }
+  :root:not([data-theme="light"]) .wine-bottle {
+    filter: drop-shadow(0 16px 30px rgba(0,0,0,0.6));
+  }
+}
+
+:root[data-theme="dark"] .wine-stage::before {
+  background: radial-gradient(circle, rgba(214,168,180,0.16) 0%, transparent 66%);
+}
+:root[data-theme="dark"] .wine-stage::after {
+  background: radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 72%);
+}
+:root[data-theme="dark"] .wine-bottle {
+  filter: drop-shadow(0 16px 30px rgba(0,0,0,0.6));
 }
 
 .wine-vintage {
@@ -618,9 +615,9 @@ body {
 
 .wine-name {
   font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
-  font-size: 1.3rem;
+  font-size: 1.9rem;
   font-weight: 400;
-  margin-top: 1rem;
+  margin-top: 0.65rem;
   color: var(--c-text);
 }
 
@@ -633,18 +630,19 @@ body {
 }
 
 .wine-notes {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--c-text-secondary);
   margin-top: 1.25rem;
-  line-height: 1.75;
+  line-height: 1.8;
   font-style: italic;
+  max-width: 46ch;
 }
 
 .wine-divider {
-  width: 30px;
+  width: 40px;
   height: 1px;
   background: var(--c-divider);
-  margin: 1.25rem auto;
+  margin: 1.5rem 0;
 }
 
 .wine-production {
@@ -652,6 +650,27 @@ body {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--c-text-muted);
+}
+
+.wine-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.25rem;
+  margin-top: 1.75rem;
+}
+
+.wine-spec-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.wine-spec-value {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1rem;
+  color: var(--c-text);
 }
 
 /* ─── ALLOCATIONS ─── */
@@ -1167,6 +1186,16 @@ body {
   .philosophy-visual { max-height: 320px; }
   .tier-grid { grid-template-columns: 1fr; max-width: 420px; }
   .exp-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .wines-rows { gap: 3.5rem; margin-top: 2.5rem; }
+  .wine-row { grid-template-columns: 1fr; gap: 1.5rem; text-align: center; }
+  .wine-row.reverse .wine-stage { order: 0; }
+  .wine-row.reverse .wine-body  { order: 0; }
+  .wine-stage { min-height: 0; padding-bottom: 1rem; }
+  .wine-stage::before { width: 240px; height: 240px; }
+  .wine-bottle { height: 340px; }
+  .wine-notes { max-width: none; }
+  .wine-divider { margin-left: auto; margin-right: auto; }
+  .wine-specs { justify-content: center; gap: 2rem; }
   .faq-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .footer-inner { grid-template-columns: 1fr; text-align: center; }
@@ -1564,7 +1593,6 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 .to-top svg { width: 15px; height: 15px; }
 
 /* ─── Card micro-interactions ─── */
-.wine-card,
 .tier-card,
 .exp-item,
 .testimonial {
@@ -1574,7 +1602,6 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     border-color 0.45s;
 }
 
-.wine-card:hover,
 .tier-card:hover,
 .testimonial:hover {
   transform: translateY(-4px);
@@ -1622,7 +1649,6 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   .hero-content > * { opacity: 1; animation: none; }
   .hero-photo { transform: none !important; }
   .progress-bar { display: none; }
-  .wine-card:hover,
   .tier-card:hover,
   .testimonial:hover,
   .exp-item:hover { transform: none; }
@@ -1714,8 +1740,8 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 
       <div class="founder-card">
         <div class="founder-photo">
-          <img src="images/robert-rex.jpeg" alt="Robert Rex, Founder &amp; Winemaker" loading="lazy"
-               style="object-position: center 22%;"
+          <img src="images/robert_rex.jpg" alt="Robert Rex, Founder &amp; Winemaker" loading="lazy"
+               style="object-position: center 18%;"
                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="founder-photo-placeholder" style="display:none;">
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1759,25 +1785,6 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       </div>
 
     </div>
-  </div>
-</section>
-
-<!-- VIDEO -->
-<section class="video-section" id="video">
-  <div class="section-inner">
-    <p class="section-eyebrow" style="color: var(--c-wine);">Watch</p>
-    <h2 class="section-title">Meet Our Winemakers</h2>
-    <div class="video-container">
-      <button class="video-placeholder" id="videoPlaceholder" aria-label="Play the winemaker interview">
-        <div class="play-btn">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 5v14l11-7L8 5z" fill="#722f3a"/>
-          </svg>
-        </div>
-        <span>Play Video</span>
-      </button>
-    </div>
-    <p class="video-caption">Cecilia Valdivia on craft, intuition, and the pursuit of clean winemaking in Sonoma Valley.</p>
   </div>
 </section>
 
@@ -1840,25 +1847,56 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     <p class="section-eyebrow">Current Releases</p>
     <h2 class="section-title">The Wines</h2>
     <p class="section-prose">Two wines. Two vineyards. Each vintage a singular expression of place and season.</p>
-    <div class="wines-grid">
-      <div class="wine-card">
-        <div class="wine-vintage">2019</div>
-        <h3 class="wine-name">Cabernet Sauvignon</h3>
-        <p class="wine-origin">Wolf Run Vineyard &middot; Sonoma Valley</p>
-        <div class="wine-divider"></div>
-        <p class="wine-notes">Dark cassis and dried violets open to a palate of black cherry, espresso, and graphite. Twenty-two months in French oak gave this wine its architecture; the volcanic soils of Wolf Run gave it its soul.</p>
-        <div class="wine-divider"></div>
-        <p class="wine-production">480 cases produced</p>
-      </div>
-      <div class="wine-card">
-        <div class="wine-vintage">2021</div>
-        <h3 class="wine-name">Pinot Noir</h3>
-        <p class="wine-origin">ElieO Vineyard &middot; Russian River Valley</p>
-        <div class="wine-divider"></div>
-        <p class="wine-notes">Ripe Bing cherry and wild strawberry meet hints of forest floor and baking spice. Whole-cluster fermentation adds a savory spine. Delicate yet persistent, this is Russian River at its most transparent.</p>
-        <div class="wine-divider"></div>
-        <p class="wine-production">520 cases produced</p>
-      </div>
+    <div class="wines-rows">
+
+      <article class="wine-row">
+        <div class="wine-stage">
+          <img class="wine-bottle" src="images/cabernet-bottle.png"
+               alt="Warm Springs Cellars 2019 Cabernet Sauvignon, Wolf Run Vineyard" loading="lazy">
+        </div>
+        <div class="wine-body">
+          <div class="wine-vintage">2019</div>
+          <h3 class="wine-name">Cabernet Sauvignon</h3>
+          <p class="wine-origin">Wolf Run Vineyard &middot; Sonoma Valley</p>
+          <div class="wine-divider"></div>
+          <p class="wine-notes">Dark cassis and dried violets open to a palate of black cherry, espresso, and graphite. Twenty-two months in French oak gave this wine its architecture; the volcanic soils of Wolf Run gave it its soul.</p>
+          <div class="wine-specs">
+            <div>
+              <p class="wine-spec-label">Aging</p>
+              <p class="wine-spec-value">22 months, French oak</p>
+            </div>
+            <div>
+              <p class="wine-spec-label">Production</p>
+              <p class="wine-spec-value">480 cases</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="wine-row reverse">
+        <div class="wine-stage">
+          <img class="wine-bottle" src="images/pinot-bottle.png"
+               alt="Warm Springs Cellars 2021 Pinot Noir, ElieO Vineyard" loading="lazy">
+        </div>
+        <div class="wine-body">
+          <div class="wine-vintage">2021</div>
+          <h3 class="wine-name">Pinot Noir</h3>
+          <p class="wine-origin">ElieO Vineyard &middot; Russian River Valley</p>
+          <div class="wine-divider"></div>
+          <p class="wine-notes">Ripe Bing cherry and wild strawberry meet hints of forest floor and baking spice. Whole-cluster fermentation adds a savory spine. Delicate yet persistent, this is Russian River at its most transparent.</p>
+          <div class="wine-specs">
+            <div>
+              <p class="wine-spec-label">Fermentation</p>
+              <p class="wine-spec-value">Whole cluster</p>
+            </div>
+            <div>
+              <p class="wine-spec-label">Production</p>
+              <p class="wine-spec-value">520 cases</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
     </div>
   </div>
 </section>
@@ -2337,8 +2375,8 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   /* ─── Scroll reveal ─── */
   var revealTargets = $$([
     '.founder-card', '.section-eyebrow', '.section-title', '.section-prose',
-    '.detail-item', '.philosophy-visual', '.wine-card', '.tier-card',
-    '.exp-item', '.testimonial', '.faq-item', '.video-container',
+    '.detail-item', '.philosophy-visual', '.wine-row', '.tier-card',
+    '.exp-item', '.testimonial', '.faq-item',
     '.quote-inner', '.join-form'
   ].join(','));
 
@@ -2439,21 +2477,6 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       }
     });
   });
-
-  /* ─── Video ─── */
-  var videoPlaceholder = $('#videoPlaceholder');
-  if (videoPlaceholder) {
-    videoPlaceholder.addEventListener('click', function () {
-      var container = $('.video-container');
-      var frame = document.createElement('iframe');
-      frame.src = 'https://www.youtube.com/embed/NLGzPgrd4AU?autoplay=1&rel=0';
-      frame.setAttribute('allow', 'autoplay; encrypted-media');
-      frame.setAttribute('allowfullscreen', '');
-      frame.setAttribute('title', 'Cecilia Valdivia on winemaking');
-      container.innerHTML = '';
-      container.appendChild(frame);
-    });
-  }
 
   /* ─── Form ─── */
   var form = $('#joinForm');

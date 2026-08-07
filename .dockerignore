@@ -6,3 +6,8 @@ Dockerfile
 .dockerignore
 README.md
 images/README.md
+tools/
+
+# Source renders for the bottle shots. The page ships the cutouts produced by
+# tools/cutout_bottles.py, not these.
+images/WarmSpringsCellars_*.png
