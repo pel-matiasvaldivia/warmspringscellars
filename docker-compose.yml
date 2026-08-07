@@ -1,0 +1,33 @@
+services:
+  web:
+    image: ghcr.io/pel-matiasvaldivia/warmspringscellars:${TAG:-latest}
+    container_name: warmspringscellars
+    restart: unless-stopped
+
+    # Only port published. Nginx Proxy Manager terminates TLS and forwards here.
+    # Bind to the loopback if NPM runs on this same host, so 8585 is not
+    # reachable from the outside: "127.0.0.1:8585:8080".
+    ports:
+      - "8585:8080"
+
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
