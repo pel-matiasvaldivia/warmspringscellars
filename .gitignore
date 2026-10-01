@@ -1,0 +1,3 @@
+# Intermediate renders: regenerate with tools/label_bottles.py. The inputs
+# (labels/*.ai and images/WarmSpringsCellars_*.png) are versioned instead.
+images/renders/

@@ -30,6 +30,7 @@
   --c-divider: #ddd2ca;
   --c-footer-bg: #2c1e24;
   --c-footer-text: #b8a0a6;
+  --bottle-scale: 980;   /* tools/cutout_bottles.py OUTPUT_HEIGHT */
   --shadow-card: 0 1px 4px rgba(114,47,58,0.05), 0 4px 16px rgba(114,47,58,0.03);
   --shadow-card-hover: 0 2px 8px rgba(114,47,58,0.08), 0 10px 28px rgba(114,47,58,0.05);
 }
@@ -511,43 +512,37 @@ body {
 
 /* ─── WINES ─── */
 .wines { background: var(--c-bg); }
+.wines .section-inner { max-width: 1160px; }
 
-.wines-rows {
+.wines-grid {
   margin-top: 4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 5.5rem;
-}
-
-.wine-row {
   display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
-  gap: 4rem;
-  align-items: center;
-  text-align: left;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 3rem 1.5rem;
+  align-items: start;
 }
 
-/* The second bottle mirrors the first so the eye zig-zags down the page. */
-.wine-row.reverse .wine-stage { order: 2; }
-.wine-row.reverse .wine-body  { order: 1; }
+.wine-card { text-align: center; }
 
 .wine-stage {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  min-height: 460px;
-  padding-bottom: 1.5rem;
+  /* A fixed stage height stands every bottle on one shelf line. */
+  --stage: 330px;
+  height: var(--stage);
+  margin-bottom: 1.75rem;
 }
 
-/* Soft light pooling behind the glass, and the shadow it casts. */
+/* Light pooling behind the glass, and the shadow it casts. */
 .wine-stage::before {
   content: "";
   position: absolute;
   left: 50%;
-  top: 46%;
-  width: 340px;
-  height: 340px;
+  top: 44%;
+  width: 230px;
+  height: 230px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(circle, var(--c-wine-pale) 0%, transparent 68%);
@@ -557,28 +552,83 @@ body {
 .wine-stage::after {
   content: "";
   position: absolute;
-  bottom: 1.2rem;
+  bottom: -4px;
   left: 50%;
-  width: 190px;
-  height: 20px;
+  width: 104px;
+  height: 14px;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(44,30,36,0.28) 0%, transparent 72%);
+  background: radial-gradient(ellipse, rgba(44,30,36,0.30) 0%, transparent 72%);
   transition: width 0.55s cubic-bezier(0.22,0.61,0.36,1), opacity 0.55s;
 }
 
 .wine-bottle {
   position: relative;
   z-index: 1;
-  height: 460px;
+  /* --h is the render's own pixel height; every bottle was cut at one common
+     scale, so dividing by that scale keeps the Burgundy genuinely shorter. */
+  height: calc(var(--stage) * var(--h) / var(--bottle-scale));
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 18px 26px rgba(44,30,36,0.22));
+  filter: drop-shadow(0 14px 20px rgba(44,30,36,0.20));
   transition: transform 0.65s cubic-bezier(0.22,0.61,0.36,1);
 }
 
-.wine-row:hover .wine-bottle { transform: translateY(-10px); }
-.wine-row:hover .wine-stage::after { width: 210px; opacity: 0.75; }
+.wine-card:hover .wine-bottle { transform: translateY(-9px); }
+.wine-card:hover .wine-stage::after { width: 120px; opacity: 0.72; }
+
+.wine-vintage {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--c-wine);
+  line-height: 1;
+}
+
+.wine-name {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin-top: 0.5rem;
+  color: var(--c-text);
+}
+
+.wine-origin {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-top: 0.6rem;
+  line-height: 1.7;
+  /* Hold three lines whatever the appellation runs to, so the rules below the
+     names stay on one level across the row. */
+  min-height: 3.2em;
+}
+
+.wine-divider {
+  width: 28px;
+  height: 1px;
+  background: var(--c-divider);
+  margin: 1.1rem auto;
+}
+
+.wine-notes {
+  font-size: 0.85rem;
+  color: var(--c-text-secondary);
+  line-height: 1.75;
+  font-style: italic;
+}
+
+.wine-specs {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
 
 /* In dark mode a near-black bottle on a near-black ground disappears. Swap the
    pooled light for a warm halo and drop the cast shadow, which reads as
@@ -591,7 +641,7 @@ body {
     background: radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 72%);
   }
   :root:not([data-theme="light"]) .wine-bottle {
-    filter: drop-shadow(0 16px 30px rgba(0,0,0,0.6));
+    filter: drop-shadow(0 12px 22px rgba(0,0,0,0.6));
   }
 }
 
@@ -602,75 +652,7 @@ body {
   background: radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 72%);
 }
 :root[data-theme="dark"] .wine-bottle {
-  filter: drop-shadow(0 16px 30px rgba(0,0,0,0.6));
-}
-
-.wine-vintage {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
-  font-size: 2.5rem;
-  font-weight: 400;
-  color: var(--c-wine);
-  line-height: 1;
-}
-
-.wine-name {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
-  font-size: 1.9rem;
-  font-weight: 400;
-  margin-top: 0.65rem;
-  color: var(--c-text);
-}
-
-.wine-origin {
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
-  margin-top: 0.75rem;
-}
-
-.wine-notes {
-  font-size: 0.95rem;
-  color: var(--c-text-secondary);
-  margin-top: 1.25rem;
-  line-height: 1.8;
-  font-style: italic;
-  max-width: 46ch;
-}
-
-.wine-divider {
-  width: 40px;
-  height: 1px;
-  background: var(--c-divider);
-  margin: 1.5rem 0;
-}
-
-.wine-production {
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
-}
-
-.wine-specs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2.25rem;
-  margin-top: 1.75rem;
-}
-
-.wine-spec-label {
-  font-size: 0.58rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
-  margin-bottom: 0.3rem;
-}
-
-.wine-spec-value {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
-  font-size: 1rem;
-  color: var(--c-text);
+  filter: drop-shadow(0 12px 22px rgba(0,0,0,0.6));
 }
 
 /* ─── ALLOCATIONS ─── */
@@ -1186,16 +1168,10 @@ body {
   .philosophy-visual { max-height: 320px; }
   .tier-grid { grid-template-columns: 1fr; max-width: 420px; }
   .exp-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-  .wines-rows { gap: 3.5rem; margin-top: 2.5rem; }
-  .wine-row { grid-template-columns: 1fr; gap: 1.5rem; text-align: center; }
-  .wine-row.reverse .wine-stage { order: 0; }
-  .wine-row.reverse .wine-body  { order: 0; }
-  .wine-stage { min-height: 0; padding-bottom: 1rem; }
-  .wine-stage::before { width: 240px; height: 240px; }
-  .wine-bottle { height: 340px; }
-  .wine-notes { max-width: none; }
-  .wine-divider { margin-left: auto; margin-right: auto; }
-  .wine-specs { justify-content: center; gap: 2rem; }
+  .wines-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 2.5rem 1.25rem; margin-top: 2.5rem; }
+  .wine-stage { --stage: 225px; }
+  .wine-stage::before { width: 150px; height: 150px; }
+  .wine-notes { font-size: 0.8rem; }
   .faq-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .footer-inner { grid-template-columns: 1fr; text-align: center; }
@@ -1721,7 +1697,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <circle cx="40" cy="18" r="4" stroke="#fff" stroke-width="0.75" fill="none" opacity="0.4"/>
     </svg>
     <h1>A Thousand Cases.<br><em>Your Allocation Awaits.</em></h1>
-    <p class="hero-sub">Single-vineyard wines from Sonoma Valley and Russian River Valley. Handcrafted in limited production by Robert Rex &amp; Cecilia Valdivia. Reserved exclusively for our members.</p>
+    <p class="hero-sub">Single-vineyard wines from Sonoma Valley, Russian River Valley and Fountain Grove. Handcrafted in limited production by Robert Rex &amp; Cecilia Valdivia. Reserved exclusively for our members.</p>
     <p class="hero-founders">Robert Rex & Cecilia Valdivia &middot; Founders & Winemakers</p>
     <a href="#join" class="hero-cta">Request Your Allocation</a>
   </div>
@@ -1803,11 +1779,11 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <div>
         <p class="section-eyebrow">Our Philosophy</p>
         <h2 class="section-title">Small by Design,<br>Not by Accident</h2>
-        <p class="section-prose">Since 1982, Warm Springs Cellars has chosen restraint over scale. Robert and Cecilia farm select vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
+        <p class="section-prose">Since 1982, Warm Springs Cellars has chosen restraint over scale. Robert and Cecilia farm five vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
         <div class="philosophy-details" style="margin-top: 2.5rem;">
           <div class="detail-item">
             <h3 class="serif">Single-Vineyard Focus</h3>
-            <p>Each wine tells the story of one vineyard, one season. Wolf Run in Sonoma Valley for our Cabernet Sauvignon. ElieO in Russian River Valley for our Pinot Noir.</p>
+            <p>Each wine tells the story of one vineyard, one season. Wolf Run and Los Chamizal in Sonoma Valley, Four Palms in Russian River Valley, Alpicella and Running Rabbit Ranch in Fountain Grove.</p>
           </div>
           <div class="detail-item">
             <h3 class="serif">Clean Winemaking</h3>
@@ -1832,7 +1808,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           </div>
           <div class="stat-divider"></div>
           <div class="stat-stack">
-            <div class="stat-number" style="font-size: 3rem;" data-count="2">2</div>
+            <div class="stat-number" style="font-size: 3rem;" data-count="5">5</div>
             <div class="stat-label">Vineyard Sources</div>
           </div>
         </div>
@@ -1846,54 +1822,86 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <div class="section-inner">
     <p class="section-eyebrow">Current Releases</p>
     <h2 class="section-title">The Wines</h2>
-    <p class="section-prose">Two wines. Two vineyards. Each vintage a singular expression of place and season.</p>
-    <div class="wines-rows">
+    <p class="section-prose">Five wines. Five vineyards. Each bottling is a single season from a single site, and when it is gone it is gone.</p>
+    <div class="wines-grid">
 
-      <article class="wine-row">
+      <article class="wine-card">
         <div class="wine-stage">
-          <img class="wine-bottle" src="images/cabernet-bottle.png"
-               alt="Warm Springs Cellars 2019 Cabernet Sauvignon, Wolf Run Vineyard" loading="lazy">
+          <img class="wine-bottle" style="--h: 980;" src="images/cabernet-bottle.png"
+               alt="Warm Springs Cellars 2021 Cabernet Sauvignon, Wolf Run Vineyard" loading="lazy">
         </div>
-        <div class="wine-body">
-          <div class="wine-vintage">2019</div>
-          <h3 class="wine-name">Cabernet Sauvignon</h3>
-          <p class="wine-origin">Wolf Run Vineyard &middot; Sonoma Valley</p>
-          <div class="wine-divider"></div>
-          <p class="wine-notes">Dark cassis and dried violets open to a palate of black cherry, espresso, and graphite. Twenty-two months in French oak gave this wine its architecture; the volcanic soils of Wolf Run gave it its soul.</p>
-          <div class="wine-specs">
-            <div>
-              <p class="wine-spec-label">Aging</p>
-              <p class="wine-spec-value">22 months, French oak</p>
-            </div>
-            <div>
-              <p class="wine-spec-label">Production</p>
-              <p class="wine-spec-value">480 cases</p>
-            </div>
-          </div>
+        <div class="wine-vintage">2021</div>
+        <h3 class="wine-name">Cabernet Sauvignon</h3>
+        <p class="wine-origin">Wolf Run Vineyard<br>Sonoma Valley</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">A mountain-grown blend from one of the region&rsquo;s premier ridge-line vineyards, built by taste rather than formula: 81% Cabernet Sauvignon with Merlot, Cabernet Franc and Syrah. Sonoma Valley is more than the valley floor, and this wine is the ridges talking.</p>
+        <div class="wine-specs">
+          <span>13.3% alc.</span>
+          <span>1,440 bottles</span>
         </div>
       </article>
 
-      <article class="wine-row reverse">
+      <article class="wine-card">
         <div class="wine-stage">
-          <img class="wine-bottle" src="images/pinot-bottle.png"
-               alt="Warm Springs Cellars 2021 Pinot Noir, ElieO Vineyard" loading="lazy">
+          <img class="wine-bottle" style="--h: 980;" src="images/malbec-bottle.png"
+               alt="Warm Springs Cellars 2023 Malbec, Running Rabbit Ranch" loading="lazy">
         </div>
-        <div class="wine-body">
-          <div class="wine-vintage">2021</div>
-          <h3 class="wine-name">Pinot Noir</h3>
-          <p class="wine-origin">ElieO Vineyard &middot; Russian River Valley</p>
-          <div class="wine-divider"></div>
-          <p class="wine-notes">Ripe Bing cherry and wild strawberry meet hints of forest floor and baking spice. Whole-cluster fermentation adds a savory spine. Delicate yet persistent, this is Russian River at its most transparent.</p>
-          <div class="wine-specs">
-            <div>
-              <p class="wine-spec-label">Fermentation</p>
-              <p class="wine-spec-value">Whole cluster</p>
-            </div>
-            <div>
-              <p class="wine-spec-label">Production</p>
-              <p class="wine-spec-value">520 cases</p>
-            </div>
-          </div>
+        <div class="wine-vintage">2023</div>
+        <h3 class="wine-name">Malbec</h3>
+        <p class="wine-origin">Running Rabbit Ranch<br>Fountain Grove, Sonoma County</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">A west-facing slope in the new Fountain Grove AVA, carved out of Sonoma Valley for its own terroir. Whole-berry fermentation and gentle cold pressing keep the dark colour and the blackberry Malbec is known for &mdash; Cecilia&rsquo;s grape, grown here.</p>
+        <div class="wine-specs">
+          <span>14.1% alc.</span>
+          <span>588 bottles</span>
+        </div>
+      </article>
+
+      <article class="wine-card">
+        <div class="wine-stage">
+          <img class="wine-bottle" style="--h: 958;" src="images/pinot-bottle.png"
+               alt="Warm Springs Cellars 2023 Pinot Noir, Four Palms Vineyard" loading="lazy">
+        </div>
+        <div class="wine-vintage">2023</div>
+        <h3 class="wine-name">Pinot Noir</h3>
+        <p class="wine-origin">Four Palms Vineyard<br>Russian River Valley</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">The Pacific&rsquo;s marine layer blankets this valley most summer mornings, and the cool microclimate shows: delicate, intensely aromatic, wonderfully complex. It pairs with a wider range of food than almost any other wine. Don&rsquo;t be afraid to serve it slightly chilled.</p>
+        <div class="wine-specs">
+          <span>16.1% alc.</span>
+          <span>1,380 bottles</span>
+        </div>
+      </article>
+
+      <article class="wine-card">
+        <div class="wine-stage">
+          <img class="wine-bottle" style="--h: 980;" src="images/sangiovese-bottle.png"
+               alt="Warm Springs Cellars 2023 Sangiovese, Alpicella Vineyard" loading="lazy">
+        </div>
+        <div class="wine-vintage">2023</div>
+        <h3 class="wine-name">Sangiovese</h3>
+        <p class="wine-origin">Alpicella Vineyard<br>Fountain Grove, Sonoma County</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">A steep slope near the top of Hood Mountain in the Mayacamas, facing the ocean and the setting sun, rooted in sparse volcanic soil. Ripe strawberry that expands across the palate like few other wines. Pair it with anything; share it with friends.</p>
+        <div class="wine-specs">
+          <span>13.6% alc.</span>
+          <span>1,750 bottles</span>
+        </div>
+      </article>
+
+      <article class="wine-card">
+        <div class="wine-stage">
+          <img class="wine-bottle" style="--h: 980;" src="images/zinfandel-bottle.png"
+               alt="Warm Springs Cellars 2024 Zinfandel, Los Chamizal Vineyard, Block 7" loading="lazy">
+        </div>
+        <div class="wine-vintage">2024</div>
+        <h3 class="wine-name">Zinfandel</h3>
+        <p class="wine-origin">Los Chamizal Vineyard<br>Block&nbsp;7 &middot; Sonoma Valley</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">A tribute to Peter Haywood, who planted Los Chamizal in the neighbourhood where Sonoma Zinfandel began in the 1870s and worked with Robert for four decades. Block 7 was Robert&rsquo;s favourite of the eight. It&rsquo;s bold, it&rsquo;s complex, and the flavour goes on forever.</p>
+        <div class="wine-specs">
+          <span>16.1% alc.</span>
+          <span>1,650 bottles</span>
         </div>
       </article>
 
@@ -1913,9 +1921,9 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <div class="tier-card">
         <p class="tier-label">Allocation</p>
         <h3 class="tier-name serif">The Cellar Door</h3>
-        <p class="tier-desc">Our core allocation. Receive both current releases twice a year, every spring and fall.</p>
+        <p class="tier-desc">Our core allocation. A selection from the current releases twice a year, every spring and fall.</p>
         <ul class="tier-details">
-          <li>4 bottles per shipment (2 of each wine)</li>
+          <li>4 bottles per shipment, chosen from the current releases</li>
           <li>Two shipments annually (Spring &amp; Fall)</li>
           <li>15% discount on all reorders</li>
           <li>Complimentary tasting for two guests</li>
@@ -1930,7 +1938,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
         <h3 class="tier-name serif">The Founder's Reserve</h3>
         <p class="tier-desc">For those who want everything the cellar offers, including wines we never release publicly.</p>
         <ul class="tier-details">
-          <li>6 bottles per shipment (includes library wines)</li>
+          <li>6 bottles per shipment, including library wines</li>
           <li>Two shipments annually (Spring &amp; Fall)</li>
           <li>20% discount on all purchases</li>
           <li>Private tasting for four guests</li>
@@ -2007,7 +2015,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
         </cite>
       </div>
       <div class="testimonial">
-        <blockquote>"The cave tasting was unforgettable. Cecilia walked us through every barrel, and Robert cooked us the best meal we had in Sonoma. The 2019 Cabernet is simply world-class."</blockquote>
+        <blockquote>"The cave tasting was unforgettable. Cecilia walked us through every barrel, and Robert cooked us the best meal we had in Sonoma. The 2021 Cabernet is simply world-class."</blockquote>
         <cite>
           <strong>James T.</strong>
           Cellar Door Member, Los Angeles
@@ -2375,7 +2383,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   /* ─── Scroll reveal ─── */
   var revealTargets = $$([
     '.founder-card', '.section-eyebrow', '.section-title', '.section-prose',
-    '.detail-item', '.philosophy-visual', '.wine-row', '.tier-card',
+    '.detail-item', '.philosophy-visual', '.wine-card', '.tier-card',
     '.exp-item', '.testimonial', '.faq-item',
     '.quote-inner', '.join-form'
   ].join(','));

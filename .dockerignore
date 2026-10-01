@@ -8,6 +8,11 @@ README.md
 images/README.md
 tools/
 
-# Source renders for the bottle shots. The page ships the cutouts produced by
-# tools/cutout_bottles.py, not these.
+.gitignore
+labels/
+
+# Artwork and renders the page never requests: it ships only the finished
+# cutouts that tools/cutout_bottles.py produces.
 images/WarmSpringsCellars_*.png
+images/labels/
+images/renders/
