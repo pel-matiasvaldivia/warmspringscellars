@@ -5,7 +5,10 @@ nginx from a container image built in CI.
 
 ```
 index.html      the whole site — markup, styles and scripts in one file
-images/         winery photography (see images/README.md)
+images/         winery photography and bottle shots (see images/README.md)
+labels/         the official label artwork, as supplied (.ai)
+fonts/          Caveat, self-hosted for the handwritten card (OFL)
+tools/          regenerate the bottle shots from the labels
 nginx.conf      server config: listens on 8080 inside the container
 Dockerfile      nginx:1.27-alpine + the site, running unprivileged
 docker-compose.yml   pulls the published image, publishes host port 8086

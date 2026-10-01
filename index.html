@@ -5,7 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Warm Springs Cellars — Wine Club | Sonoma County, EST. 1982</title>
 <meta name="description" content="Join the Warm Springs Cellars allocation list. Limited to 1,000 cases of single-vineyard wines from Sonoma Valley and Russian River Valley. Founded by Robert Rex & Cecilia Valdivia. EST. 1982.">
+<link rel="preload" href="fonts/caveat-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* Caveat, for the handwritten card. Self-hosted rather than pulled from a CDN:
+   one less third party on the page, and it still renders if that CDN is
+   unreachable. SIL Open Font License, see fonts/OFL.txt. */
+@font-face {
+  font-family: 'Caveat';
+  src: url('fonts/caveat-latin.woff2') format('woff2');
+  font-weight: 400 700;      /* variable */
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC,
+                 U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --c-bg: #faf8f5;
   --c-bg-alt: #f3eeea;
@@ -655,6 +670,361 @@ body {
   filter: drop-shadow(0 12px 22px rgba(0,0,0,0.6));
 }
 
+/* ─── THE SHIPMENT ─── */
+.shipment { background: var(--c-bg-warm); }
+
+.shipment-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 4rem;
+  align-items: center;
+  margin-top: 3.5rem;
+}
+
+/* The box, seen from above. Bottles travel lying down, so each one is the
+   same render turned on its side — which is also why the labels still read. */
+.pack {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  background: #b3853f;
+  box-shadow:
+    0 2px 4px rgba(44,30,36,0.12),
+    0 22px 48px rgba(44,30,36,0.22);
+  overflow: hidden;
+}
+
+/* The four flaps, folded back. Corrugation runs across them. */
+.pack-flap {
+  position: absolute;
+  background-color: #c49a60;
+  z-index: 1;
+}
+
+.pack-flap-t, .pack-flap-b { left: 0; right: 0; height: 4.5%; }
+.pack-flap-l, .pack-flap-r { top: 0; bottom: 0; width: 4.5%; }
+.pack-flap-t { top: 0;    background-image: linear-gradient(180deg, #d4ab74 0%, #b98c57 100%); }
+.pack-flap-b { bottom: 0; background-image: linear-gradient(0deg,   #d4ab74 0%, #b98c57 100%); }
+.pack-flap-l { left: 0;   background-image: linear-gradient(90deg,  #d4ab74 0%, #b98c57 100%); }
+.pack-flap-r { right: 0;  background-image: linear-gradient(270deg, #d4ab74 0%, #b98c57 100%); }
+
+/* The cut edge of the board, where the flap folds over the opening. */
+.pack-flap::after {
+  content: "";
+  position: absolute;
+  background: #8a6239;
+}
+
+.pack-flap-t::after { left: 0; right: 0; bottom: 0; height: 2px; }
+.pack-flap-b::after { left: 0; right: 0; top: 0; height: 2px; }
+.pack-flap-l::after { top: 0; bottom: 0; right: 0; width: 2px; }
+.pack-flap-r::after { top: 0; bottom: 0; left: 0; width: 2px; }
+
+/* The well: what you look down into. */
+.pack-well {
+  position: absolute;
+  inset: 4.5%;
+  background: linear-gradient(168deg, #6f4b2b 0%, #5c3d23 55%, #4d331d 100%);
+  /* Two rings: the inside face of the wall catching light, then the depth. */
+  box-shadow:
+    inset 0 0 0 7px rgba(176,129,78,0.55),
+    inset 0 14px 26px rgba(0,0,0,0.62),
+    inset 0 -9px 20px rgba(0,0,0,0.5),
+    inset 12px 0 22px rgba(0,0,0,0.42),
+    inset -12px 0 22px rgba(0,0,0,0.42);
+  overflow: hidden;
+}
+
+/* Tissue, tucked down the sides and crumpled at the corners. */
+.pack-tissue {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(102deg, rgba(252,249,243,0.97) 0%, rgba(252,249,243,0.62) 4.5%, rgba(252,249,243,0) 15%),
+    linear-gradient(258deg, rgba(252,249,243,0.95) 0%, rgba(252,249,243,0.55) 4%, rgba(252,249,243,0) 14%),
+    linear-gradient(12deg,  rgba(252,249,243,0.80) 0%, rgba(252,249,243,0.3) 3%, rgba(252,249,243,0) 10%),
+    linear-gradient(192deg, rgba(252,249,243,0.85) 0%, rgba(252,249,243,0.35) 3%, rgba(252,249,243,0) 10%);
+  pointer-events: none;
+}
+
+.pack-bottle {
+  position: absolute;
+  left: 44%;
+  width: 20%;
+  height: auto;
+  transform: translate(-50%, -50%) rotate(90deg);
+  filter: drop-shadow(0 10px 11px rgba(12,6,9,0.6));
+  z-index: 3;
+}
+
+.pack-bottle:nth-of-type(1) { top: 17%; }
+.pack-bottle:nth-of-type(2) { top: 39%; }
+.pack-bottle:nth-of-type(3) { top: 61%; }
+.pack-bottle:nth-of-type(4) { top: 83%; }
+
+/* Kraft dividers, the way a real shipper separates the glass. */
+.pack-divider {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  height: 9px;
+  z-index: 2;
+  background: linear-gradient(180deg, #c49868 0%, #a87b49 50%, #7d5833 100%);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+}
+
+.pack-divider:nth-of-type(1) { top: 28%; }
+.pack-divider:nth-of-type(2) { top: 50%; }
+.pack-divider:nth-of-type(3) { top: 72%; }
+
+/* ─── The handwritten card ─── */
+.pack-card {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  right: 3%;
+  width: 41%;
+  transform: translateY(-50%) rotate(-3.2deg);
+  padding: 1.15rem 1.2rem 1rem;
+  background:
+    repeating-linear-gradient(97deg,
+      rgba(120,90,60,0.028) 0 3px, rgba(255,255,255,0) 3px 7px),
+    linear-gradient(168deg, #fdfaf4 0%, #f5eee0 100%);
+  box-shadow:
+    0 1px 2px rgba(44,30,36,0.2),
+    0 16px 30px rgba(12,6,9,0.45);
+  transition: transform 0.7s cubic-bezier(0.22,0.61,0.36,1);
+}
+
+.pack:hover .pack-card { transform: translateY(-50%) rotate(-1.4deg) scale(1.03); }
+
+/* Torn top edge, so it reads as cut from a sheet rather than die-stamped. */
+.pack-card::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -2px;
+  height: 4px;
+  background: #fdfaf4;
+  clip-path: polygon(0 60%, 4% 20%, 9% 70%, 15% 25%, 22% 65%, 29% 15%, 36% 60%,
+                     44% 25%, 52% 70%, 60% 20%, 68% 65%, 76% 25%, 84% 60%,
+                     92% 20%, 100% 55%, 100% 100%, 0 100%);
+}
+
+.pack-card-mark {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 0.4rem;
+  opacity: 0.35;
+}
+
+.pack-card p {
+  font-family: 'Caveat', 'Segoe Script', 'Bradley Hand', cursive;
+  color: #3c272d;
+  line-height: 1.32;
+  margin: 0;
+}
+
+.pack-card .card-greeting {
+  font-size: clamp(0.92rem, 1.45vw, 1.16rem);
+  margin-bottom: 0.25rem;
+}
+
+.pack-card .card-note {
+  font-size: clamp(0.86rem, 1.38vw, 1.1rem);
+  min-height: 8.2em;
+}
+
+.pack-card .card-sign {
+  font-size: clamp(0.88rem, 1.4vw, 1.12rem);
+  margin-top: 0.4rem;
+  color: var(--c-wine);
+}
+
+.pack-card .card-rule {
+  width: 38px;
+  height: 1px;
+  background: rgba(114,47,58,0.28);
+  margin: 0.5rem 0 0.4rem;
+}
+
+/* ─── The panel beside it ─── */
+.shipment-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.shipment-steps li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.shipment-steps .step-n {
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--c-wine);
+  border: 1px solid var(--c-wine-light);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.shipment-steps strong {
+  display: block;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--c-text);
+  margin-bottom: 0.15rem;
+}
+
+.shipment-steps span {
+  font-size: 0.86rem;
+  color: var(--c-text-secondary);
+  line-height: 1.7;
+}
+
+/* Controls that write the visitor's own name onto the card. */
+.pack-personalise {
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  padding: 1.35rem 1.4rem;
+  margin-bottom: 2rem;
+}
+
+.pack-personalise > p {
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 0.9rem;
+}
+
+.pack-name {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--c-text);
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  transition: border-color 0.25s;
+}
+
+.pack-name:focus { outline: none; border-color: var(--c-wine-light); }
+.pack-name::placeholder { color: var(--c-text-muted); }
+
+.pack-wines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+}
+
+.pack-wine {
+  font-family: inherit;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--c-border);
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.pack-wine:hover { border-color: var(--c-wine-light); color: var(--c-wine); }
+
+.pack-wine[aria-pressed="true"] {
+  background: var(--c-wine);
+  border-color: var(--c-wine);
+  color: #fff;
+}
+
+/* ─── Sticky join banner ─── */
+.join-banner {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 92;
+  background: var(--c-wine);
+  color: var(--c-hero-text);
+  box-shadow: 0 -2px 20px rgba(44,30,36,0.22);
+  transform: translateY(102%);
+  transition: transform 0.5s cubic-bezier(0.22,0.61,0.36,1);
+}
+
+.join-banner.show { transform: none; }
+
+.join-banner-inner {
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 0.85rem 3rem 0.85rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.join-banner-text { font-size: 0.85rem; line-height: 1.5; }
+
+.join-banner-text strong {
+  display: block;
+  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  margin-bottom: 0.1rem;
+}
+
+.join-banner-text span { color: var(--c-hero-muted); }
+
+.join-banner-cta {
+  flex-shrink: 0;
+  padding: 0.8rem 2.1rem;
+  background: var(--c-hero-text);
+  color: var(--c-wine);
+  text-decoration: none;
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-radius: 2px;
+  transition: transform 0.3s cubic-bezier(0.22,0.61,0.36,1), background 0.3s;
+}
+
+.join-banner-cta:hover { background: #fff; transform: translateY(-2px); }
+
+.join-banner-close {
+  position: absolute;
+  top: 50%;
+  right: 0.9rem;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--c-hero-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.25s, background 0.25s;
+}
+
+.join-banner-close:hover { color: #fff; background: rgba(255,255,255,0.12); }
+
+/* Keep the back-to-top button clear of the banner. */
+body.banner-up .to-top { bottom: 6.2rem; }
+
 /* ─── ALLOCATIONS ─── */
 .allocations { background: var(--c-bg-alt); }
 
@@ -1169,6 +1539,16 @@ body {
   .tier-grid { grid-template-columns: 1fr; max-width: 420px; }
   .exp-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .wines-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 2.5rem 1.25rem; margin-top: 2.5rem; }
+  .shipment-grid { grid-template-columns: 1fr; gap: 2.5rem; margin-top: 2.5rem; }
+  /* The card needs room for its handwriting before the box gets this narrow. */
+  .pack-card { width: 46%; padding: 0.8rem 0.85rem 0.7rem; }
+  .pack-card .card-note { min-height: 9.5em; }
+  .join-banner-inner { padding: 0.75rem 2.6rem 0.75rem 1.25rem; gap: 1rem; }
+  .join-banner-text { font-size: 0.75rem; }
+  .join-banner-text strong { font-size: 0.92rem; }
+  .join-banner-text span { display: none; }
+  .join-banner-cta { padding: 0.7rem 1.2rem; letter-spacing: 0.14em; }
+  body.banner-up .to-top { bottom: 5.4rem; }
   .wine-stage { --stage: 225px; }
   .wine-stage::before { width: 150px; height: 150px; }
   .wine-notes { font-size: 0.8rem; }
@@ -1198,6 +1578,16 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .hero-scroll { animation: none; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 a:focus-visible,
@@ -1663,6 +2053,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     <li><a href="#philosophy">Story</a></li>
     <li><a href="#wines">Wines</a></li>
     <li><a href="#allocations">Allocation</a></li>
+    <li><a href="#shipment">The Box</a></li>
     <li><a href="#experience">Members</a></li>
     <li><a href="#join">Request Access</a></li>
   </ul>
@@ -1676,6 +2067,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <a href="#philosophy">Story</a>
   <a href="#wines">Wines</a>
   <a href="#allocations">Allocation</a>
+  <a href="#shipment">The Box</a>
   <a href="#experience">Members</a>
   <div class="mobile-menu-rule"></div>
   <a href="#join">Request Access</a>
@@ -1953,6 +2345,90 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   </div>
 </section>
 
+<!-- THE SHIPMENT -->
+<section class="section shipment" id="shipment">
+  <div class="section-inner">
+    <p class="section-eyebrow">What Arrives</p>
+    <h2 class="section-title">Packed by the Hands That Made It</h2>
+    <p class="section-prose">Every allocation leaves the cellar packed by hand. Bottles laid in kraft, tissue tucked down the sides, and a card written at the bench &mdash; what the season gave us, and what to do with it.</p>
+
+    <div class="shipment-grid">
+
+      <figure class="pack" id="pack" aria-label="An open shipment: four bottles laid in kraft with a handwritten card">
+        <div class="pack-flap pack-flap-t"></div>
+        <div class="pack-flap pack-flap-b"></div>
+        <div class="pack-flap pack-flap-l"></div>
+        <div class="pack-flap pack-flap-r"></div>
+
+        <div class="pack-well">
+          <img class="pack-bottle" src="images/cabernet-bottle.png" alt="" aria-hidden="true" loading="lazy">
+          <img class="pack-bottle" src="images/zinfandel-bottle.png" alt="" aria-hidden="true" loading="lazy">
+          <img class="pack-bottle" src="images/sangiovese-bottle.png" alt="" aria-hidden="true" loading="lazy">
+          <img class="pack-bottle" src="images/pinot-bottle.png" alt="" aria-hidden="true" loading="lazy">
+          <div class="pack-divider"></div>
+          <div class="pack-divider"></div>
+          <div class="pack-divider"></div>
+          <div class="pack-tissue"></div>
+        </div>
+
+        <figcaption class="pack-card">
+          <svg class="pack-card-mark" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#722f3a" stroke-width="2.5" fill="none"/>
+            <rect x="26" y="36" width="28" height="32" rx="14" stroke="#722f3a" stroke-width="2.5" fill="none"/>
+          </svg>
+          <p class="card-greeting" id="cardGreeting">Dear friend,</p>
+          <p class="card-note" id="cardNote"></p>
+          <div class="card-rule"></div>
+          <p class="card-sign">Robert &amp; Cecilia</p>
+        </figcaption>
+      </figure>
+
+      <div>
+        <div class="pack-personalise">
+          <p>See it with your name on it</p>
+          <label class="sr-only" for="packName">Your first name</label>
+          <input type="text" id="packName" class="pack-name" maxlength="22"
+                 placeholder="Your first name" autocomplete="given-name">
+          <div class="pack-wines" id="packWines" role="group" aria-label="Choose a wine to read its card">
+            <button type="button" class="pack-wine" data-wine="cabernet" aria-pressed="true">Cabernet</button>
+            <button type="button" class="pack-wine" data-wine="malbec" aria-pressed="false">Malbec</button>
+            <button type="button" class="pack-wine" data-wine="pinot" aria-pressed="false">Pinot Noir</button>
+            <button type="button" class="pack-wine" data-wine="sangiovese" aria-pressed="false">Sangiovese</button>
+            <button type="button" class="pack-wine" data-wine="zinfandel" aria-pressed="false">Zinfandel</button>
+          </div>
+        </div>
+
+        <ol class="shipment-steps">
+          <li>
+            <span class="step-n">1</span>
+            <div>
+              <strong>We write before we ship</strong>
+              <span>Two weeks out you hear what is in the allocation, with the option to change quantities or skip a season.</span>
+            </div>
+          </li>
+          <li>
+            <span class="step-n">2</span>
+            <div>
+              <strong>Packed by the people who made it</strong>
+              <span>Hand-laid in kraft with dividers between the glass, and a card in Robert or Cecilia&rsquo;s own hand for each wine in the box.</span>
+            </div>
+          </li>
+          <li>
+            <span class="step-n">3</span>
+            <div>
+              <strong>Carried cold, signed for</strong>
+              <span>Temperature-controlled transit, held back in a heat wave rather than risked. An adult signature on arrival.</span>
+            </div>
+          </li>
+        </ol>
+
+        <a href="#join" class="tier-cta">Join the Wine Club</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- EXPERIENCE -->
 <section class="section experience" id="experience">
   <div class="section-inner">
@@ -2226,6 +2702,17 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   </div>
 </footer>
 
+<div class="join-banner" id="joinBanner" role="complementary" aria-label="Join the wine club">
+  <div class="join-banner-inner">
+    <p class="join-banner-text">
+      <strong>1,000 cases. Two shipments a year.</strong>
+      <span>The list opens only as far as the harvest allows.</span>
+    </p>
+    <a href="#join" class="join-banner-cta">Join the Wine Club</a>
+  </div>
+  <button class="join-banner-close" id="joinBannerClose" aria-label="Dismiss">&times;</button>
+</div>
+
 <button class="to-top" id="toTop" aria-label="Back to top">
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 19V5M12 5l-7 7M12 5l7 7" stroke="currentColor" stroke-width="1.5"
@@ -2313,6 +2800,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     });
 
     sweepReveals();
+    updateBanner();
     ticking = false;
   }
 
@@ -2485,6 +2973,96 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       }
     });
   });
+
+  /* ─── The shipment card ──────────────────────────────────
+     Writes the visitor's own name onto the card, and swaps
+     the note for whichever wine they pick. */
+  var CARDS = {
+    cabernet: "The 2021 came off the Wolf Run ridge, where the mountain gives " +
+              "Cabernet its weight. We blended it by taste — a little Merlot, " +
+              "Franc and Syrah — until it tasted like the place. Open it an " +
+              "hour early. Only 1,440 bottles.",
+    malbec: "Cecilia's grape, on a west-facing slope in Fountain Grove. Whole " +
+            "berries, gentle cold press, nothing hurried. Dark and generous, " +
+            "all blackberry. We made 588 bottles, so this one is scarce.",
+    pinot: "Four Palms, in the Russian River. The fog does most of the work " +
+           "here — it comes in off the Pacific most summer mornings and keeps " +
+           "everything slow. Delicate, aromatic. Serve it slightly chilled.",
+    sangiovese: "Alpicella sits near the top of Hood Mountain on sparse volcanic " +
+                "soil, facing the ocean. Ripe strawberry that keeps expanding " +
+                "across the palate. Pair it with anything. Wine is social glue.",
+    zinfandel: "Block 7 at Los Chamizal — Peter Haywood's vineyard, and Robert's " +
+               "favourite of the eight blocks Peter marked out. Bold, complex, " +
+               "and the flavour goes on forever. It will knock your socks off."
+  };
+
+  var cardGreeting = $('#cardGreeting');
+  var cardNote = $('#cardNote');
+  var packName = $('#packName');
+  var packWines = $('#packWines');
+  var currentWine = 'cabernet';
+
+  function renderCard() {
+    var name = (packName && packName.value || '').trim();
+    cardGreeting.textContent = name ? 'Dear ' + name + ',' : 'Dear friend,';
+    cardNote.textContent = CARDS[currentWine];
+  }
+
+  if (cardNote) {
+    renderCard();
+
+    packName.addEventListener('input', renderCard);
+
+    packWines.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.pack-wine') : null;
+      if (!btn) return;
+      currentWine = btn.getAttribute('data-wine');
+      $$('.pack-wine', packWines).forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
+      renderCard();
+    });
+
+    // A name typed into the request form belongs on the card too.
+    var formFirst = $('#f-first');
+    if (formFirst) {
+      formFirst.addEventListener('input', function () {
+        if (!packName.value.trim()) {
+          cardGreeting.textContent = formFirst.value.trim()
+            ? 'Dear ' + formFirst.value.trim() + ','
+            : 'Dear friend,';
+        }
+      });
+    }
+  }
+
+  /* ─── Sticky join banner ─────────────────────────────────
+     Shows once the hero is behind the visitor, and gets out
+     of the way over the form it points at. */
+  var banner = $('#joinBanner');
+  var bannerClose = $('#joinBannerClose');
+  var joinSection = $('#join');
+  var BANNER_OFF = 'wsc-banner-dismissed';
+  var bannerDismissed = !!storage(function () {
+    return sessionStorage.getItem(BANNER_OFF);
+  }, null);
+
+  function updateBanner() {
+    if (!banner) return;
+    var past = hero.getBoundingClientRect().bottom < 0;
+    var atForm = joinSection.getBoundingClientRect().top < window.innerHeight * 0.85;
+    var show = past && !atForm && !bannerDismissed;
+    banner.classList.toggle('show', show);
+    document.body.classList.toggle('banner-up', show);
+  }
+
+  if (bannerClose) {
+    bannerClose.addEventListener('click', function () {
+      bannerDismissed = true;
+      storage(function () { return sessionStorage.setItem(BANNER_OFF, '1'); });
+      updateBanner();
+    });
+  }
 
   /* ─── Form ─── */
   var form = $('#joinForm');
