@@ -673,131 +673,43 @@ body {
 /* ─── THE SHIPMENT ─── */
 .shipment { background: var(--c-bg-warm); }
 
-.shipment-grid {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 4rem;
-  align-items: center;
-  margin-top: 3.5rem;
-}
-
-/* The box, seen from above. Bottles travel lying down, so each one is the
-   same render turned on its side — which is also why the labels still read. */
-.pack {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  border-radius: 3px;
-  background: #b3853f;
-  box-shadow:
-    0 2px 4px rgba(44,30,36,0.12),
-    0 22px 48px rgba(44,30,36,0.22);
-  overflow: hidden;
-}
-
-/* The four flaps, folded back. Corrugation runs across them. */
-.pack-flap {
-  position: absolute;
-  background-color: #c49a60;
-  z-index: 1;
-}
-
-.pack-flap-t, .pack-flap-b { left: 0; right: 0; height: 4.5%; }
-.pack-flap-l, .pack-flap-r { top: 0; bottom: 0; width: 4.5%; }
-.pack-flap-t { top: 0;    background-image: linear-gradient(180deg, #d4ab74 0%, #b98c57 100%); }
-.pack-flap-b { bottom: 0; background-image: linear-gradient(0deg,   #d4ab74 0%, #b98c57 100%); }
-.pack-flap-l { left: 0;   background-image: linear-gradient(90deg,  #d4ab74 0%, #b98c57 100%); }
-.pack-flap-r { right: 0;  background-image: linear-gradient(270deg, #d4ab74 0%, #b98c57 100%); }
-
-/* The cut edge of the board, where the flap folds over the opening. */
-.pack-flap::after {
-  content: "";
-  position: absolute;
-  background: #8a6239;
-}
-
-.pack-flap-t::after { left: 0; right: 0; bottom: 0; height: 2px; }
-.pack-flap-b::after { left: 0; right: 0; top: 0; height: 2px; }
-.pack-flap-l::after { top: 0; bottom: 0; right: 0; width: 2px; }
-.pack-flap-r::after { top: 0; bottom: 0; left: 0; width: 2px; }
-
-/* The well: what you look down into. */
-.pack-well {
-  position: absolute;
-  inset: 4.5%;
-  background: linear-gradient(168deg, #6f4b2b 0%, #5c3d23 55%, #4d331d 100%);
-  /* Two rings: the inside face of the wall catching light, then the depth. */
-  box-shadow:
-    inset 0 0 0 7px rgba(176,129,78,0.55),
-    inset 0 14px 26px rgba(0,0,0,0.62),
-    inset 0 -9px 20px rgba(0,0,0,0.5),
-    inset 12px 0 22px rgba(0,0,0,0.42),
-    inset -12px 0 22px rgba(0,0,0,0.42);
-  overflow: hidden;
-}
-
-/* Tissue, tucked down the sides and crumpled at the corners. */
-.pack-tissue {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background:
-    linear-gradient(102deg, rgba(252,249,243,0.97) 0%, rgba(252,249,243,0.62) 4.5%, rgba(252,249,243,0) 15%),
-    linear-gradient(258deg, rgba(252,249,243,0.95) 0%, rgba(252,249,243,0.55) 4%, rgba(252,249,243,0) 14%),
-    linear-gradient(12deg,  rgba(252,249,243,0.80) 0%, rgba(252,249,243,0.3) 3%, rgba(252,249,243,0) 10%),
-    linear-gradient(192deg, rgba(252,249,243,0.85) 0%, rgba(252,249,243,0.35) 3%, rgba(252,249,243,0) 10%);
-  pointer-events: none;
-}
-
-.pack-bottle {
-  position: absolute;
-  left: 44%;
-  width: 20%;
+/* The crate is the point of this section, so it gets the full width rather
+   than a column beside a list. */
+.shipment-photo {
+  display: block;
+  width: 100%;
+  max-width: 980px;
   height: auto;
-  transform: translate(-50%, -50%) rotate(90deg);
-  filter: drop-shadow(0 10px 11px rgba(12,6,9,0.6));
-  z-index: 3;
+  margin: 2.5rem auto 0;
 }
 
-.pack-bottle:nth-of-type(1) { top: 17%; }
-.pack-bottle:nth-of-type(2) { top: 39%; }
-.pack-bottle:nth-of-type(3) { top: 61%; }
-.pack-bottle:nth-of-type(4) { top: 83%; }
-
-/* Kraft dividers, the way a real shipper separates the glass. */
-.pack-divider {
-  position: absolute;
-  left: 2%;
-  right: 2%;
-  height: 9px;
-  z-index: 2;
-  background: linear-gradient(180deg, #c49868 0%, #a87b49 50%, #7d5833 100%);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+.shipment-aside {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+  margin-top: 3rem;
+  padding-top: 3rem;
+  border-top: 1px solid var(--c-border-light);
 }
-
-.pack-divider:nth-of-type(1) { top: 28%; }
-.pack-divider:nth-of-type(2) { top: 50%; }
-.pack-divider:nth-of-type(3) { top: 72%; }
 
 /* ─── The handwritten card ─── */
 .pack-card {
-  position: absolute;
-  z-index: 6;
-  top: 50%;
-  right: 3%;
-  width: 41%;
-  transform: translateY(-50%) rotate(-3.2deg);
-  padding: 1.15rem 1.2rem 1rem;
+  position: relative;
+  margin-top: 1.75rem;
+  padding: 1.3rem 1.4rem 1.15rem;
+  transform: rotate(-1.1deg);
   background:
     repeating-linear-gradient(97deg,
-      rgba(120,90,60,0.028) 0 3px, rgba(255,255,255,0) 3px 7px),
+      rgba(120,90,60,0.03) 0 3px, rgba(255,255,255,0) 3px 7px),
     linear-gradient(168deg, #fdfaf4 0%, #f5eee0 100%);
   box-shadow:
-    0 1px 2px rgba(44,30,36,0.2),
-    0 16px 30px rgba(12,6,9,0.45);
-  transition: transform 0.7s cubic-bezier(0.22,0.61,0.36,1);
+    0 1px 2px rgba(44,30,36,0.14),
+    0 10px 22px rgba(44,30,36,0.12);
+  transition: transform 0.6s cubic-bezier(0.22,0.61,0.36,1);
 }
 
-.pack:hover .pack-card { transform: translateY(-50%) rotate(-1.4deg) scale(1.03); }
+.pack-card:hover { transform: rotate(-0.3deg); }
 
 /* Torn top edge, so it reads as cut from a sheet rather than die-stamped. */
 .pack-card::before {
@@ -826,18 +738,11 @@ body {
   margin: 0;
 }
 
-.pack-card .card-greeting {
-  font-size: clamp(0.92rem, 1.45vw, 1.16rem);
-  margin-bottom: 0.25rem;
-}
-
-.pack-card .card-note {
-  font-size: clamp(0.86rem, 1.38vw, 1.1rem);
-  min-height: 8.2em;
-}
+.pack-card .card-greeting { font-size: 1.12rem; margin-bottom: 0.25rem; }
+.pack-card .card-note { font-size: 1.06rem; min-height: 6.4em; }
 
 .pack-card .card-sign {
-  font-size: clamp(0.88rem, 1.4vw, 1.12rem);
+  font-size: 1.08rem;
   margin-top: 0.4rem;
   color: var(--c-wine);
 }
@@ -852,10 +757,10 @@ body {
 /* ─── The panel beside it ─── */
 .shipment-steps {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin: 2rem 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  margin: 3rem 0 0;
 }
 
 .shipment-steps li {
@@ -894,19 +799,15 @@ body {
 }
 
 /* Controls that write the visitor's own name onto the card. */
-.pack-personalise {
-  border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  padding: 1.35rem 1.4rem;
-  margin-bottom: 2rem;
-}
+.pack-personalise { margin-top: 0; }
+.shipment-cta { margin-top: 1.75rem; }
 
 .pack-personalise > p {
   font-size: 0.6rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--c-text-muted);
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.8rem;
 }
 
 .pack-name {
@@ -915,7 +816,7 @@ body {
   font-family: inherit;
   font-size: 0.88rem;
   color: var(--c-text);
-  background: var(--c-bg);
+  background: var(--c-surface);
   border: 1px solid var(--c-border);
   transition: border-color 0.25s;
 }
@@ -927,7 +828,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  margin-top: 0.9rem;
+  margin-top: 0.7rem;
 }
 
 .pack-wine {
@@ -1539,10 +1440,10 @@ body.banner-up .to-top { bottom: 6.2rem; }
   .tier-grid { grid-template-columns: 1fr; max-width: 420px; }
   .exp-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .wines-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 2.5rem 1.25rem; margin-top: 2.5rem; }
-  .shipment-grid { grid-template-columns: 1fr; gap: 2.5rem; margin-top: 2.5rem; }
-  /* The card needs room for its handwriting before the box gets this narrow. */
-  .pack-card { width: 46%; padding: 0.8rem 0.85rem 0.7rem; }
-  .pack-card .card-note { min-height: 9.5em; }
+  .shipment-steps { grid-template-columns: 1fr; gap: 1.5rem; margin-top: 2rem; }
+  .shipment-aside { grid-template-columns: 1fr; gap: 2rem; margin-top: 2rem; padding-top: 2rem; }
+  .pack-card { margin-top: 0; }
+  .pack-card .card-note { min-height: 7.6em; }
   .join-banner-inner { padding: 0.75rem 2.6rem 0.75rem 1.25rem; gap: 1rem; }
   .join-banner-text { font-size: 0.75rem; }
   .join-banner-text strong { font-size: 0.92rem; }
@@ -2350,42 +2251,40 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <div class="section-inner">
     <p class="section-eyebrow">What Arrives</p>
     <h2 class="section-title">Packed by the Hands That Made It</h2>
-    <p class="section-prose">Every allocation leaves the cellar packed by hand. Bottles laid in kraft, tissue tucked down the sides, and a card written at the bench &mdash; what the season gave us, and what to do with it.</p>
+    <p class="section-prose">Every allocation leaves the cellar in a branded pine crate: a bed of wood wool under the glass, more packed around each bottle, and a board between them. Nothing moves between here and your table.</p>
 
-    <div class="shipment-grid">
+    <img class="shipment-photo" src="images/shipment-crate.webp" width="1500" height="1125"
+         alt="An open Warm Springs Cellars pine crate: five bottles standing in wood wool, the winery's mark branded into the front board"
+         loading="lazy">
 
-      <figure class="pack" id="pack" aria-label="An open shipment: four bottles laid in kraft with a handwritten card">
-        <div class="pack-flap pack-flap-t"></div>
-        <div class="pack-flap pack-flap-b"></div>
-        <div class="pack-flap pack-flap-l"></div>
-        <div class="pack-flap pack-flap-r"></div>
-
-        <div class="pack-well">
-          <img class="pack-bottle" src="images/cabernet-bottle.png" alt="" aria-hidden="true" loading="lazy">
-          <img class="pack-bottle" src="images/zinfandel-bottle.png" alt="" aria-hidden="true" loading="lazy">
-          <img class="pack-bottle" src="images/sangiovese-bottle.png" alt="" aria-hidden="true" loading="lazy">
-          <img class="pack-bottle" src="images/pinot-bottle.png" alt="" aria-hidden="true" loading="lazy">
-          <div class="pack-divider"></div>
-          <div class="pack-divider"></div>
-          <div class="pack-divider"></div>
-          <div class="pack-tissue"></div>
+    <ol class="shipment-steps">
+      <li>
+        <span class="step-n">1</span>
+        <div>
+          <strong>We write before we ship</strong>
+          <span>Two weeks out you hear what is in the allocation, with the option to change quantities or skip a season.</span>
         </div>
+      </li>
+      <li>
+        <span class="step-n">2</span>
+        <div>
+          <strong>Nested, not rattled</strong>
+          <span>A bed of wood wool under the glass and more packed around it, in a branded pine crate with a board between each bottle.</span>
+        </div>
+      </li>
+      <li>
+        <span class="step-n">3</span>
+        <div>
+          <strong>Carried cold, signed for</strong>
+          <span>Temperature-controlled transit, held back in a heat wave rather than risked. An adult signature on arrival.</span>
+        </div>
+      </li>
+    </ol>
 
-        <figcaption class="pack-card">
-          <svg class="pack-card-mark" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#722f3a" stroke-width="2.5" fill="none"/>
-            <rect x="26" y="36" width="28" height="32" rx="14" stroke="#722f3a" stroke-width="2.5" fill="none"/>
-          </svg>
-          <p class="card-greeting" id="cardGreeting">Dear friend,</p>
-          <p class="card-note" id="cardNote"></p>
-          <div class="card-rule"></div>
-          <p class="card-sign">Robert &amp; Cecilia</p>
-        </figcaption>
-      </figure>
-
+    <div class="shipment-aside">
       <div>
         <div class="pack-personalise">
-          <p>See it with your name on it</p>
+          <p>And a card, in their hand</p>
           <label class="sr-only" for="packName">Your first name</label>
           <input type="text" id="packName" class="pack-name" maxlength="22"
                  placeholder="Your first name" autocomplete="given-name">
@@ -2397,34 +2296,19 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
             <button type="button" class="pack-wine" data-wine="zinfandel" aria-pressed="false">Zinfandel</button>
           </div>
         </div>
-
-        <ol class="shipment-steps">
-          <li>
-            <span class="step-n">1</span>
-            <div>
-              <strong>We write before we ship</strong>
-              <span>Two weeks out you hear what is in the allocation, with the option to change quantities or skip a season.</span>
-            </div>
-          </li>
-          <li>
-            <span class="step-n">2</span>
-            <div>
-              <strong>Packed by the people who made it</strong>
-              <span>Hand-laid in kraft with dividers between the glass, and a card in Robert or Cecilia&rsquo;s own hand for each wine in the box.</span>
-            </div>
-          </li>
-          <li>
-            <span class="step-n">3</span>
-            <div>
-              <strong>Carried cold, signed for</strong>
-              <span>Temperature-controlled transit, held back in a heat wave rather than risked. An adult signature on arrival.</span>
-            </div>
-          </li>
-        </ol>
-
-        <a href="#join" class="tier-cta">Join the Wine Club</a>
+        <a href="#join" class="tier-cta shipment-cta">Join the Wine Club</a>
       </div>
 
+      <figure class="pack-card">
+        <svg class="pack-card-mark" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#722f3a" stroke-width="2.5" fill="none"/>
+          <rect x="26" y="36" width="28" height="32" rx="14" stroke="#722f3a" stroke-width="2.5" fill="none"/>
+        </svg>
+        <p class="card-greeting" id="cardGreeting">Dear friend,</p>
+        <p class="card-note" id="cardNote"></p>
+        <div class="card-rule"></div>
+        <p class="card-sign">Robert &amp; Cecilia</p>
+      </figure>
     </div>
   </div>
 </section>
@@ -2872,7 +2756,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   var revealTargets = $$([
     '.founder-card', '.section-eyebrow', '.section-title', '.section-prose',
     '.detail-item', '.philosophy-visual', '.wine-card', '.tier-card',
-    '.exp-item', '.testimonial', '.faq-item',
+    '.exp-item', '.testimonial', '.faq-item', '.shipment-photo', '.shipment-steps li',
     '.quote-inner', '.join-form'
   ].join(','));
 
