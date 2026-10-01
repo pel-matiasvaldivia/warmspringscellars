@@ -16,32 +16,26 @@ third. The hero image is cropped wide and full-bleed.
 The group photo of the team has no slot yet — the band that displayed it was
 removed because the file never landed here and it 404'd on every page load.
 
-## The shipment crate
+## The shipment crate — slot still open
 
-`shipment-crate.webp` is rendered by `tools/render_shipment.py`, not
-photographed. It draws a pine crate of bottles nested in wood wool through an
-actual pinhole camera: the crate's faces are warped by the homography their
-projected corners imply, the boards are procedural pine with grain, knots and a
-branded stencil, and the excelsior is drawn strand by strand and depth-sorted
-against the glass.
+The "What Arrives" section has no packaging photograph yet. A procedural render
+of a pine crate lived here and was cut: it was geometrically sound and nobody
+believed it. Generating a convincing photograph of wood, wood wool and glass is
+not something code gets to by itself, and a near-miss reads worse on a premium
+page than no photograph at all. It is in the history (`tools/render_shipment.py`)
+if it is ever wanted as a starting point.
 
-The bottles are the finished cutouts, placed as billboards. That is sound: a
-wine bottle is a surface of revolution, so a straight-on photograph is what it
-looks like from any angle around it — only its size and its height on screen
-have to follow the perspective.
+What to put here instead, in order of preference:
 
-It is matted out of its backdrop by rendering the scene twice, once on black and
-once on white. The difference gives the exact coverage of every pixel, soft
-shadow edges included, which no threshold could recover. The page then shows the
-crate on its own background in either theme.
+1. A studio photograph of a real packed crate — open, three-quarter view, bottles
+   standing in wood wool, shot against a plain sweep so it can be cut out.
+2. A photograph staged at the winery, same framing, daylight.
+3. A render from a 3D tool with real materials.
 
-```bash
-python3 tools/render_shipment.py
-```
-
-Framing comes from the geometry, not from the pixels: the crate's corners and
-the bottle tops are projected and the image is cropped to those. Move the camera
-or resize the crate and the framing follows.
+Drop it in as `shipment-crate.webp` (or `.jpg`) and add it back to the section.
+A cut-out with a transparent background is worth the extra step: it sits on the
+page's own ground in both light and dark themes, rather than as a pasted-in
+rectangle of studio grey.
 
 ## Bottle shots
 

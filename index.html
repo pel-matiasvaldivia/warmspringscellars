@@ -673,39 +673,27 @@ body {
 /* ─── THE SHIPMENT ─── */
 .shipment { background: var(--c-bg-warm); }
 
-/* The crate is the point of this section, so it gets the full width rather
-   than a column beside a list. */
-.shipment-photo {
-  display: block;
-  width: 100%;
-  max-width: 980px;
-  height: auto;
-  margin: 2.5rem auto 0;
-}
-
-.shipment-aside {
+.shipment-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 4rem;
   align-items: start;
-  margin-top: 3rem;
-  padding-top: 3rem;
-  border-top: 1px solid var(--c-border-light);
+  margin-top: 3.5rem;
 }
 
 /* ─── The handwritten card ─── */
 .pack-card {
   position: relative;
-  margin-top: 1.75rem;
-  padding: 1.3rem 1.4rem 1.15rem;
+  margin: 0;
+  padding: 2rem 2.1rem 1.75rem;
   transform: rotate(-1.1deg);
   background:
     repeating-linear-gradient(97deg,
       rgba(120,90,60,0.03) 0 3px, rgba(255,255,255,0) 3px 7px),
     linear-gradient(168deg, #fdfaf4 0%, #f5eee0 100%);
   box-shadow:
-    0 1px 2px rgba(44,30,36,0.14),
-    0 10px 22px rgba(44,30,36,0.12);
+    0 1px 2px rgba(44,30,36,0.16),
+    0 16px 34px rgba(44,30,36,0.16);
   transition: transform 0.6s cubic-bezier(0.22,0.61,0.36,1);
 }
 
@@ -725,8 +713,8 @@ body {
 
 .pack-card-mark {
   display: block;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   margin-bottom: 0.4rem;
   opacity: 0.35;
 }
@@ -738,11 +726,11 @@ body {
   margin: 0;
 }
 
-.pack-card .card-greeting { font-size: 1.12rem; margin-bottom: 0.25rem; }
-.pack-card .card-note { font-size: 1.06rem; min-height: 6.4em; }
+.pack-card .card-greeting { font-size: 1.45rem; margin-bottom: 0.35rem; }
+.pack-card .card-note { font-size: 1.32rem; min-height: 6.6em; }
 
 .pack-card .card-sign {
-  font-size: 1.08rem;
+  font-size: 1.3rem;
   margin-top: 0.4rem;
   color: var(--c-wine);
 }
@@ -757,10 +745,10 @@ body {
 /* ─── The panel beside it ─── */
 .shipment-steps {
   list-style: none;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2.5rem;
-  margin: 3rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin: 0;
 }
 
 .shipment-steps li {
@@ -799,8 +787,8 @@ body {
 }
 
 /* Controls that write the visitor's own name onto the card. */
-.pack-personalise { margin-top: 0; }
-.shipment-cta { margin-top: 1.75rem; }
+.pack-personalise { margin-top: 1.75rem; }
+.shipment-cta { margin-top: 2rem; }
 
 .pack-personalise > p {
   font-size: 0.6rem;
@@ -1440,9 +1428,11 @@ body.banner-up .to-top { bottom: 6.2rem; }
   .tier-grid { grid-template-columns: 1fr; max-width: 420px; }
   .exp-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .wines-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 2.5rem 1.25rem; margin-top: 2.5rem; }
-  .shipment-steps { grid-template-columns: 1fr; gap: 1.5rem; margin-top: 2rem; }
-  .shipment-aside { grid-template-columns: 1fr; gap: 2rem; margin-top: 2rem; padding-top: 2rem; }
-  .pack-card { margin-top: 0; }
+  .shipment-grid { grid-template-columns: 1fr; gap: 2.5rem; margin-top: 2.5rem; }
+  .pack-card { padding: 1.5rem 1.5rem 1.3rem; }
+  .pack-card .card-greeting { font-size: 1.25rem; }
+  .pack-card .card-note { font-size: 1.14rem; min-height: 7.6em; }
+  .pack-card .card-sign { font-size: 1.12rem; }
   .pack-card .card-note { min-height: 7.6em; }
   .join-banner-inner { padding: 0.75rem 2.6rem 0.75rem 1.25rem; gap: 1rem; }
   .join-banner-text { font-size: 0.75rem; }
@@ -2253,38 +2243,22 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     <h2 class="section-title">Packed by the Hands That Made It</h2>
     <p class="section-prose">Every allocation leaves the cellar in a branded pine crate: a bed of wood wool under the glass, more packed around each bottle, and a board between them. Nothing moves between here and your table.</p>
 
-    <img class="shipment-photo" src="images/shipment-crate.webp" width="1500" height="1125"
-         alt="An open Warm Springs Cellars pine crate: five bottles standing in wood wool, the winery's mark branded into the front board"
-         loading="lazy">
+    <div class="shipment-grid">
 
-    <ol class="shipment-steps">
-      <li>
-        <span class="step-n">1</span>
-        <div>
-          <strong>We write before we ship</strong>
-          <span>Two weeks out you hear what is in the allocation, with the option to change quantities or skip a season.</span>
-        </div>
-      </li>
-      <li>
-        <span class="step-n">2</span>
-        <div>
-          <strong>Nested, not rattled</strong>
-          <span>A bed of wood wool under the glass and more packed around it, in a branded pine crate with a board between each bottle.</span>
-        </div>
-      </li>
-      <li>
-        <span class="step-n">3</span>
-        <div>
-          <strong>Carried cold, signed for</strong>
-          <span>Temperature-controlled transit, held back in a heat wave rather than risked. An adult signature on arrival.</span>
-        </div>
-      </li>
-    </ol>
-
-    <div class="shipment-aside">
       <div>
+        <figure class="pack-card">
+          <svg class="pack-card-mark" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#722f3a" stroke-width="2.5" fill="none"/>
+            <rect x="26" y="36" width="28" height="32" rx="14" stroke="#722f3a" stroke-width="2.5" fill="none"/>
+          </svg>
+          <p class="card-greeting" id="cardGreeting">Dear friend,</p>
+          <p class="card-note" id="cardNote"></p>
+          <div class="card-rule"></div>
+          <p class="card-sign">Robert &amp; Cecilia</p>
+        </figure>
+
         <div class="pack-personalise">
-          <p>And a card, in their hand</p>
+          <p>Read the card for another wine &mdash; or put your name on it</p>
           <label class="sr-only" for="packName">Your first name</label>
           <input type="text" id="packName" class="pack-name" maxlength="22"
                  placeholder="Your first name" autocomplete="given-name">
@@ -2296,19 +2270,43 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
             <button type="button" class="pack-wine" data-wine="zinfandel" aria-pressed="false">Zinfandel</button>
           </div>
         </div>
+      </div>
+
+      <div>
+        <ol class="shipment-steps">
+          <li>
+            <span class="step-n">1</span>
+            <div>
+              <strong>We write before we ship</strong>
+              <span>Two weeks out you hear what is in the allocation, with the option to change quantities or skip a season.</span>
+            </div>
+          </li>
+          <li>
+            <span class="step-n">2</span>
+            <div>
+              <strong>Nested, not rattled</strong>
+              <span>A bed of wood wool under the glass and more packed around it, in a branded pine crate with a board between each bottle.</span>
+            </div>
+          </li>
+          <li>
+            <span class="step-n">3</span>
+            <div>
+              <strong>A card for every bottle</strong>
+              <span>Written at the bench by whoever made the wine &mdash; what the season gave, and what to do with it.</span>
+            </div>
+          </li>
+          <li>
+            <span class="step-n">4</span>
+            <div>
+              <strong>Carried cold, signed for</strong>
+              <span>Temperature-controlled transit, held back in a heat wave rather than risked. An adult signature on arrival.</span>
+            </div>
+          </li>
+        </ol>
+
         <a href="#join" class="tier-cta shipment-cta">Join the Wine Club</a>
       </div>
 
-      <figure class="pack-card">
-        <svg class="pack-card-mark" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M40 8L12 28V72H68V28L40 8Z" stroke="#722f3a" stroke-width="2.5" fill="none"/>
-          <rect x="26" y="36" width="28" height="32" rx="14" stroke="#722f3a" stroke-width="2.5" fill="none"/>
-        </svg>
-        <p class="card-greeting" id="cardGreeting">Dear friend,</p>
-        <p class="card-note" id="cardNote"></p>
-        <div class="card-rule"></div>
-        <p class="card-sign">Robert &amp; Cecilia</p>
-      </figure>
     </div>
   </div>
 </section>
@@ -2756,7 +2754,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   var revealTargets = $$([
     '.founder-card', '.section-eyebrow', '.section-title', '.section-prose',
     '.detail-item', '.philosophy-visual', '.wine-card', '.tier-card',
-    '.exp-item', '.testimonial', '.faq-item', '.shipment-photo', '.shipment-steps li',
+    '.exp-item', '.testimonial', '.faq-item', '.shipment-steps li', '.pack-card',
     '.quote-inner', '.join-form'
   ].join(','));
 
