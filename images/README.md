@@ -16,26 +16,43 @@ third. The hero image is cropped wide and full-bleed.
 The group photo of the team has no slot yet — the band that displayed it was
 removed because the file never landed here and it 404'd on every page load.
 
-## The shipment crate — slot still open
+## The shipment photograph
 
-The "What Arrives" section has no packaging photograph yet. A procedural render
-of a pine crate lived here and was cut: it was geometrically sound and nobody
-believed it. Generating a convincing photograph of wood, wood wool and glass is
-not something code gets to by itself, and a near-miss reads worse on a premium
-page than no photograph at all. It is in the history (`tools/render_shipment.py`)
-if it is ever wanted as a starting point.
+`shipment-box.webp` is the winery's own photograph of a packed case — corrugated
+outer, moulded pulp cradle, three bottles — with the labels replaced. The
+bottles in the original wore another winery's brand; everything else in the
+frame is untouched: the box, the pulp, the capsules, the floor and the light.
 
-What to put here instead, in order of preference:
+```bash
+python3 tools/relabel_box_photo.py            # the real work
+python3 tools/relabel_box_photo.py --debug    # overlay the spans on the source
+```
 
-1. A studio photograph of a real packed crate — open, three-quarter view, bottles
-   standing in wood wool, shot against a plain sweep so it can be cut out.
-2. A photograph staged at the winery, same framing, daylight.
-3. A render from a 3D tool with real materials.
+A bottle lying on its side is a cylinder, so a label on it is not a rectangle.
+Each one is mapped through the cylinder the way `tools/label_bottles.py` does it
+— a column at screen offset *s* sits at angle asin(*s*), so the artwork
+compresses towards the silhouette — then through a homography onto the four
+corners the bottle occupies in frame, which carries the camera's perspective.
+The scale comes from the silhouette: a 750ml Bordeaux is three inches across, so
+the bottle's width in pixels is the ruler for everything else, and the label
+keeps the proportions of the artwork instead of being stretched to fit.
 
-Drop it in as `shipment-crate.webp` (or `.jpg`) and add it back to the section.
-A cut-out with a transparent background is worth the extra step: it sits on the
-page's own ground in both light and dark themes, rather than as a pasted-in
-rectangle of studio grey.
+The lighting is not invented. For each bottle the glass's own brightness is
+measured under where the label will go, taking a low percentile along the
+bottle's length so the existing print is excluded and only the glass is left.
+That profile — the specular streak, the fall-off at the edges — is what the new
+label is lit by, which is why it sits in the same light as the capsule above it.
+
+Each bottle is wiped before it is labelled, over a longer span than the label
+covers, because the other winery printed onto the shoulder where no label of
+ours reaches. The wipe paints that same measured profile and nothing else, so it
+reconstructs clean glass rather than inventing any. Running `--debug` draws both
+spans: orange is wiped, cyan is labelled.
+
+**The source is only 1024×576**, which is tight for a full-width image on a
+high-density screen. If a larger original exists, drop it in as
+`shipment-box-source.jpg` and rerun — the measurements in `BOTTLES` are in
+source pixels and would need scaling with it.
 
 ## Bottle shots
 

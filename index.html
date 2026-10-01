@@ -673,12 +673,34 @@ body {
 /* ─── THE SHIPMENT ─── */
 .shipment { background: var(--c-bg-warm); }
 
+/* The crate is what this section is about, so it takes the full width. */
+.shipment-photo {
+  display: block;
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  margin: 2.5rem auto 0;
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(44,30,36,0.10), 0 18px 40px rgba(44,30,36,0.14);
+}
+
+.shipment-caption {
+  max-width: 980px;
+  margin: 0.9rem auto 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--c-text-muted);
+  text-align: right;
+}
+
 .shipment-grid {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   gap: 4rem;
   align-items: start;
-  margin-top: 3.5rem;
+  margin-top: 3.25rem;
+  padding-top: 3rem;
+  border-top: 1px solid var(--c-border-light);
 }
 
 /* ─── The handwritten card ─── */
@@ -1448,7 +1470,8 @@ body.banner-up .to-top { bottom: 6.2rem; }
   .tier-grid { grid-template-columns: 1fr; max-width: 420px; gap: 1.25rem; }
   .exp-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .wines-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 2.5rem 1.25rem; margin-top: 2.5rem; }
-  .shipment-grid { grid-template-columns: 1fr; gap: 2.5rem; margin-top: 2.5rem; }
+  .shipment-grid { grid-template-columns: 1fr; gap: 2.5rem; margin-top: 2.5rem; padding-top: 2.5rem; }
+  .shipment-caption { text-align: left; font-size: 0.68rem; }
   .pack-card { padding: 1.5rem 1.5rem 1.3rem; }
   .pack-card .card-greeting { font-size: 1.25rem; }
   .pack-card .card-note { font-size: 1.14rem; min-height: 7.6em; }
@@ -2307,7 +2330,12 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <div class="section-inner">
     <p class="section-eyebrow">What Arrives</p>
     <h2 class="section-title">Packed by the Hands That Made It</h2>
-    <p class="section-prose">Every allocation leaves the cellar in a branded pine crate: a bed of wood wool under the glass, more packed around each bottle, and a board between them. Nothing moves between here and your table.</p>
+    <p class="section-prose">Every allocation leaves the cellar laid in a moulded pulp cradle, one bottle to a bay, inside a corrugated case rated for the journey. Nothing touches anything else between here and your table.</p>
+
+    <img class="shipment-photo" src="images/shipment-box.webp" width="1024" height="576"
+         alt="A Warm Springs Cellars shipment: three bottles lying in a moulded pulp insert inside a corrugated case"
+         loading="lazy">
+    <p class="shipment-caption">A Cellar Door shipment, packed and ready to close.</p>
 
     <div class="shipment-grid">
 
@@ -2351,7 +2379,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
             <span class="step-n">2</span>
             <div>
               <strong>Nested, not rattled</strong>
-              <span>A bed of wood wool under the glass and more packed around it, in a branded pine crate with a board between each bottle.</span>
+              <span>Each bottle sits in its own moulded pulp bay &mdash; the same cradle the trade ships in, and the reason a case can be dropped without a cork moving.</span>
             </div>
           </li>
           <li>
@@ -2824,7 +2852,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   var revealTargets = $$([
     '.founder-card', '.section-eyebrow', '.section-title', '.section-prose',
     '.detail-item', '.philosophy-visual', '.wine-card', '.tier-card',
-    '.exp-item', '.testimonial', '.faq-item', '.shipment-steps li', '.pack-card',
+    '.exp-item', '.testimonial', '.faq-item', '.shipment-steps li', '.pack-card', '.shipment-photo',
     '.quote-inner', '.join-form'
   ].join(','));
 
