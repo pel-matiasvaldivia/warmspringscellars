@@ -1,0 +1,107 @@
+{
+  "_comment": [
+    "The club's commercial offer, and the only place it is written down.",
+    "The API serves it to the offer page, the invoice uses it for line items,",
+    "and tools/sync_tiers.py writes it into the landing page, so these numbers",
+    "cannot drift between what a visitor is shown and what they are charged.",
+    "",
+    "NUMBERS NEED THE WINERY'S SIGN-OFF. The two existing tiers carry the",
+    "prices already published on the site. The Full Case and Inner Circle are",
+    "proposals. Note that per-bottle cost is not monotonic across the ladder",
+    "(the Founder's Reserve costs more per bottle than the Cellar Door because",
+    "it includes library wines) — deliberate or not, it is worth a look.",
+    "",
+    "Deerfield Ranch, the reference, ships four times a year. This ships twice,",
+    "which is what the rest of the site says and what 6,808 bottles a year can",
+    "actually support. Changing it is one field."
+  ],
+
+  "currency": "usd",
+  "shipments_per_year": 2,
+  "shipment_months": [4, 10],
+
+  "tiers": [
+    {
+      "key": "cellar-door",
+      "name": "The Cellar Door",
+      "label": "Allocation",
+      "bottles": 4,
+      "discount_pct": 15,
+      "price_cents": 18000,
+      "shipping_cents": 2500,
+      "invite_only": false,
+      "featured": false,
+      "summary": "Our core allocation. A selection from the current releases twice a year, every spring and fall.",
+      "benefits": [
+        "4 bottles per shipment, chosen from the current releases",
+        "Two shipments annually (Spring &amp; Fall)",
+        "15% discount on all reorders",
+        "2 complimentary tastings per visit, three visits a year",
+        "Priority access to new releases",
+        "Member-only event invitations"
+      ]
+    },
+    {
+      "key": "founders-reserve",
+      "name": "The Founder's Reserve",
+      "label": "Inner Allocation",
+      "bottles": 6,
+      "discount_pct": 20,
+      "price_cents": 34000,
+      "shipping_cents": 0,
+      "invite_only": false,
+      "featured": true,
+      "summary": "For those who want everything the cellar offers, including wines we never release publicly.",
+      "benefits": [
+        "6 bottles per shipment, including library wines",
+        "Two shipments annually (Spring &amp; Fall)",
+        "20% discount on all purchases",
+        "4 complimentary tastings per visit, three visits a year",
+        "Annual harvest dinner with Robert &amp; Cecilia",
+        "First access to single-barrel selections",
+        "Complimentary shipping on all orders"
+      ]
+    },
+    {
+      "key": "full-case",
+      "name": "The Full Case",
+      "label": "By the Case",
+      "bottles": 12,
+      "discount_pct": 25,
+      "price_cents": 62000,
+      "shipping_cents": 0,
+      "invite_only": false,
+      "featured": false,
+      "summary": "A full case of every current release, twice a year. For the table that goes through it.",
+      "benefits": [
+        "12 bottles per shipment, every current release",
+        "Two shipments annually (Spring &amp; Fall)",
+        "25% discount on all purchases",
+        "6 complimentary tastings per visit, three visits a year",
+        "Annual harvest dinner with Robert &amp; Cecilia",
+        "Complimentary shipping on all orders"
+      ]
+    },
+    {
+      "key": "inner-circle",
+      "name": "The Inner Circle",
+      "label": "By Invitation",
+      "bottles": 12,
+      "discount_pct": 30,
+      "price_cents": 98000,
+      "shipping_cents": 0,
+      "invite_only": true,
+      "featured": false,
+      "summary": "Everything the cellar makes, including the single barrels that never leave it, and a key to the cave.",
+      "benefits": [
+        "12 bottles per shipment, with single-barrel selections",
+        "Two shipments annually (Spring &amp; Fall)",
+        "30% discount on all purchases",
+        "Unlimited tastings for up to six guests",
+        "A key to the cellar cave, by appointment",
+        "Harvest dinner and barrel-blending session",
+        "Complimentary shipping on all orders"
+      ]
+    }
+  ]
+}

@@ -7,6 +7,9 @@ Dockerfile
 README.md
 images/README.md
 tools/
+api/
+.env
+.env.example
 
 .gitignore
 labels/

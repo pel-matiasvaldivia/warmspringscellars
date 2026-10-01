@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Warm Springs Cellars{% endblock %}</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root {
+  --bg: #faf8f5;
+  --bg-alt: #f3eeea;
+  --surface: #ffffff;
+  --text: #2c1e24;
+  --text-2: #5c4650;
+  --muted: #9a8890;
+  --wine: #722f3a;
+  --wine-light: #8b3d4a;
+  --wine-deep: #5a1f2a;
+  --wine-pale: #f0e3e6;
+  --border: #e2d8d0;
+  --ok: #3f6b4f;
+  --bad: #9c3b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1215; --bg-alt: #221920; --surface: #241a1e;
+    --text: #ede6e0; --text-2: #c0b0b6; --muted: #86747a;
+    --wine: #a8505e; --wine-light: #c06878; --wine-deep: #8b3d4a;
+    --wine-pale: #2e1e24; --border: #3a2c32;
+    --ok: #7fae8d; --bad: #d98a8a;
+  }
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Optima','Candara','Noto Sans','Segoe UI',system-ui,sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+.serif { font-family: 'Didot','Bodoni MT','Noto Serif Display',Georgia,serif; }
+a { color: var(--wine); }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+.masthead { text-align: center; margin-bottom: 2.5rem; }
+.masthead .logo {
+  font-family: 'Didot','Bodoni MT',Georgia,serif;
+  font-size: 1.05rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--wine); text-decoration: none;
+}
+.masthead .logo em { font-style: italic; text-transform: none; letter-spacing: 0.02em; }
+.eyebrow {
+  font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--wine); margin-bottom: 0.75rem;
+}
+h1 {
+  font-family: 'Didot','Bodoni MT',Georgia,serif;
+  font-weight: 400; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height: 1.2;
+  text-wrap: balance; margin-bottom: 1rem;
+}
+.lede { color: var(--text-2); max-width: 54ch; margin: 0 auto 0.5rem; }
+.center { text-align: center; }
+.notice {
+  border: 1px solid var(--border); border-left: 3px solid var(--wine);
+  background: var(--surface); padding: 1rem 1.25rem; margin: 1.5rem 0;
+  font-size: 0.9rem; color: var(--text-2);
+}
+.notice.bad { border-left-color: var(--bad); }
+.notice.ok { border-left-color: var(--ok); }
+.btn {
+  display: inline-block; padding: 0.85rem 2.2rem; border: 1px solid var(--wine);
+  background: var(--wine); color: #fff; text-decoration: none; cursor: pointer;
+  font-family: inherit; font-size: 0.68rem; letter-spacing: 0.2em;
+  text-transform: uppercase; font-weight: 600;
+  transition: background .25s, transform .25s;
+}
+.btn:hover { background: var(--wine-deep); transform: translateY(-1px); }
+.btn.ghost { background: transparent; color: var(--wine); }
+.btn.ghost:hover { background: var(--wine-pale); }
+.btn[disabled], .btn.disabled {
+  background: transparent; color: var(--muted); border-color: var(--border);
+  cursor: not-allowed; transform: none;
+}
+.foot {
+  margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+  font-size: 0.72rem; color: var(--muted); text-align: center;
+}
+{% block style %}{% endblock %}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <a class="logo" href="/">Warm Springs <em>Cellars</em></a>
+  </header>
+  {% block body %}{% endblock %}
+  <footer class="foot">
+    Warm Springs Cellars · Kenwood, Sonoma Valley · You must be 21 or older to purchase.
+    An adult signature is required on delivery.
+  </footer>
+</div>
+</body>
+</html>

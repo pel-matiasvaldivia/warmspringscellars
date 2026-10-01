@@ -1,0 +1,40 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>Releases</h1>
+<p class="sub">A release raises one order for every active member. Running it twice is safe.</p>
+
+<div class="card">
+  <form method="post" action="/admin/releases" class="row">
+    <div style="flex:1;min-width:12rem">
+      <label for="name">Name</label>
+      <input id="name" name="name" placeholder="Spring 2026" required>
+    </div>
+    <div style="flex:1;min-width:10rem">
+      <label for="ships_on">Ships on</label>
+      <input id="ships_on" name="ships_on" type="date" required>
+    </div>
+    <button class="btn" type="submit">Plan it</button>
+  </form>
+</div>
+
+{% if not rows %}
+<div class="empty">No releases planned.</div>
+{% else %}
+<table>
+  <tr><th>Name</th><th>Ships</th><th>Status</th><th class="num">Orders</th><th></th></tr>
+  {% for r in rows %}
+  <tr>
+    <td>{{ r.name }}</td>
+    <td class="num">{{ r.ships_on }}</td>
+    <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+    <td class="num">{{ r.order_count }}</td>
+    <td>
+      <form method="post" action="/admin/releases/{{ r.id }}/generate">
+        <button class="btn ghost small" type="submit">Raise orders</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

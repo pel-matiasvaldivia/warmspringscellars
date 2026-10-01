@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} — Warm Springs Cellars{% endblock %}
+{% block body %}
+<div class="center">
+  <p class="eyebrow">{{ eyebrow }}</p>
+  <h1>{{ heading }}</h1>
+  <p class="lede">{{ body }}</p>
+  {% if cta_url %}<p style="margin-top:2rem"><a class="btn" href="{{ cta_url }}">{{ cta_label }}</a></p>{% endif %}
+</div>
+{% endblock %}

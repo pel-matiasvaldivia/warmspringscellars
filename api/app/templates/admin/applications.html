@@ -1,0 +1,25 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>Applications</h1>
+<p class="sub">{{ rows|length }} shown · pending first, newest first</p>
+
+{% if not rows %}
+<div class="empty">Nothing has come in yet.</div>
+{% else %}
+<table>
+  <tr><th>Received</th><th>Name</th><th>Email</th><th>Ships to</th>
+      <th>Asked for</th><th>Status</th><th></th></tr>
+  {% for r in rows %}
+  <tr>
+    <td class="num">{{ r.created_at[:16].replace('T',' ') }}</td>
+    <td>{{ r.first_name }} {{ r.last_name }}</td>
+    <td>{{ r.email }}</td>
+    <td>{{ [r.city, r.state] | select | join(', ') }}</td>
+    <td>{{ tier_names.get(r.tier_interest, '—') }}</td>
+    <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+    <td><a class="btn ghost small" href="/admin/applications/{{ r.id }}">Open</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

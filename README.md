@@ -8,17 +8,37 @@ index.html      the whole site — markup, styles and scripts in one file
 images/         winery photography and bottle shots (see images/README.md)
 labels/         the official label artwork, as supplied (.ai)
 fonts/          Caveat, self-hosted for the handwritten card (OFL)
-tools/          regenerate the bottle shots from the labels
-nginx.conf      server config: listens on 8080 inside the container
+tools/          regenerate the bottle shots, and sync the tiers into the page
+api/            the club: applications, offers, payments, invoices, shipments
+nginx.conf      serves the site and proxies the club service
 Dockerfile      nginx:1.27-alpine + the site, running unprivileged
-docker-compose.yml   pulls the published image, publishes host port 8086
-.github/workflows/docker.yml   builds and pushes to GHCR
+docker-compose.yml   two services behind one published port, 8086
+.env.example    every secret the club service needs
+.github/workflows/docker.yml   tests, then builds both images
 ```
 
-## The image
+## Two services, one port
 
-`.github/workflows/docker.yml` builds `linux/amd64` and `linux/arm64` and
-pushes to `ghcr.io/pel-matiasvaldivia/warmspringscellars` on every push to
+```
+Nginx Proxy Manager
+        │  :8086
+        ▼
+      nginx ──────── /                    the static site
+        │
+        └─ proxy ──▶ api:8000             /api/   the request form and webhooks
+                                          /club/  the member's offer pages
+                                          /admin  the cellar desk
+```
+
+Only nginx is published. The club service is reachable from nothing but nginx,
+on the compose network, which is why it does not need TLS of its own.
+
+## The images
+
+`.github/workflows/docker.yml` runs the club's test suite first, then builds
+`linux/amd64` and `linux/arm64` for both
+`ghcr.io/pel-matiasvaldivia/warmspringscellars` and
+`…-api`, on every push to
 `main` (tagged `latest`), on branch pushes (tagged with the branch name), and
 on `v*` tags (tagged with the semver). Pull requests build without pushing, so
 a broken Dockerfile fails before it lands. Auth uses the built-in
@@ -29,8 +49,22 @@ a broken Dockerfile fails before it lands. Auth uses the built-in
 ```bash
 git clone https://github.com/pel-matiasvaldivia/warmspringscellars.git
 cd warmspringscellars
+cp .env.example .env
+#   SECRET_KEY:     openssl rand -base64 48   — generate once, never change it
+#   ADMIN_PASSWORD: anything long
+$EDITOR .env
 docker compose up -d
 ```
+
+`docker compose` refuses to start until `SECRET_KEY` and `ADMIN_PASSWORD` are
+set, deliberately: a club that signs invitation links with a key it invented at
+boot invalidates every link already in a member's inbox each time it restarts.
+
+Everything else in `.env` is optional. Without Stripe keys, checkout is
+simulated and no money moves; without SMTP, every email is written to the data
+volume as a `.eml` file and the invitation link is shown on the desk. That is a
+working installation you can walk a colleague through — it just cannot take
+money yet. `GET /api/health` lists whatever is still a stub.
 
 Only **8086** is published, mapped to nginx on 8080 inside the container. Put
 Nginx Proxy Manager in front of it:
@@ -65,6 +99,51 @@ ports:
 
 …or drop `ports` entirely, attach both containers to a shared network, and
 point NPM at `warmspringscellars:8080`.
+
+## Running the club
+
+The whole commercial flow, from the form to the doorstep, is described in
+[`api/FLOW.md`](api/FLOW.md) — including the two things it deliberately does not
+do yet (US shipping compliance, and sales tax).
+
+The desk is at `/admin`, behind the password in `.env`. Restrict it by address
+in `nginx.conf` too; the commented `allow`/`deny` lines are there for it.
+
+| What | Where |
+| --- | --- |
+| Read and approve requests | `/admin` |
+| Members, and pausing or cancelling them | `/admin/memberships` |
+| Orders and their invoices | `/admin/orders` |
+| The pick list, and tracking numbers | `/admin/shipments` |
+| Raise a release's orders | `/admin/releases` |
+
+### The offer
+
+```bash
+cd api && pip install -r requirements-dev.txt && python -m pytest tests -q
+```
+
+The club's prices and benefits live in **one** file, `api/app/tiers.json`. The
+offer page renders from it, the invoice bills from it, and
+`tools/sync_tiers.py` writes it into the landing page:
+
+```bash
+python3 tools/sync_tiers.py           # update index.html from the catalogue
+python3 tools/sync_tiers.py --check   # CI uses this; fails if they disagree
+```
+
+Edit the JSON, run the tool, commit both. A visitor shown $180 who is then
+charged $205 is a bug that costs trust rather than pixels.
+
+### Backups
+
+Everything the club knows is in the `club-data` volume: the SQLite database,
+the invoice PDFs, and the outbox. Back it up.
+
+```bash
+docker run --rm -v warmspringscellars_club-data:/var -v "$PWD":/backup alpine \
+  tar czf /backup/club-$(date +%F).tar.gz -C /var .
+```
 
 ### Pinning a version
 

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Welcome to the cellar — Warm Springs Cellars{% endblock %}
+{% block style %}
+.steps { max-width: 520px; margin: 2.5rem auto 0; display: flex; flex-direction: column; gap: 1.25rem; }
+.step { display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: start; text-align: left; }
+.step .n {
+  width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--wine-light);
+  display: grid; place-items: center; font-family: 'Didot',Georgia,serif;
+  font-size: .72rem; color: var(--wine);
+}
+.step strong { display: block; font-weight: 500; font-size: .95rem; }
+.step span { font-size: .86rem; color: var(--text-2); }
+{% endblock %}
+{% block body %}
+<div class="center">
+  <p class="eyebrow">You are in</p>
+  <h1>Welcome to the cellar</h1>
+  <p class="lede">
+    {% if membership %}
+      Your {{ tier.name }} allocation is reserved, {{ membership.first_name }}.
+      The invoice is on its way to {{ membership.email }}.
+    {% else %}
+      Your payment is being confirmed. This page will have your allocation on it
+      the moment our provider tells us the money moved — usually seconds, and we
+      email you either way.
+    {% endif %}
+  </p>
+</div>
+
+<div class="steps">
+  <div class="step"><span class="n">1</span><div>
+    <strong>We write before we ship</strong>
+    <span>Two weeks before each release you hear what is in the allocation, with the option to change quantities or skip the season.</span>
+  </div></div>
+  <div class="step"><span class="n">2</span><div>
+    <strong>Packed by the people who made it</strong>
+    <span>A bed of wood wool under the glass, a board between each bottle, and a card in Robert or Cecilia's hand.</span>
+  </div></div>
+  <div class="step"><span class="n">3</span><div>
+    <strong>Carried cold, signed for</strong>
+    <span>Temperature-controlled transit, held back in a heat wave rather than risked. An adult signature on arrival.</span>
+  </div></div>
+</div>
+{% endblock %}

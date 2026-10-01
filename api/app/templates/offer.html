@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Your allocation — Warm Springs Cellars{% endblock %}
+
+{% block style %}
+.tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  align-items: stretch;
+}
+.tier {
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 2rem 1.6rem 1.6rem; position: relative;
+  transition: border-color .3s, box-shadow .3s, transform .3s;
+}
+.tier:hover {
+  border-color: var(--wine-light); transform: translateY(-3px);
+  box-shadow: 0 2px 8px rgba(114,47,58,.08), 0 12px 28px rgba(114,47,58,.06);
+}
+.tier.featured { border-color: var(--wine); }
+.tier.featured::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+  background: linear-gradient(90deg, var(--wine-light), var(--wine), var(--wine-light));
+}
+.tier.locked { opacity: .78; }
+
+/* The bottle count in a disc, as the reference club does it. */
+.disc {
+  width: 132px; height: 132px; border-radius: 50%;
+  background: var(--wine-pale);
+  margin: 0 auto 1.5rem; display: grid; place-items: center; text-align: center;
+  position: relative; overflow: hidden;
+}
+.disc .count {
+  font-family: 'Didot','Bodoni MT',Georgia,serif;
+  font-size: 2.4rem; line-height: 1; color: var(--wine-deep);
+}
+.disc .unit {
+  font-size: .55rem; letter-spacing: .26em; text-transform: uppercase;
+  color: var(--wine); margin-top: .35rem;
+}
+.disc.invite .count { font-size: 1.5rem; letter-spacing: .04em; }
+
+.tier-label {
+  font-size: .56rem; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--wine-light); text-align: center;
+}
+.tier-name {
+  font-family: 'Didot','Bodoni MT',Georgia,serif;
+  font-size: 1.25rem; font-weight: 400; text-align: center; margin: .4rem 0 .9rem;
+}
+.tier-summary { font-size: .85rem; color: var(--text-2); text-align: center; }
+.rule { width: 36px; height: 1px; background: var(--border); margin: 1.25rem auto; }
+.tier ul { list-style: none; display: flex; flex-direction: column; gap: .6rem; }
+.tier li {
+  font-size: .82rem; color: var(--text-2); padding-left: 1.1rem; position: relative;
+}
+.tier li::before {
+  content: ""; position: absolute; left: 0; top: .6em;
+  width: 6px; height: 2px; background: var(--wine-light);
+}
+.price {
+  font-family: 'Didot','Bodoni MT',Georgia,serif;
+  font-size: 1.15rem; text-align: center; margin: 1.4rem 0 .2rem;
+}
+.price small {
+  display: block; font-family: inherit; font-size: .66rem; color: var(--muted);
+  letter-spacing: .02em;
+}
+.tier form { margin-top: 1.1rem; }
+.tier .btn { width: 100%; text-align: center; }
+.spacer { flex: 1; }
+.summary-strip {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 1.75rem;
+  margin-top: 2rem; font-size: .72rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+}
+{% endblock %}
+
+{% block body %}
+<div class="center">
+  <p class="eyebrow">Your invitation</p>
+  <h1>{{ application.first_name }}, a place has opened</h1>
+  <p class="lede">
+    Robert and Cecilia have reviewed your request and kept you an allocation.
+    Choose the one that suits your table — you can change it later, and you can
+    skip a season whenever you need to.
+  </p>
+  <div class="summary-strip">
+    <span>{{ catalogue.shipments_per_year }} shipments a year</span>
+    <span>Cancel after two shipments</span>
+    <span>Invitation open until {{ expires_on }}</span>
+  </div>
+</div>
+
+{% if cancelled %}
+<div class="notice">
+  Checkout was cancelled, and nothing has been charged. Your invitation is still
+  open — pick an allocation whenever you are ready.
+</div>
+{% endif %}
+{% if error %}
+<div class="notice bad">{{ error }}</div>
+{% endif %}
+
+<div class="tiers">
+  {% for tier in tiers %}
+  <article class="tier{% if tier.featured %} featured{% endif %}{% if tier.invite_only %} locked{% endif %}">
+    <div class="disc{% if tier.invite_only %} invite{% endif %}">
+      <div>
+        {% if tier.invite_only %}
+          <div class="count serif">Inner<br>Circle</div>
+        {% else %}
+          <div class="count">{{ tier.bottles }}</div>
+          <div class="unit">Bottles</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <p class="tier-label">{{ tier.label }}</p>
+    <h2 class="tier-name">{{ tier.name }}</h2>
+    <p class="tier-summary">{{ tier.summary }}</p>
+    <div class="rule"></div>
+
+    <ul>
+      {% for benefit in tier.benefits %}<li>{{ benefit | safe }}</li>{% endfor %}
+    </ul>
+
+    <div class="spacer"></div>
+
+    <p class="price">
+      {{ tier.price }}
+      <small>
+        per shipment{% if tier.shipping_cents %} + {{ "$%.2f"|format(tier.shipping_cents / 100) }} shipping{% else %} · shipping included{% endif %}
+      </small>
+    </p>
+
+    {% if tier.invite_only %}
+      <span class="btn disabled">Invite Only</span>
+    {% else %}
+      <form method="post" action="/club/offer/{{ token }}/checkout">
+        <input type="hidden" name="tier_key" value="{{ tier.key }}">
+        <button class="btn" type="submit">Join Now</button>
+      </form>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+
+<div class="notice">
+  <strong>What happens next.</strong> You pay at our payment provider — your card
+  never touches this site. Your first shipment is reserved as soon as the payment
+  clears, and an invoice reaches you by email the same minute. We write two weeks
+  before every release so you can change quantities or skip.
+  {% if not payments_live %}
+  <br><br><em>This installation is running without payment credentials, so
+  checkout is simulated and no money will move.</em>
+  {% endif %}
+</div>
+{% endblock %}

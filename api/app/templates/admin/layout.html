@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} — Cellar desk</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root {
+  --bg:#faf8f5; --surface:#fff; --text:#2c1e24; --text-2:#5c4650; --muted:#9a8890;
+  --wine:#722f3a; --wine-pale:#f0e3e6; --border:#e2d8d0;
+  --ok:#3f6b4f; --warn:#8a6d1f; --bad:#9c3b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#1a1215; --surface:#241a1e; --text:#ede6e0; --text-2:#c0b0b6;
+          --muted:#86747a; --wine:#a8505e; --wine-pale:#2e1e24; --border:#3a2c32;
+          --ok:#7fae8d; --warn:#cdae5e; --bad:#d98a8a; }
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+     background:var(--bg);color:var(--text)}
+a{color:var(--wine)}
+header.bar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.9rem 1.5rem;display:flex;gap:1.5rem;align-items:baseline;flex-wrap:wrap}
+header.bar .brand{font-family:Georgia,serif;letter-spacing:.1em;text-transform:uppercase;
+  font-size:.8rem;color:var(--wine);text-decoration:none}
+header.bar nav{display:flex;gap:1.1rem;flex-wrap:wrap}
+header.bar nav a{font-size:.78rem;text-decoration:none;color:var(--text-2)}
+header.bar nav a.on,header.bar nav a:hover{color:var(--wine)}
+main{max-width:1180px;margin:0 auto;padding:1.75rem 1.5rem 4rem}
+h1{font-family:Georgia,serif;font-weight:400;font-size:1.5rem;margin-bottom:.35rem}
+.sub{color:var(--muted);font-size:.82rem;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;background:var(--surface);
+      border:1px solid var(--border);font-size:.85rem}
+th,td{padding:.6rem .75rem;text-align:left;border-bottom:1px solid var(--border);
+      vertical-align:top}
+th{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+   font-weight:500;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;padding:.12rem .5rem;border-radius:999px;font-size:.66rem;
+      letter-spacing:.06em;border:1px solid var(--border);color:var(--text-2);white-space:nowrap}
+.pill.pending,.pill.sent,.pill.opened,.pill.ready,.pill.planned{border-color:var(--warn);color:var(--warn)}
+.pill.approved,.pill.accepted,.pill.paid,.pill.active,.pill.delivered,.pill.fulfilled,.pill.issued,.pill.open{border-color:var(--ok);color:var(--ok)}
+.pill.declined,.pill.expired,.pill.failed,.pill.cancelled,.pill.revoked,.pill.returned,.pill.held{border-color:var(--bad);color:var(--bad)}
+.card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;margin-bottom:1.25rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.btn{display:inline-block;padding:.5rem 1rem;border:1px solid var(--wine);background:var(--wine);
+     color:#fff;text-decoration:none;cursor:pointer;font:inherit;font-size:.76rem}
+.btn.ghost{background:transparent;color:var(--wine)}
+.btn.small{padding:.3rem .65rem;font-size:.7rem}
+input,select,textarea{font:inherit;font-size:.82rem;padding:.45rem .6rem;background:var(--bg);
+  color:var(--text);border:1px solid var(--border);width:100%}
+label{display:block;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--muted);margin:.75rem 0 .3rem}
+.row{display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap}
+.warn{border-left:3px solid var(--warn);background:var(--surface);border:1px solid var(--border);
+      padding:.85rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--text-2)}
+.warn b{color:var(--text)}
+.empty{color:var(--muted);font-size:.85rem;padding:1.5rem;text-align:center;
+       background:var(--surface);border:1px solid var(--border)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8em;
+     background:var(--wine-pale);padding:.1rem .3rem;border-radius:2px;word-break:break-all}
+.log{font-size:.76rem;color:var(--text-2)}
+.log time{color:var(--muted);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="/admin">Cellar desk</a>
+  <nav>
+    <a href="/admin" class="{{ 'on' if section == 'applications' }}">Applications</a>
+    <a href="/admin/memberships" class="{{ 'on' if section == 'memberships' }}">Members</a>
+    <a href="/admin/orders" class="{{ 'on' if section == 'orders' }}">Orders</a>
+    <a href="/admin/shipments" class="{{ 'on' if section == 'shipments' }}">Shipments</a>
+    <a href="/admin/releases" class="{{ 'on' if section == 'releases' }}">Releases</a>
+  </nav>
+</header>
+<main>
+  {% for w in warnings %}<div class="warn"><b>Not configured:</b> {{ w }}</div>{% endfor %}
+  {% if flash %}<div class="warn"><b>Done:</b> {{ flash | safe }}</div>{% endif %}
+  {% block body %}{% endblock %}
+</main>
+</body>
+</html>

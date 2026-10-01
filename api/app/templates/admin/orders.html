@@ -1,0 +1,29 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>Orders</h1>
+<p class="sub">{{ rows|length }} shown · newest first</p>
+{% if not rows %}
+<div class="empty">No orders yet.</div>
+{% else %}
+<table>
+  <tr><th>Reference</th><th>Raised</th><th>Member</th><th>Allocation</th><th>Release</th>
+      <th class="num">Total</th><th>Status</th><th>Invoice</th></tr>
+  {% for r in rows %}
+  <tr>
+    <td><code>{{ r.reference }}</code></td>
+    <td class="num">{{ r.created_at[:10] }}</td>
+    <td>{{ r.first_name }} {{ r.last_name }}</td>
+    <td>{{ tier_names.get(r.tier_key, r.tier_key) }}</td>
+    <td>{{ r.release_name or '—' }}</td>
+    <td class="num">{{ money(r.total_cents, r.currency) }}</td>
+    <td><span class="pill {{ r.status }}">{{ r.status.replace('_',' ') }}</span></td>
+    <td>
+      {% if r.invoice_number %}
+        <a href="/admin/invoices/{{ r.invoice_id }}.pdf">{{ r.invoice_number }}</a>
+      {% else %}—{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

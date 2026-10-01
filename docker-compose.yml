@@ -3,6 +3,8 @@ services:
     image: ghcr.io/pel-matiasvaldivia/warmspringscellars:${TAG:-latest}
     container_name: warmspringscellars
     restart: unless-stopped
+    depends_on:
+      - api
 
     # Only port published. Nginx Proxy Manager terminates TLS and forwards here.
     # Bind to the loopback if NPM runs on this same host, so 8086 is not
@@ -31,3 +33,47 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # The club: applications, offers, payments, invoices, shipments.
+  # Not published. Only nginx reaches it, over the internal network.
+  api:
+    image: ghcr.io/pel-matiasvaldivia/warmspringscellars-api:${TAG:-latest}
+    container_name: warmspringscellars-api
+    restart: unless-stopped
+
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://warmspringscellars.com}
+      # Signs the offer links. Generate once and keep it: changing it
+      # invalidates every invitation already in someone's inbox.
+      #   openssl rand -base64 48
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      ADMIN_USER: ${ADMIN_USER:-cellar}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      # Until these are set, checkout is simulated and no money moves.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      # Until SMTP_HOST is set, mail is written to var/outbox as .eml files.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-club@warmspringscellars.com}
+      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-club@warmspringscellars.com}
+
+    # The database, the invoice PDFs and the outbox. Back this up.
+    volumes:
+      - club-data:/srv/var
+
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  club-data:

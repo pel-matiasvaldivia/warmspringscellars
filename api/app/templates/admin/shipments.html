@@ -1,0 +1,39 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>Shipments</h1>
+<p class="sub">{{ rows|length }} shown · the pick list is everything not yet delivered</p>
+{% if not rows %}
+<div class="empty">Nothing to pack.</div>
+{% else %}
+<table>
+  <tr><th>Order</th><th>Member</th><th>Allocation</th><th>To</th><th>Status</th>
+      <th>Carrier / tracking</th><th>Move it on</th></tr>
+  {% for r in rows %}
+  <tr>
+    <td><code>{{ r.reference }}</code></td>
+    <td>{{ r.first_name }} {{ r.last_name }}</td>
+    <td>{{ tier_names.get(r.tier_key, r.tier_key) }} · {{ bottles.get(r.tier_key, '?') }} btl</td>
+    <td>{{ r.ship_state }}</td>
+    <td><span class="pill {{ r.status }}">{{ r.status.replace('_',' ') }}</span>
+        {% if r.held_reason %}<br><span class="log">{{ r.held_reason }}</span>{% endif %}</td>
+    <td class="log">{{ r.carrier or '—' }}{% if r.tracking %}<br><code>{{ r.tracking }}</code>{% endif %}</td>
+    <td>
+      {% for target in transitions.get(r.status, []) %}
+        <form method="post" action="/admin/shipments/{{ r.id }}/advance" class="row"
+              style="margin-bottom:.35rem">
+          <input type="hidden" name="target" value="{{ target }}">
+          {% if target == 'in_transit' %}
+            <input name="carrier" placeholder="Carrier" style="width:7rem">
+            <input name="tracking" placeholder="Tracking" style="width:9rem" required>
+          {% elif target == 'held' %}
+            <input name="reason" placeholder="Why held" style="width:11rem">
+          {% endif %}
+          <button class="btn ghost small" type="submit">{{ target.replace('_',' ') }}</button>
+        </form>
+      {% endfor %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

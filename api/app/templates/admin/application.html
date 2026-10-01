@@ -1,0 +1,84 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>{{ app.first_name }} {{ app.last_name }}</h1>
+<p class="sub">
+  Application #{{ app.id }} · <span class="pill {{ app.status }}">{{ app.status }}</span>
+  · received {{ app.created_at[:16].replace('T',' ') }}
+</p>
+
+<div class="grid2">
+  <div class="card">
+    <table>
+      <tr><th>Email</th><td>{{ app.email }}</td></tr>
+      <tr><th>Phone</th><td>{{ app.phone or '—' }}</td></tr>
+      <tr><th>Ships to</th><td>{{ [app.city, app.state] | select | join(', ') }}</td></tr>
+      <tr><th>Asked for</th><td>{{ tier_names.get(app.tier_interest, '—') }}</td></tr>
+      <tr><th>Heard via</th><td>{{ app.referral or '—' }}</td></tr>
+      <tr><th>Note</th><td>{{ app.note or '—' }}</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    {% if app.status == 'pending' %}
+      <form method="post" action="/admin/applications/{{ app.id }}/approve">
+        <label>Allocations to offer</label>
+        {% for t in selectable %}
+          <div style="display:flex;gap:.5rem;align-items:center;margin:.3rem 0">
+            <input type="checkbox" name="tiers" value="{{ t.key }}" checked
+                   style="width:auto" id="t-{{ t.key }}">
+            <label for="t-{{ t.key }}" style="margin:0;text-transform:none;letter-spacing:0;
+                   font-size:.85rem;color:var(--text)">{{ t.name }} — {{ t.price }}</label>
+          </div>
+        {% endfor %}
+        <div style="display:flex;gap:.5rem;align-items:center;margin:.3rem 0">
+          <input type="checkbox" name="tiers" value="inner-circle" style="width:auto" id="t-inner">
+          <label for="t-inner" style="margin:0;text-transform:none;letter-spacing:0;
+                 font-size:.85rem;color:var(--text)">The Inner Circle — by invitation</label>
+        </div>
+        <p style="margin-top:1rem"><button class="btn" type="submit">Approve &amp; send the invitation</button></p>
+      </form>
+
+      <hr style="border:0;border-top:1px solid var(--border);margin:1.25rem 0">
+
+      <form method="post" action="/admin/applications/{{ app.id }}/decline">
+        <label for="reason">Decline, with a reason (kept internal)</label>
+        <input id="reason" name="reason" placeholder="No allocation left this season">
+        <p style="margin-top:.75rem"><button class="btn ghost" type="submit">Decline</button></p>
+      </form>
+    {% else %}
+      <p class="sub" style="margin:0">
+        Decided {{ (app.decided_at or '')[:16].replace('T',' ') }} by {{ app.decided_by or '—' }}.
+        {% if app.decline_reason %}<br>Reason: {{ app.decline_reason }}{% endif %}
+      </p>
+    {% endif %}
+
+    {% if offers %}
+      <h2 style="font:400 1rem Georgia,serif;margin:1.5rem 0 .5rem">Invitations</h2>
+      <table>
+        <tr><th>Sent</th><th>Status</th><th>Expires</th><th>Link</th></tr>
+        {% for o in offers %}
+        <tr>
+          <td class="num">{{ o.created_at[:16].replace('T',' ') }}</td>
+          <td><span class="pill {{ o.status }}">{{ o.status }}</span></td>
+          <td class="num">{{ o.expires_at[:10] }}</td>
+          <td><code>{{ offer_urls[o.id] }}</code></td>
+        </tr>
+        {% endfor %}
+      </table>
+      <p class="sub" style="margin-top:.5rem">
+        The link is shown here because mail is not configured yet; once SMTP is set
+        it goes to the member and nowhere else.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2 style="font:400 1rem Georgia,serif;margin-bottom:.75rem">What happened</h2>
+  {% for e in events %}
+    <div class="log"><time>{{ e.created_at[:16].replace('T',' ') }}</time>
+      — {{ e.subject }} {{ e.action }}{% if e.actor != 'system' %} by {{ e.actor }}{% endif %}
+      {% if e.detail %}<span style="color:var(--muted)">{{ e.detail }}</span>{% endif %}</div>
+  {% endfor %}
+</div>
+{% endblock %}
