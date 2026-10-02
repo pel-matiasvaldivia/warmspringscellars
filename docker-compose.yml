@@ -52,6 +52,17 @@ services:
       # Until these are set, checkout is simulated and no money moves.
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      # Until QBO_CLIENT_ID is set, invoices queue at /admin/accounting
+      # instead of reaching QuickBooks. The tokens live in the data volume,
+      # not here: Intuit replaces the refresh token on every refresh.
+      QBO_CLIENT_ID: ${QBO_CLIENT_ID:-}
+      QBO_CLIENT_SECRET: ${QBO_CLIENT_SECRET:-}
+      QBO_ENVIRONMENT: ${QBO_ENVIRONMENT:-sandbox}
+      QBO_REDIRECT_URI: ${QBO_REDIRECT_URI:-}
+      QBO_WINE_ITEM: ${QBO_WINE_ITEM:-Wine Club Allocation}
+      QBO_SHIPPING_ITEM: ${QBO_SHIPPING_ITEM:-Shipping}
+      QBO_DEPOSIT_ACCOUNT: ${QBO_DEPOSIT_ACCOUNT:-}
+      QBO_AUTOSYNC: ${QBO_AUTOSYNC:-false}
       # Until SMTP_HOST is set, mail is written to var/outbox as .eml files.
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

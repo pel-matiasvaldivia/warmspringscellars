@@ -164,6 +164,38 @@ CREATE TABLE IF NOT EXISTS webhook_seen (
     received_at TEXT NOT NULL,
     PRIMARY KEY (provider, event_id)
 );
+
+-- Documents waiting to reach the accounting system. Written in the same
+-- transaction as the invoice they describe, so the books can never be asked
+-- to record an order that was rolled back, and an order that committed always
+-- has its paperwork queued even if QuickBooks was down at the time.
+CREATE TABLE IF NOT EXISTS ledger_task (
+    id          INTEGER PRIMARY KEY,
+    created_at  TEXT NOT NULL,
+    kind        TEXT NOT NULL,            -- 'invoice' | 'payment'
+    subject_id  INTEGER NOT NULL,         -- invoice.id in both cases
+    status      TEXT NOT NULL DEFAULT 'pending',   -- pending | done | failed
+    attempts    INTEGER NOT NULL DEFAULT 0,
+    last_error  TEXT,
+    external_id TEXT,                     -- the ledger's own id for the document
+    provider    TEXT,
+    synced_at   TEXT,
+    UNIQUE (kind, subject_id)
+);
+CREATE INDEX IF NOT EXISTS ledger_task_status ON ledger_task(status, id);
+
+-- OAuth tokens for the accounting system. In the database rather than the
+-- environment because Intuit rotates the refresh token on every refresh: a
+-- value baked into .env would be stale an hour after the first sync.
+CREATE TABLE IF NOT EXISTS oauth_token (
+    provider            TEXT PRIMARY KEY,
+    realm_id            TEXT,
+    access_token        TEXT,
+    refresh_token       TEXT,
+    access_expires_at   TEXT,
+    refresh_expires_at  TEXT,
+    updated_at          TEXT NOT NULL
+);
 """
 
 

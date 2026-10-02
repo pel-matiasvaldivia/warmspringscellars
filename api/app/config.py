@@ -60,6 +60,26 @@ class Settings:
     offer_days: int = field(default_factory=lambda: int(_env("OFFER_DAYS", "14")))
     currency: str = field(default_factory=lambda: _env("CURRENCY", "usd"))
 
+    # ── QuickBooks Online ────────────────────────────────────────────────
+    # The company itself is not configured here: its realm id only arrives on
+    # the redirect back from Intuit, and is stored with the tokens.
+    qbo_client_id: str = field(default_factory=lambda: _env("QBO_CLIENT_ID"))
+    qbo_client_secret: str = field(default_factory=lambda: _env("QBO_CLIENT_SECRET"))
+    qbo_environment: str = field(
+        default_factory=lambda: _env("QBO_ENVIRONMENT", "sandbox").lower())
+    qbo_redirect_uri_raw: str = field(default_factory=lambda: _env("QBO_REDIRECT_URI"))
+    # These items must already exist in QuickBooks. The adapter will not create
+    # them: which income account the money lands in is the bookkeeper's call.
+    qbo_wine_item: str = field(
+        default_factory=lambda: _env("QBO_WINE_ITEM", "Wine Club Allocation"))
+    qbo_shipping_item: str = field(
+        default_factory=lambda: _env("QBO_SHIPPING_ITEM", "Shipping"))
+    qbo_deposit_account: str = field(default_factory=lambda: _env("QBO_DEPOSIT_ACCOUNT"))
+    # Push as each invoice is issued, or only when the desk asks. Off by
+    # default: the first weeks of a new connection are better watched than
+    # automatic.
+    qbo_autosync: bool = field(default_factory=lambda: _bool("QBO_AUTOSYNC", False))
+
     @property
     def db_path(self) -> Path:
         return self.data_dir / "club.sqlite3"
@@ -71,6 +91,21 @@ class Settings:
     @property
     def invoice_dir(self) -> Path:
         return self.data_dir / "invoices"
+
+    @property
+    def quickbooks_configured(self) -> bool:
+        return bool(self.qbo_client_id and self.qbo_client_secret)
+
+    @property
+    def qbo_redirect_uri(self) -> str:
+        """Where Intuit sends the browser back.
+
+        Derived from the public address unless overridden, because it has to
+        match the value registered in the Intuit app exactly — and a value
+        typed twice is a value that disagrees with itself eventually.
+        """
+        return (self.qbo_redirect_uri_raw
+                or f"{self.public_base_url}/admin/accounting/callback")
 
     @property
     def payments_live(self) -> bool:
@@ -96,6 +131,13 @@ class Settings:
                        "instead of being sent.")
         if not self.admin_password:
             out.append("ADMIN_PASSWORD is unset: /admin is closed until it is set.")
+        if not self.quickbooks_configured:
+            out.append("QBO_CLIENT_ID/QBO_CLIENT_SECRET are unset: invoices queue up for "
+                       "QuickBooks instead of reaching it. Nothing is lost — the queue is "
+                       "at /admin/accounting, and exports as CSV.")
+        elif self.payments_live and self.qbo_environment != "production":
+            out.append("Stripe is live but QBO_ENVIRONMENT is 'sandbox': real money would "
+                       "be booked into a practice company.")
         return out
 
 

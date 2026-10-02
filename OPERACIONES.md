@@ -6,6 +6,8 @@ envíos del Warm Springs Cellars Wine Club.
 La pantalla está en inglés porque es la que ven Robert y Cecilia; en este manual
 los nombres de los botones van entre comillas tal como aparecen ahí.
 
+*There is an English version of this manual at [`OPERATIONS.md`](OPERATIONS.md).*
+
 Las reglas de negocio están en [`api/FLOW.md`](api/FLOW.md). Este documento es
 el de uso diario: qué abrir, qué apretar y qué revisar.
 
@@ -51,6 +53,9 @@ adaptador todavía es un simulador. Los cuatro que importan:
   pueden verificar y **se rechazan**: un pago real no se registraría.
 - `SMTP_HOST` sin definir → ningún mail sale; cada uno se guarda como archivo
   `.eml` en `/srv/var/outbox` dentro del contenedor.
+- `QBO_CLIENT_ID`/`QBO_CLIENT_SECRET` sin definir → las facturas **se acumulan
+  en cola** en vez de llegar a QuickBooks. No se pierde nada: la cola está en
+  **Books** y se exporta en CSV (§7).
 
 Mientras haya recuadros, lo que se ve en pantalla es un ensayo, no la operación.
 Para leer los mails que no salieron:
@@ -62,7 +67,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 
 ---
 
-## 2. Las cinco pestañas
+## 2. Las seis pestañas
 
 | Pestaña | Para qué |
 | --- | --- |
@@ -71,6 +76,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 | **Orders** | Las órdenes y sus facturas en PDF |
 | **Shipments** | Los envíos, de "listo para empacar" a "entregado" |
 | **Releases** | Los despachos de temporada (abril y octubre) |
+| **Books** | QuickBooks: qué facturas ya están en los libros y qué falta |
 
 Las solicitudes pendientes y los envíos sin entregar suben solos al principio de
 sus listas. Lo que requiere atención queda arriba.
@@ -132,13 +138,16 @@ error. Si de verdad hace falta otro, lo que corresponde es una solicitud nueva.
 
 Con Stripe activo, el alta solo se confirma cuando llega el webhook. Si el socio
 dice que pagó y en **Orders** no aparece `paid`, el problema está en el webhook,
-no en el socio (ver §6).
+no en el socio (ver §8).
 
 ### 3.4 Lo que se genera solo
 
 Con el pago acreditado, el sistema crea sin intervención: la **membresía**
 (`active`), la **orden** (`paid`), la **factura** (con número correlativo sin
 huecos) y el **envío** (`ready`). No hay nada que apretar en este paso.
+
+La factura también **se encola para QuickBooks** en el mismo momento, en la
+misma transacción. Llegar a los libros es otro paso, y es el §7.
 
 ---
 
@@ -208,7 +217,95 @@ reembolsar. `cancelled` no tiene vuelta.
 
 ---
 
-## 7. Cuando algo no cierra
+## 7. Los libros: QuickBooks
+
+La pestaña **Books**. Cada factura y cada pago viajan a QuickBooks Online como
+dos documentos: la factura (*invoice*) y el pago que la cancela (*payment*).
+
+**Los libros van siempre detrás, nunca en el camino.** El socio que pagó es
+socio, haya contestado Intuit o no. Por eso emitir la factura no llama a
+QuickBooks: encola el documento y el envío se hace después. De ahí salen tres
+cosas que conviene saber:
+
+- Una orden que se confirmó **siempre** tiene su papeleo en cola, y una que se
+  deshizo nunca lo tiene. No pueden contradecirse: son el mismo commit.
+- Un envío que falla **queda a la vista**. La cola de Books es la respuesta
+  permanente a "¿qué no saben todavía los libros?", que es mejor preguntar en
+  marzo que descubrir en enero.
+- **Reintentar es gratis.** Si la factura ya está en QuickBooks con ese número,
+  el reintento la adopta en lugar de escribir una segunda.
+
+### 7.1 Conectar la primera vez
+
+1. En [developer.intuit.com](https://developer.intuit.com) → *My Apps* → crear
+   una app con el scope **Accounting**.
+2. Registrar en Intuit **exactamente** esta URI de retorno:
+   `https://<dominio>/admin/accounting/callback` — la pantalla de Books la
+   muestra escrita, para copiar y pegar.
+3. Poner `QBO_CLIENT_ID` y `QBO_CLIENT_SECRET` en `.env`, y
+   `QBO_ENVIRONMENT=sandbox` para practicar o `production` para los libros
+   reales. `docker compose up -d` para que los tome.
+4. En **Books** → **"Connect to QuickBooks"**. Intuit pide permiso, elegís la
+   empresa y vuelve. Eso es todo: la empresa queda guardada.
+
+**Antes del primer envío, dos ítems tienen que existir en QuickBooks** con
+estos nombres (Sales → Products and services):
+
+| Ítem | Qué lleva |
+| --- | --- |
+| `Wine Club Allocation` | el vino |
+| `Shipping` | el envío |
+
+El sistema **no los crea**. A qué cuenta de ingresos va cada peso es decisión
+del contador, y un valor por defecto pondría dinero real en la cuenta
+equivocada y en silencio. Si falta uno, el envío falla diciendo cuál.
+
+### 7.2 El día a día
+
+| Botón | Qué hace |
+| --- | --- |
+| **"Sync now"** | Manda todo lo pendiente: primero las facturas, después sus pagos |
+| **"Retry"** | Reintenta un documento que falló (aparece solo en esas filas) |
+| **"Export all (CSV)"** | Todas las facturas, una fila por renglón |
+| **"Export unfiled"** | Solo lo que todavía no está en los libros |
+| **"Disconnect"** | Corta la conexión. **La cola queda intacta** |
+
+El número grande de **"Waiting to be filed"** es lo único que hay que mirar de
+rutina: si crece y no baja, los libros se están quedando atrás. También sale en
+`/api/health`, para monitorearlo desde afuera.
+
+Con `QBO_AUTOSYNC=true` el envío sale solo con cada pago. Conviene dejarlo en
+`false` las primeras semanas y apretar "Sync now" a mano, mirando qué pasa.
+
+### 7.3 Los cien días
+
+Intuit **reemplaza el token de refresco en cada uso** —por eso los tokens viven
+en la base de datos y no en `.env`— y **lo vence si no se usa por cien días**.
+Un club que factura dos veces al año es, justamente, un club que se va a
+encontrar desconectado.
+
+La pantalla muestra la fecha límite en **"Re-authorise before"**. No es un dato
+de color: pasada esa fecha la única reparación es volver a apretar "Connect to
+QuickBooks". La cola no se pierde, pero nada se envía hasta que alguien
+reconecte.
+
+### 7.4 QuickBooks Desktop, o un contador que prefiere un archivo
+
+El CSV cubre los dos casos. QuickBooks **Desktop no tiene API**, y hay
+contadores que prefieren un archivo antes que darle acceso a la empresa a una
+aplicación. El export trae todo lo que hace falta: número, cliente, email,
+fecha, ítem, cantidad, importe, moneda, referencia de la orden y si está pago.
+
+> **Lo que no está probado.** El adaptador nunca habló con una empresa real de
+> QuickBooks desde acá: este contenedor no tiene salida a Intuit. Su lógica
+> propia sí está probada (rotación de tokens, buscar el cliente por email,
+> adoptar una factura duplicada, refrescar ante un 401), pero que Intuit acepte
+> cada campo solo lo prueba una empresa sandbox. **Conectá una sandbox y mandá
+> una factura antes de confiarle los libros reales.**
+
+---
+
+## 8. Cuando algo no cierra
 
 | Síntoma | Dónde mirar |
 | --- | --- |
@@ -219,11 +316,17 @@ reembolsar. `cancelled` no tiene vuelta.
 | El formulario del sitio devuelve error | Hay un límite de **8 solicitudes por hora por dirección IP**, y **los intentos rechazados también cuentan**. Desde la oficina, probando, se agota rápido. |
 | El escritorio da 503 | Falta `ADMIN_PASSWORD`. |
 | Un botón de estado no aparece | No es un bug: ese cambio de estado no está permitido desde donde está la fila. Ver la tabla de §5. |
+| "QuickBooks is not connected" | O faltan las credenciales en `.env`, o nadie autorizó la empresa todavía: **Books → "Connect to QuickBooks"**. Nada se perdió. |
+| "QuickBooks has no item called …" | Falta crear ese ítem en QuickBooks, apuntado a la cuenta de ingresos que corresponda (§7.1). El sistema no lo inventa a propósito. |
+| "Duplicate Document Number" | Resuelto solo: el reintento adopta la factura que ya está en QuickBooks. Si la fila quedó en `failed`, "Retry" la cierra. |
+| La cola de Books no baja | ¿Venció el token de los cien días? Mirar "Re-authorise before" y reconectar (§7.3). |
+| El contador pide los datos y no hay conexión | "Export all (CSV)". Es un sustituto completo, no un parche (§7.4). |
 
 ### Lo que hay que respaldar
 
 Todo vive en un único volumen, `club-data` (`/srv/var` dentro del
-contenedor): la base `club.sqlite3`, las facturas en PDF y el outbox.
+contenedor): la base `club.sqlite3` —con la cola de QuickBooks y los tokens de
+Intuit adentro—, las facturas en PDF y el outbox.
 
 ```bash
 docker compose exec api tar cz -C /srv var > respaldo-club-$(date +%F).tar.gz
@@ -239,7 +342,7 @@ primer lugar donde mirar antes de preguntarle al socio.
 
 ---
 
-## 8. Cómo se publica
+## 9. Cómo se publica
 
 El sitio y la API son dos contenedores y **un solo puerto publicado**, el
 `8086`, pensado para quedar detrás de Nginx Proxy Manager. La API no se publica:
@@ -261,7 +364,7 @@ se versiona.
 
 ---
 
-## 9. Antes de cobrar de verdad
+## 10. Antes de cobrar de verdad
 
 - [ ] `SECRET_KEY` generada, guardada y **fija** en `.env`
 - [ ] `ADMIN_PASSWORD` puesta, y el rango de IP descomentado en `nginx.conf`
@@ -271,6 +374,12 @@ se versiona.
       `checkout.session.completed`
 - [ ] SMTP configurado y probado con una aprobación de prueba a un mail propio
 - [ ] `SHIPPABLE_STATES` revisada contra los permisos reales de la bodega
+- [ ] QuickBooks: app creada, URI de retorno registrada, los dos ítems creados
+      y **una factura enviada a una empresa sandbox** antes de pasar a
+      `production`
+- [ ] `QBO_ENVIRONMENT=production` el mismo día que Stripe pasa a vivo — el
+      sistema avisa si uno está vivo y el otro en sandbox, pero mejor no
+      llegar ahí
 - [ ] Respaldo del volumen `club-data` automatizado
 
 Dos cosas que **no** están implementadas y conviene tener presentes: los límites

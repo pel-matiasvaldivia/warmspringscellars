@@ -18,6 +18,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
+from .accounting.queue import enqueue
 from .catalogue import Tier, catalogue
 from .config import SHIPPABLE_STATES, Settings
 from .db import Database, log, next_in_sequence, now
@@ -358,6 +359,14 @@ class Flow:
         )
         invoice_id = int(cur.lastrowid)
         log(con, "invoice", invoice_id, "issued", number=reference, order_id=order_id)
+
+        # The books are told inside this transaction, but only told that they
+        # are owed a document — the push itself happens later, from the queue.
+        # An invoice that committed always has its paperwork queued, and one
+        # that rolled back never does.
+        enqueue(con, "invoice", invoice_id)
+        if order["status"] == "paid":
+            enqueue(con, "payment", invoice_id)
         return invoice_id
 
     def _create_shipment(self, con: sqlite3.Connection, order_id: int) -> int:

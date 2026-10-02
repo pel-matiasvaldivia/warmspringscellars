@@ -13,11 +13,21 @@ from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request, Response
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import BackgroundTasks, Depends, FastAPI, Form, HTTPException, Request, Response
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+)
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
+from itsdangerous import BadSignature, URLSafeTimedSerializer
 
+from .accounting import AccountingError, build_ledger
+from .accounting import queue as ledger_queue
+from .accounting.quickbooks import new_state
 from .catalogue import catalogue
 from .config import SHIPPABLE_STATES, settings
 from .db import Database, log
@@ -33,6 +43,7 @@ TEMPLATES = Path(__file__).resolve().parent / "templates"
 db = Database(settings.db_path)
 payments = build_provider(settings)
 mailer = build_mailer(settings)
+ledger = build_ledger(settings, db)
 flow = Flow(db=db, settings=settings, payments=payments)
 
 templates = Jinja2Templates(directory=str(TEMPLATES))
@@ -40,7 +51,8 @@ templates.env.globals["money"] = money
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    print(f"[club] payments={payments.name} mail={mailer.name} db={settings.db_path}")
+    print(f"[club] payments={payments.name} mail={mailer.name} ledger={ledger.name}"
+          f" db={settings.db_path}")
     for warning in settings.warnings():
         print(f"[club] NOT CONFIGURED: {warning}")
     yield
@@ -106,6 +118,11 @@ def health() -> dict:
         "ok": True,
         "payments": {"provider": payments.name, "live": payments.live},
         "mail": {"transport": mailer.name, "live": mailer.live},
+        # The outstanding count is here on purpose: a queue that is quietly
+        # growing is the one failure in this service nobody would otherwise
+        # notice until an accountant asked.
+        "books": {"ledger": ledger.name, "live": ledger.live,
+                  "outstanding": len(ledger_queue.pending(db))},
         "not_configured": settings.warnings(),
     }
 
@@ -240,19 +257,32 @@ def sandbox_checkout(request: Request, d: str, s: str) -> HTMLResponse:
 
 
 @app.get("/club/sandbox/confirm")
-async def sandbox_confirm(d: str, s: str) -> RedirectResponse:
+async def sandbox_confirm(d: str, s: str,
+                          background: BackgroundTasks) -> RedirectResponse:
     if payments.live or not isinstance(payments, FakeProvider):
         raise HTTPException(404)
     body = json.loads(unb64(d))
     payload, signature = payments.sandbox_delivery(
         body["session_id"], int(body["amount_cents"]), body["currency"], body["metadata"],
     )
-    await handle_payment(payload, signature)
+    await handle_payment(payload, signature, background)
     return RedirectResponse(body["success_url"], status_code=303)
 
 
 # ── webhook ──────────────────────────────────────────────────────────────
-async def handle_payment(payload: bytes, signature: str | None) -> int | None:
+def push_books() -> None:
+    """Drain the ledger queue. Never raises: `push_one` records failures.
+
+    Run after the response, not inside it. A payment confirmation that waited
+    on Intuit would be a payment confirmation that Stripe times out on, and a
+    timed-out webhook is retried, which is a second chance to get the same
+    invoice pushed — not a reason to make the member wait.
+    """
+    ledger_queue.drain(db, ledger, actor="autosync")
+
+
+async def handle_payment(payload: bytes, signature: str | None,
+                         background: BackgroundTasks | None = None) -> int | None:
     event = payments.parse_webhook(payload, signature)
     if event is None:
         return None
@@ -283,15 +313,18 @@ async def handle_payment(payload: bytes, signature: str | None) -> int | None:
         with db.transaction() as con:
             log(con, "membership", membership_id, "receipt_failed", error=str(exc))
 
+    if settings.qbo_autosync and ledger.live and background is not None:
+        background.add_task(push_books)
+
     return membership_id
 
 
 @app.post("/api/payments/webhook")
-async def payments_webhook(request: Request) -> Response:
+async def payments_webhook(request: Request, background: BackgroundTasks) -> Response:
     payload = await request.body()
     signature = request.headers.get("stripe-signature") or request.headers.get("x-signature")
     try:
-        await handle_payment(payload, signature)
+        await handle_payment(payload, signature, background)
     except WebhookError as exc:
         # 400 so the provider marks the delivery failed and retries, rather
         # than 200 which would silently drop a real payment.
@@ -478,3 +511,102 @@ def admin_invoice_pdf(invoice_id: int, actor: str = Depends(require_admin)) -> F
         raise HTTPException(404)
     path = ensure_pdf(db, settings.invoice_dir, invoice_id)
     return FileResponse(path, media_type="application/pdf", filename=f"{row['number']}.pdf")
+
+
+# ── the books ────────────────────────────────────────────────────────────
+# The state parameter is signed rather than stored. A one-row table for a
+# value that lives ninety seconds is a table to back up and migrate forever.
+_state_signer = URLSafeTimedSerializer(settings.secret_key, salt="qbo-state")
+STATE_MAX_AGE = 900
+
+
+@app.get("/admin/accounting", response_class=HTMLResponse)
+def admin_accounting(request: Request, actor: str = Depends(require_admin)) -> HTMLResponse:
+    return admin_page(
+        request, "accounting.html", "accounting",
+        status=ledger.status(), ledger_name=ledger.name,
+        configured=settings.quickbooks_configured,
+        autosync=settings.qbo_autosync,
+        wine_item=settings.qbo_wine_item, shipping_item=settings.qbo_shipping_item,
+        redirect_uri=settings.qbo_redirect_uri,
+        rows=ledger_queue.tasks(db),
+        outstanding=len(ledger_queue.pending(db)),
+    )
+
+
+@app.get("/admin/accounting/connect")
+def admin_accounting_connect(actor: str = Depends(require_admin)) -> RedirectResponse:
+    if not settings.quickbooks_configured:
+        raise HTTPException(400, "QuickBooks is not configured")
+    url = ledger.authorize_url(_state_signer.dumps(new_state()))
+    return RedirectResponse(url, status_code=303)
+
+
+@app.get("/admin/accounting/callback", response_class=HTMLResponse)
+def admin_accounting_callback(request: Request, actor: str = Depends(require_admin),
+                              code: str = "", realmId: str = "",   # noqa: N803
+                              state: str = "", error: str = "") -> RedirectResponse:
+    """Where Intuit sends the browser back after consent.
+
+    Behind the desk's own password on purpose: Intuit redirects the staff
+    browser, not a server, so the address restriction and the password both
+    still apply to this hop.
+    """
+    if error:
+        return RedirectResponse(f"/admin/accounting?done=Intuit returned: {error}",
+                                status_code=303)
+    try:
+        _state_signer.loads(state, max_age=STATE_MAX_AGE)
+    except BadSignature:
+        raise HTTPException(400, "that authorisation did not start here") from None
+    if not code or not realmId:
+        raise HTTPException(400, "Intuit sent no code or no company")
+
+    try:
+        ledger.exchange_code(code, realmId)
+    except AccountingError as exc:
+        return RedirectResponse(f"/admin/accounting?done=Could not finish: {exc}",
+                                status_code=303)
+    return RedirectResponse(
+        f"/admin/accounting?done=Connected to QuickBooks company {realmId}.",
+        status_code=303)
+
+
+@app.post("/admin/accounting/disconnect")
+def admin_accounting_disconnect(actor: str = Depends(require_admin)) -> RedirectResponse:
+    if hasattr(ledger, "disconnect"):
+        ledger.disconnect()
+    return RedirectResponse("/admin/accounting?done=Disconnected. The queue is untouched.",
+                            status_code=303)
+
+
+@app.post("/admin/accounting/sync")
+def admin_accounting_sync(actor: str = Depends(require_admin)) -> RedirectResponse:
+    results = ledger_queue.drain(db, ledger, actor=actor)
+    done = " · ".join(results) if results else "Nothing was waiting."
+    return RedirectResponse(f"/admin/accounting?done={done}", status_code=303)
+
+
+@app.post("/admin/accounting/tasks/{task_id}/retry")
+def admin_accounting_retry(task_id: int,
+                           actor: str = Depends(require_admin)) -> RedirectResponse:
+    ledger_queue.retry(db, task_id)
+    task = db.one(
+        "SELECT t.*, i.number FROM ledger_task t LEFT JOIN invoice i ON i.id = t.subject_id"
+        " WHERE t.id = ?", (task_id,))
+    if task is None:
+        raise HTTPException(404)
+    done = ledger_queue.push_one(db, ledger, task, actor) if ledger.live else \
+        "QuickBooks is not connected, so nothing was pushed."
+    return RedirectResponse(f"/admin/accounting?done={done}", status_code=303)
+
+
+@app.get("/admin/accounting/export.csv")
+def admin_accounting_export(unsynced: int = 0,
+                            actor: str = Depends(require_admin)) -> PlainTextResponse:
+    body = ledger_queue.export_csv(db, only_unsynced=bool(unsynced))
+    name = "warm-springs-invoices.csv"
+    return PlainTextResponse(
+        body, media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{name}"'},
+    )

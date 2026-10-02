@@ -42,7 +42,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-block;padding:.12rem .5rem;border-radius:999px;font-size:.66rem;
       letter-spacing:.06em;border:1px solid var(--border);color:var(--text-2);white-space:nowrap}
 .pill.pending,.pill.sent,.pill.opened,.pill.ready,.pill.planned{border-color:var(--warn);color:var(--warn)}
-.pill.approved,.pill.accepted,.pill.paid,.pill.active,.pill.delivered,.pill.fulfilled,.pill.issued,.pill.open{border-color:var(--ok);color:var(--ok)}
+.pill.approved,.pill.accepted,.pill.paid,.pill.active,.pill.delivered,.pill.fulfilled,.pill.issued,.pill.open,.pill.done{border-color:var(--ok);color:var(--ok)}
 .pill.declined,.pill.expired,.pill.failed,.pill.cancelled,.pill.revoked,.pill.returned,.pill.held{border-color:var(--bad);color:var(--bad)}
 .card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;margin-bottom:1.25rem}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
@@ -76,6 +76,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8em;
     <a href="/admin/orders" class="{{ 'on' if section == 'orders' }}">Orders</a>
     <a href="/admin/shipments" class="{{ 'on' if section == 'shipments' }}">Shipments</a>
     <a href="/admin/releases" class="{{ 'on' if section == 'releases' }}">Releases</a>
+    <a href="/admin/accounting" class="{{ 'on' if section == 'accounting' }}">Books</a>
   </nav>
 </header>
 <main>

@@ -106,10 +106,10 @@ The whole commercial flow, from the form to the doorstep, is described in
 [`api/FLOW.md`](api/FLOW.md) — including the two things it deliberately does not
 do yet (US shipping compliance, and sales tax).
 
-Day to day, whoever works the desk wants
-[`OPERACIONES.md`](OPERACIONES.md) instead: what to open, what to press, and
-what to check when something does not add up. It is in Spanish, like the
-conversations that produced it.
+Day to day, whoever works the desk wants the operations manual instead: what to
+open, what to press, and what to check when something does not add up. It is
+the same document in two languages — [`OPERATIONS.md`](OPERATIONS.md) and
+[`OPERACIONES.md`](OPERACIONES.md).
 
 The desk is at `/admin`, behind the password in `.env`. Restrict it by address
 in `nginx.conf` too; the commented `allow`/`deny` lines are there for it.
@@ -121,6 +121,7 @@ in `nginx.conf` too; the commented `allow`/`deny` lines are there for it.
 | Orders and their invoices | `/admin/orders` |
 | The pick list, and tracking numbers | `/admin/shipments` |
 | Raise a release's orders | `/admin/releases` |
+| QuickBooks, and what the books are still owed | `/admin/accounting` |
 
 ### The offer
 
@@ -142,8 +143,9 @@ charged $205 is a bug that costs trust rather than pixels.
 
 ### Backups
 
-Everything the club knows is in the `club-data` volume: the SQLite database,
-the invoice PDFs, and the outbox. Back it up.
+Everything the club knows is in the `club-data` volume: the SQLite database —
+which also holds the QuickBooks queue and the Intuit tokens — the invoice PDFs,
+and the outbox. Back it up.
 
 ```bash
 docker run --rm -v warmspringscellars_club-data:/var -v "$PWD":/backup alpine \

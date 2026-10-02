@@ -1,0 +1,103 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>The books</h1>
+<p class="sub">Every invoice and every payment, on its way to QuickBooks.</p>
+
+<div class="grid2">
+  <div class="card">
+    <h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.05rem;margin-bottom:.6rem">
+      QuickBooks Online</h2>
+
+    {% if not configured %}
+      <p style="color:var(--text-2)">
+        No credentials yet. Create an app at
+        <a href="https://developer.intuit.com" rel="noopener">developer.intuit.com</a>,
+        then put its client id and secret in <code>.env</code> as
+        <code>QBO_CLIENT_ID</code> and <code>QBO_CLIENT_SECRET</code>, with this
+        exact redirect URI registered on the Intuit side:</p>
+      <p><code>{{ redirect_uri }}</code></p>
+      <p style="color:var(--text-2);margin-top:.75rem">
+        Nothing is lost in the meantime — the queue below keeps everything, and
+        the CSV export is a full substitute.</p>
+
+    {% elif not status.connected %}
+      <p style="color:var(--text-2)">{{ status.detail }}</p>
+      <p style="margin-top:.9rem">
+        <a class="btn" href="/admin/accounting/connect">Connect to QuickBooks</a></p>
+      <p class="log" style="margin-top:.6rem">
+        Environment: <b>{{ status.environment }}</b> · redirect:
+        <code>{{ redirect_uri }}</code></p>
+
+    {% else %}
+      <table>
+        <tr><th>Company</th><td>{{ status.company }}</td></tr>
+        <tr><th>Environment</th><td>{{ status.environment }}</td></tr>
+        <tr><th>Token renews</th><td>{{ status.access_expires_at or '—' }}</td></tr>
+        <tr><th>Re-authorise before</th><td>{{ status.reauthorise_before or '—' }}</td></tr>
+        <tr><th>Wine item</th><td>{{ wine_item }}</td></tr>
+        <tr><th>Shipping item</th><td>{{ shipping_item }}</td></tr>
+        <tr><th>On payment</th>
+            <td>{{ 'pushed automatically' if autosync else 'queued for review' }}</td></tr>
+      </table>
+      <p class="log" style="margin-top:.75rem">{{ status.detail }}</p>
+      <form method="post" action="/admin/accounting/disconnect" style="margin-top:.9rem"
+            onsubmit="return confirm('Disconnect QuickBooks? The queue is kept.')">
+        <button class="btn ghost small" type="submit">Disconnect</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.05rem;margin-bottom:.6rem">
+      Waiting to be filed</h2>
+    <p style="font-size:2rem;font-variant-numeric:tabular-nums;line-height:1">
+      {{ outstanding }}</p>
+    <p class="log">document{{ '' if outstanding == 1 else 's' }} not yet in the books</p>
+
+    <div class="row" style="margin-top:1.1rem">
+      <form method="post" action="/admin/accounting/sync">
+        <button class="btn" type="submit">Sync now</button>
+      </form>
+      <a class="btn ghost" href="/admin/accounting/export.csv">Export all (CSV)</a>
+      <a class="btn ghost" href="/admin/accounting/export.csv?unsynced=1">Export unfiled</a>
+    </div>
+    <p class="log" style="margin-top:.8rem">
+      The export is the way out that needs no connection at all: QuickBooks
+      Desktop has no API, and some bookkeepers would rather have the file.</p>
+  </div>
+</div>
+
+<h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.05rem;margin:.5rem 0 .6rem">
+  The queue</h2>
+
+{% if rows %}
+<table>
+  <tr><th>#</th><th>Document</th><th>Invoice</th><th>Status</th><th class="num">Tries</th>
+      <th>In the books as</th><th>Last problem</th><th></th></tr>
+  {% for r in rows %}
+  <tr>
+    <td class="num">{{ r.id }}</td>
+    <td>{{ r.kind }}</td>
+    <td>{{ r.number or '—' }}</td>
+    <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+    <td class="num">{{ r.attempts }}</td>
+    <td>{% if r.external_id %}<code>{{ r.external_id }}</code>
+        {% else %}—{% endif %}</td>
+    <td class="log">{{ r.last_error or '' }}</td>
+    <td>
+      {% if r.status == 'failed' %}
+      <form method="post" action="/admin/accounting/tasks/{{ r.id }}/retry">
+        <button class="btn ghost small" type="submit">Retry</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="log" style="margin-top:.75rem">
+  Pushing the same document twice is safe: an invoice QuickBooks already holds
+  under that number is adopted, not duplicated.</p>
+{% else %}
+<p class="empty">Nothing has been invoiced yet.</p>
+{% endif %}
+{% endblock %}
