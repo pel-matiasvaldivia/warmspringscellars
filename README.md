@@ -106,6 +106,11 @@ The whole commercial flow, from the form to the doorstep, is described in
 [`api/FLOW.md`](api/FLOW.md) — including the two things it deliberately does not
 do yet (US shipping compliance, and sales tax).
 
+Day to day, whoever works the desk wants
+[`OPERACIONES.md`](OPERACIONES.md) instead: what to open, what to press, and
+what to check when something does not add up. It is in Spanish, like the
+conversations that produced it.
+
 The desk is at `/admin`, behind the password in `.env`. Restrict it by address
 in `nginx.conf` too; the commented `allow`/`deny` lines are there for it.
 
