@@ -41,7 +41,7 @@ def tasks(c) -> list[dict]:
     return [dict(r) for r in c.main.db.all("SELECT * FROM ledger_task ORDER BY id")]
 
 
-def take_delivery(c, tier: str = "cellar-door") -> None:
+def take_delivery(c, tier: str = "founders-reserve") -> None:
     """One paid membership, which is one invoice and one payment."""
     apply_(c)
     token = approve(c)
@@ -87,10 +87,12 @@ def test_draining_files_the_invoice_and_then_its_payment(client):
     # The document carries what an accountant needs: who, how much, and the
     # split between wine and the shipping it travelled on.
     assert invoice.customer.email == "matias@example.com"
-    assert invoice.total_cents == 20500
-    assert [line.kind for line in invoice.lines] == ["wine", "shipping"]
-    assert sum(line.total_cents for line in invoice.lines) == 20500
-    assert fake.payments[number].amount_cents == 20500
+    assert invoice.total_cents == 34000
+    # Every tier on offer now includes carriage, so there is one line. The
+    # split is still exercised, in the adapter tests below.
+    assert [line.kind for line in invoice.lines] == ["wine"]
+    assert sum(line.total_cents for line in invoice.lines) == 34000
+    assert fake.payments[number].amount_cents == 34000
 
 
 def test_a_payment_waits_for_the_invoice_it_links_to(client):
@@ -195,13 +197,12 @@ def test_the_export_carries_every_line_of_every_invoice(client):
     assert "attachment" in res.headers["content-disposition"]
 
     rows = list(csv.DictReader(io.StringIO(res.text)))
-    assert len(rows) == 2                          # the allocation, and its shipping
+    assert len(rows) == 1                          # the allocation, carriage included
     assert rows[0]["InvoiceNo"].startswith("WSC-INV-")
     assert rows[0]["Email"] == "matias@example.com"
     assert rows[0]["Item"] == "Wine Club Allocation"
-    assert rows[1]["Item"] == "Shipping"
     assert rows[0]["Paid"] == "Yes"
-    assert sum(float(r["ItemAmount"]) for r in rows) == 205.00
+    assert float(rows[0]["ItemAmount"]) == 340.00
 
 
 def test_the_export_can_be_narrowed_to_what_is_not_filed_yet(client):
@@ -210,7 +211,7 @@ def test_the_export_can_be_narrowed_to_what_is_not_filed_yet(client):
 
     everything = client.get("/admin/accounting/export.csv", auth=ADMIN).text
     unfiled = client.get("/admin/accounting/export.csv?unsynced=1", auth=ADMIN).text
-    assert len(everything.splitlines()) == 3
+    assert len(everything.splitlines()) == 2
     assert len(unfiled.splitlines()) == 1          # the header, and nothing owed
 
 
@@ -346,7 +347,10 @@ def _an_invoice():
     return Invoice(
         number="WSC-INV-2026-0001", issued_at="2026-04-02T10:00:00+00:00", currency="usd",
         total_cents=20500, customer=_a_customer(), reference="WSC-2026-0001",
-        lines=(Line("The Cellar Door — 4 bottles", 1, 18000, 18000, "wine"),
+        # Two lines on purpose, although no tier charges for carriage today:
+        # the adapter has to map wine and shipping to different items, and
+        # that is exactly what comes back the day a tier charges again.
+        lines=(Line("The Founder's Reserve — 6 bottles", 1, 18000, 18000, "wine"),
                Line("Temperature-controlled shipping", 1, 2500, 2500, "shipping")),
     )
 

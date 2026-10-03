@@ -246,17 +246,17 @@ things follow:
 4. On **Books** → **"Connect to QuickBooks"**. Intuit asks for consent, you
    choose the company, and it comes back. That is all: the company is stored.
 
-**Before the first push, two items must already exist in QuickBooks** under
-these names (Sales → Products and services):
+**Before the first push, the item `Wine Club Allocation` must already exist in
+QuickBooks** (Sales → Products and services), under exactly that name.
 
-| Item | What it carries |
-| --- | --- |
-| `Wine Club Allocation` | the wine |
-| `Shipping` | the carriage |
-
-The service **will not create them**. Which income account each dollar lands in
+The service **will not create it**. Which income account each dollar lands in
 is the bookkeeper's decision, and a default would put real money in the wrong
-account quietly. If one is missing, the push fails saying which.
+account quietly. If it is missing, the push fails saying so.
+
+A second item, `Shipping`, is **not needed today**: every tier on offer includes
+carriage, so an order raises a single line. It is needed again the day a tier
+charges for carriage separately — wine and shipping book to different accounts,
+which is why they are different lines.
 
 ### 7.2 Day to day
 
@@ -373,7 +373,7 @@ template is the only part that is versioned.
       `checkout.session.completed`
 - [ ] SMTP configured, and tested with a trial approval to your own address
 - [ ] `SHIPPABLE_STATES` checked against the winery's actual permits
-- [ ] QuickBooks: app created, redirect URI registered, both items created, and
+- [ ] QuickBooks: app created, redirect URI registered, the item created, and
       **one invoice pushed to a sandbox company** before switching to
       `production`
 - [ ] `QBO_ENVIRONMENT=production` on the same day Stripe goes live — the

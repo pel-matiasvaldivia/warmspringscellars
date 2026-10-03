@@ -5,11 +5,13 @@
     "and tools/sync_tiers.py writes it into the landing page, so these numbers",
     "cannot drift between what a visitor is shown and what they are charged.",
     "",
-    "NUMBERS NEED THE WINERY'S SIGN-OFF. The two existing tiers carry the",
-    "prices already published on the site. The Full Case and Inner Circle are",
-    "proposals. Note that per-bottle cost is not monotonic across the ladder",
-    "(the Founder's Reserve costs more per bottle than the Cellar Door because",
-    "it includes library wines) — deliberate or not, it is worth a look.",
+    "NUMBERS NEED THE WINERY'S SIGN-OFF. The Founder's Reserve carries the",
+    "price already published on the site; The Full Case and Inner Circle are",
+    "proposals the winery has confirmed. The entry tier (The Cellar Door, 4",
+    "bottles at $180) was withdrawn in October 2026 and is not offered — the",
+    "Founder's Reserve is now the way in. Every remaining tier includes",
+    "shipping, so an order raises a single line; the shipping line and its",
+    "QuickBooks item only come back if a tier charges for carriage again.",
     "",
     "Deerfield Ranch, the reference, ships four times a year. This ships twice,",
     "which is what the rest of the site says and what 6,808 bottles a year can",
@@ -21,26 +23,6 @@
   "shipment_months": [4, 10],
 
   "tiers": [
-    {
-      "key": "cellar-door",
-      "name": "The Cellar Door",
-      "label": "Allocation",
-      "bottles": 4,
-      "discount_pct": 15,
-      "price_cents": 18000,
-      "shipping_cents": 2500,
-      "invite_only": false,
-      "featured": false,
-      "summary": "Our core allocation. A selection from the current releases twice a year, every spring and fall.",
-      "benefits": [
-        "4 bottles per shipment, chosen from the current releases",
-        "Two shipments annually (Spring &amp; Fall)",
-        "15% discount on all reorders",
-        "2 complimentary tastings per visit, three visits a year",
-        "Priority access to new releases",
-        "Member-only event invitations"
-      ]
-    },
     {
       "key": "founders-reserve",
       "name": "The Founder's Reserve",
@@ -92,13 +74,13 @@
       "shipping_cents": 0,
       "invite_only": true,
       "featured": false,
-      "summary": "Everything the cellar makes, including the single barrels that never leave it, and a key to the cave.",
+      "summary": "Everything the cellar makes, including the single barrels that never leave it, and the run of the winery itself.",
       "benefits": [
         "12 bottles per shipment, with single-barrel selections",
         "Two shipments annually (Spring &amp; Fall)",
         "30% discount on all purchases",
         "Unlimited tastings for up to six guests",
-        "A key to the cellar cave, by appointment",
+        "The fermentation floor and the barrel room, by appointment",
         "Harvest dinner and barrel-blending session",
         "Complimentary shipping on all orders"
       ]

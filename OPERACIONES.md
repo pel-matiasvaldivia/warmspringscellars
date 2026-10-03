@@ -248,17 +248,17 @@ cosas que conviene saber:
 4. En **Books** → **"Connect to QuickBooks"**. Intuit pide permiso, elegís la
    empresa y vuelve. Eso es todo: la empresa queda guardada.
 
-**Antes del primer envío, dos ítems tienen que existir en QuickBooks** con
-estos nombres (Sales → Products and services):
+**Antes del primer envío, el ítem `Wine Club Allocation` tiene que existir en
+QuickBooks** (Sales → Products and services), con ese nombre exacto.
 
-| Ítem | Qué lleva |
-| --- | --- |
-| `Wine Club Allocation` | el vino |
-| `Shipping` | el envío |
-
-El sistema **no los crea**. A qué cuenta de ingresos va cada peso es decisión
+El sistema **no lo crea**. A qué cuenta de ingresos va cada peso es decisión
 del contador, y un valor por defecto pondría dinero real en la cuenta
-equivocada y en silencio. Si falta uno, el envío falla diciendo cuál.
+equivocada y en silencio. Si falta, el envío falla diciendo cuál falta.
+
+Hay un segundo ítem, `Shipping`, que hoy **no hace falta**: todos los niveles
+vigentes incluyen el envío, así que la orden sale con un solo renglón. Vuelve a
+hacer falta el día que un nivel cobre el flete aparte — el vino y el flete van a
+cuentas distintas, y por eso son renglones distintos.
 
 ### 7.2 El día a día
 
@@ -374,7 +374,7 @@ se versiona.
       `checkout.session.completed`
 - [ ] SMTP configurado y probado con una aprobación de prueba a un mail propio
 - [ ] `SHIPPABLE_STATES` revisada contra los permisos reales de la bodega
-- [ ] QuickBooks: app creada, URI de retorno registrada, los dos ítems creados
+- [ ] QuickBooks: app creada, URI de retorno registrada, el ítem creado
       y **una factura enviada a una empresa sandbox** antes de pasar a
       `production`
 - [ ] `QBO_ENVIRONMENT=production` el mismo día que Stripe pasa a vivo — el

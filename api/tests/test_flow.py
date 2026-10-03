@@ -66,7 +66,7 @@ def apply_(client, **overrides) -> int:
 
 
 def approve(client, app_id: int | None = None,
-            tiers=("cellar-door", "founders-reserve")) -> str:
+            tiers=("founders-reserve", "full-case")) -> str:
     if app_id is None:
         app_id = int(client.main.db.one(
             "SELECT id FROM application WHERE status = 'pending' ORDER BY id DESC")["id"])
@@ -112,9 +112,9 @@ def test_request_to_shipment(client):
 
     offer_page = client.get(f"/club/offer/{token}")
     assert offer_page.status_code == 200
-    assert "The Cellar Door" in offer_page.text
-    assert "The Founder&#39;s Reserve" in offer_page.text or "Founder" in offer_page.text
-    assert "The Full Case" not in offer_page.text     # not offered to this applicant
+    assert "Founder" in offer_page.text and "The Full Case" in offer_page.text
+    # The invite-only tier is never ticked by default, so it is not on offer.
+    assert "The Inner Circle" not in offer_page.text
 
     pay(client, token, "founders-reserve")
 
@@ -214,7 +214,7 @@ def test_an_expired_offer_is_refused(client):
 
 def test_a_tier_that_was_not_offered_is_refused(client):
     app_id = apply_(client)
-    token = approve(client, app_id, tiers=("cellar-door",))
+    token = approve(client, app_id, tiers=("founders-reserve",))
     res = client.post(f"/club/offer/{token}/checkout",
                       data={"tier_key": "full-case"}, follow_redirects=False)
     assert res.status_code == 303
@@ -225,7 +225,7 @@ def test_a_tier_that_was_not_offered_is_refused(client):
 def test_an_offer_cannot_be_used_twice(client):
     app_id = apply_(client)
     token = approve(client)
-    pay(client, token, "cellar-door")
+    pay(client, token, "founders-reserve")
     assert client.main.db.one("SELECT COUNT(*) c FROM membership")["c"] == 1
 
     res = client.get(f"/club/offer/{token}")
@@ -233,16 +233,34 @@ def test_an_offer_cannot_be_used_twice(client):
     assert "already been accepted" in res.text
 
 
-def test_cellar_door_carries_its_shipping(client):
+def test_a_tier_that_charges_for_carriage_bills_it_as_its_own_line(client):
+    """No tier charges for shipping today, and the code still has to.
+
+    The entry tier that did was withdrawn in October 2026, so this exercises
+    `_create_order` directly rather than through the catalogue. Carriage stays
+    its own line because wine and shipping book to different accounts, and a
+    tier that charges for it again must not fold it into the wine.
+    """
+    from app.catalogue import Tier
+
     apply_(client)
-    token = approve(client)
-    pay(client, token, "cellar-door")
-    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    pay(client, approve(client), "founders-reserve")
+    membership_id = int(client.main.db.one("SELECT id FROM membership")["id"])
+
+    carriage = Tier(key="carriage", name="Carriage", label="Test", bottles=4,
+                    discount_pct=15, price_cents=18000, shipping_cents=2500,
+                    invite_only=False, featured=False, summary="", benefits=())
+    with client.main.db.transaction() as con:
+        order_id = client.main.flow._create_order(con, membership_id, carriage, None)
+
+    order = client.main.db.one('SELECT * FROM "order" WHERE id = ?', (order_id,))
     assert order["subtotal_cents"] == 18000
     assert order["shipping_cents"] == 2500
     assert order["total_cents"] == 20500
-    lines = client.main.db.all("SELECT * FROM order_line WHERE order_id = ?", (order["id"],))
+    lines = client.main.db.all("SELECT * FROM order_line WHERE order_id = ? ORDER BY id",
+                               (order_id,))
     assert len(lines) == 2
+    assert "shipping" in lines[1]["description"].lower()
 
 
 # ── the webhook ──────────────────────────────────────────────────────────
@@ -251,7 +269,7 @@ def test_a_replayed_webhook_does_not_create_a_second_membership(client):
     token = approve(client)
 
     res = client.post(f"/club/offer/{token}/checkout",
-                      data={"tier_key": "cellar-door"}, follow_redirects=False)
+                      data={"tier_key": "founders-reserve"}, follow_redirects=False)
     sandbox = res.headers["location"]
     confirm = sandbox.replace("/checkout?", "/confirm?")
 
@@ -309,7 +327,7 @@ def test_a_release_raises_one_order_per_active_member_and_only_once(client):
     for i in range(3):
         app_id = apply_(client, email=f"member{i}@example.com")
         token = approve(client, app_id)
-        pay(client, token, "cellar-door")
+        pay(client, token, "founders-reserve")
 
     # one of them steps out for the season
     member = client.main.db.one("SELECT * FROM membership ORDER BY id LIMIT 1")
@@ -336,7 +354,7 @@ def test_a_release_raises_one_order_per_active_member_and_only_once(client):
 def test_a_shipment_cannot_skip_ahead(client):
     apply_(client)
     token = approve(client)
-    pay(client, token, "cellar-door")
+    pay(client, token, "founders-reserve")
     shipment = client.main.db.one("SELECT * FROM shipment ORDER BY id DESC")
 
     res = client.post(f"/admin/shipments/{shipment['id']}/advance",
@@ -349,7 +367,7 @@ def test_a_shipment_cannot_skip_ahead(client):
 def test_a_shipment_does_not_travel_without_a_tracking_number(client):
     apply_(client)
     token = approve(client)
-    pay(client, token, "cellar-door")
+    pay(client, token, "founders-reserve")
     shipment = client.main.db.one("SELECT * FROM shipment ORDER BY id DESC")
     client.post(f"/admin/shipments/{shipment['id']}/advance", data={"target": "picked"},
                 auth=ADMIN, follow_redirects=False)
@@ -363,7 +381,7 @@ def test_a_shipment_does_not_travel_without_a_tracking_number(client):
 def test_wine_can_be_held_out_of_a_heat_wave_and_released_again(client):
     apply_(client)
     token = approve(client)
-    pay(client, token, "cellar-door")
+    pay(client, token, "founders-reserve")
     shipment = client.main.db.one("SELECT * FROM shipment ORDER BY id DESC")
     sid = int(shipment["id"])
 
@@ -387,7 +405,7 @@ def test_invoice_numbers_run_without_gaps(client):
     for i in range(3):
         app_id = apply_(client, email=f"seq{i}@example.com")
         token = approve(client, app_id)
-        pay(client, token, "cellar-door")
+        pay(client, token, "founders-reserve")
         numbers.append(client.main.db.one(
             "SELECT number FROM invoice ORDER BY id DESC")["number"])
 
@@ -407,7 +425,7 @@ def test_health_says_what_is_still_a_stub(client):
 def test_the_catalogue_is_served_for_the_landing_page(client):
     body = client.get("/api/catalogue").json()
     keys = [t["key"] for t in body["tiers"]]
-    assert keys == ["cellar-door", "founders-reserve", "full-case", "inner-circle"]
+    assert keys == ["founders-reserve", "full-case", "inner-circle"]
     assert body["tiers"][-1]["invite_only"] is True
 
 

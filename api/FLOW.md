@@ -136,9 +136,10 @@ itself disconnected. The desk shows that deadline rather than burying it.
 
 ### Where the money lands
 
-The adapter will not create items in QuickBooks. `QBO_WINE_ITEM` and
-`QBO_SHIPPING_ITEM` must already exist there, and a push fails with a sentence
-saying so if they do not. Which income account wine revenue and shipping book
+The adapter will not create items in QuickBooks. `QBO_WINE_ITEM` must already
+exist there, and a push fails with a sentence saying so if it does not.
+`QBO_SHIPPING_ITEM` is only reached when a tier charges for carriage as its own
+line, which none do since the entry tier was withdrawn. Which income account wine revenue and shipping book
 against is a bookkeeping decision; a default would put real money in a wrong
 account quietly, and quietly is the worst way to be wrong about money.
 
