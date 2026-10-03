@@ -8,10 +8,22 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `cellar-exterior.jpeg`   | The winery building with the arched wooden doors         | Hero — faded behind the headline          |
 | `robert_rex.jpg`         | Robert Rex in the vineyard, straw hat, holding a bottle  | Our Winemakers — left card                |
 | `cecilia-valdivia.jpeg`  | Cecilia Valdivia leaning on a barrel, glass in hand      | Our Winemakers — right card               |
+| `richard-deane.jpg`      | Richard Deane — the one of him with Cecilia and Robert   | Our Winemakers — the Richard Deane band   |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
 third. The hero image is cropped wide and full-bleed.
+
+**`richard-deane.jpg` is not here yet.** The band that introduces him is
+written and live; it simply drops its photo frame and centres the prose until
+the file exists, so nothing 404s and nothing looks broken in the meantime. Drop
+the photograph in under that name and it appears, cropped 4:5 with the faces in
+the upper third — the evening shot of the three of them crops well if it is
+taken in on Richard, or on Robert and Richard together.
+
+One thing to check before it ships: in that photograph both Robert and Richard
+are wearing jackets with another winery's name embroidered on them, legible at
+full size. A crop above the chest avoids it.
 
 The group photo of the team has no slot yet — the band that displayed it was
 removed because the file never landed here and it 404'd on every page load.
