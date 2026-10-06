@@ -16,6 +16,9 @@ Three passes, in order:
   3. Find the bottom of the glass — the lowest row that is both wide enough to
      be the bottle and mostly dark — and drop everything under it. That is what
      separates the bottle from its reflection and from the lit contact line.
+  4. Walk that edge back up through the contact ramp. The floor throws light
+     onto the last few rows of the heel, and keeping them leaves a pale lip
+     across the bottom that reads, on the page, as a shadow someone cut off.
 
 Run from the repo root:  python3 tools/cutout_bottles.py
 Requires Pillow and numpy. Runs after tools/label_bottles.py.
@@ -32,6 +35,9 @@ from PIL import Image, ImageFilter
 # common scale is what keeps a Burgundy shorter and fatter than a Bordeaux when
 # they stand side by side.
 OUTPUT_HEIGHT = 980
+
+# Fraction of the climb from glass to floor that still counts as bottle.
+CONTACT_CLIMB = 0.05
 
 # Every render tools/label_bottles.py produces.
 SRC_DIR = "images/renders"
@@ -100,6 +106,28 @@ def cutout(src):
         if (hi - lo) > body_width * 0.78 and dark >= 0.75:
             base = y
             break
+
+    # Refine it. The floor's light spills onto the heel for a few rows before
+    # the glass ends, and those rows are what read as a cut-off shadow once the
+    # bottle is on the page: a pale lip across a flat bottom edge.
+    #
+    # The ramp from glass to floor is steep and clean — on the supplied renders
+    # the darkest row is 1139 and the floor has taken over by 1148 — so the cut
+    # goes where that climb starts rather than at an absolute brightness: the
+    # heel of a dark bottle and the heel of a pale one sit at different levels,
+    # but both are flat before the floor lifts them.
+    core = slice(body.min() + int(body_width * 0.15), body.max() - int(body_width * 0.15))
+    rows = lum[:, core].mean(axis=1)
+
+    window = rows[max(base - 15, 0):min(base + 6, h)]
+    darkest = int(np.argmin(window)) + max(base - 15, 0)
+    floor_level = float(np.median(rows[min(base + 20, h - 1):min(base + 50, h)]))
+    # 5% of the climb: past that the row is carrying floor light, not glass.
+    ceiling = rows[darkest] + CONTACT_CLIMB * (floor_level - rows[darkest])
+    y = darkest
+    while y + 1 < h and rows[y + 1] <= ceiling:
+        y += 1
+    base = y
 
     silhouette = np.zeros((h, w), bool)
     for y in range(base + 1):

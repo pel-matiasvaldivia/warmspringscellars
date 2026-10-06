@@ -9,6 +9,7 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `robert_rex.jpg`         | Robert Rex in the vineyard, straw hat, holding a bottle  | Our Winemakers — left card                |
 | `cecilia-valdivia.jpeg`  | Cecilia Valdivia leaning on a barrel, glass in hand      | Our Winemakers — right card               |
 | `richard-deane.jpg`      | Richard Deane — the one of him with Cecilia and Robert   | Our Winemakers — the Richard Deane band   |
+| `door-mark.svg`          | Generated: the winery's mark, from the label artwork     | Inlined in the header beside the wordmark |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
@@ -28,7 +29,42 @@ full size. A crop above the chest avoids it.
 The group photo of the team has no slot yet — the band that displayed it was
 removed because the file never landed here and it 404'd on every page load.
 
+## The winery's mark
+
+`door-mark.svg` is the gable, the medallion and the arched doors from the
+label, lifted as **vector** out of the artwork and not traced by hand:
+
+```bash
+python3 tools/extract_doormark.py        # labels/21CS_WSC_final_label.ai -> images/door-mark.svg
+```
+
+A brand mark redrawn by eye is a different mark, and nobody notices until a
+printer puts the two side by side. The `.ai` files are PDF inside, so the
+drawing is already vector; the tool pulls the paths inside the mark's box and
+writes them out.
+
+The label prints it in two inks — burgundy masses with white line work over
+them — and flattening that to one colour loses every line inside the doors. So
+the line work is **cut out of the mass with a mask** rather than painted in the
+background's colour. Painting it would mean naming that colour, and the mark
+sits over the hero photograph, over cream once the page scrolls, and over a
+dark surface in the dark theme: three answers, one of them a photograph. A hole
+is the same hole on all of them.
+
+It is inlined into `index.html` rather than loaded through `<img>`, because an
+SVG in an `<img>` can see neither `currentColor` nor a CSS variable, and the
+mark takes the header's own colour.
+
+Not taken: the "EST 1982" lettering, which is set as text. At header size it
+would be illegible anyway.
+
 ## The shipment photograph
+
+**This photograph is currently off the page.** It was removed in October 2026;
+the slot, the caption and the styles are still in `index.html`, commented, so a
+better photograph goes back in by dropping the file here and uncommenting ten
+lines. Everything below still describes how the file in the repository was
+made.
 
 `shipment-box.webp` is the winery's own photograph of a packed case — corrugated
 outer, moulded pulp cradle, three bottles — with the labels replaced. The
@@ -95,6 +131,19 @@ so borrowing its own profile would drop a shadow through the wine's name.
 a black bottle from its own reflection is the hard part, since the reflection
 is dark too; it is found by scanning up for the lowest row both wide enough and
 dark enough to be the glass itself.
+
+That edge is then walked back up through the **contact ramp**. The floor throws
+light onto the last few rows of the heel — on these renders the glass runs dark
+to row 1139 and the floor has taken over by 1148 — and keeping those rows left a
+pale lip across the bottom of every bottle. On the page, under a drop-shadow,
+that lip read as a shadow someone had sliced through. The cut now goes where
+the climb to floor brightness begins (5% of the way up it), which lands all five
+bottles on the same row, as it should: they share a floor.
+
+The page carries no drop-shadow on the bottles any more. A CSS filter shadow
+hangs off the flat bottom edge of a cut-out and announces it; the only grounding
+is the soft ellipse on the stage, which is its own element and cannot be clipped
+by the card.
 
 Every bottle is scaled by one common factor rather than fitted individually, so
 the Burgundy stays genuinely shorter than the Bordeaux when they stand side by
