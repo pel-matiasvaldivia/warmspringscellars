@@ -1,0 +1,464 @@
+/* Warm Springs Coffee — the second unit.
+   Same house, different room: the type system and the mark come straight from
+   the winery's page, the palette is roast rather than wine. Kept in its own
+   file because this page is a sibling of index.html, not a copy of it, and the
+   two should be able to drift apart without one breaking the other. */
+
+:root {
+  --c-bg: #faf7f2;
+  --c-bg-alt: #f3ece3;
+  --c-surface: #ffffff;
+  --c-text: #241a12;
+  --c-text-secondary: #5a4736;
+  --c-text-muted: #9a8a78;
+
+  /* The roast: from green through to the darkest bean. */
+  --c-bean: #4a2c17;
+  --c-bean-deep: #311c0d;
+  --c-bean-light: #6b422a;
+  --c-ember: #b4661f;          /* the accent — a cup held to the light */
+  --c-ember-pale: #f4e5d6;
+
+  /* The winery's own colour, used only where the two units meet. */
+  --c-wine: #722f3a;
+  --c-wine-pale: #f0e3e6;
+
+  --c-border: #e4dacd;
+  --c-divider: #ded2c3;
+  --c-hero-bg: var(--c-bean-deep);
+  --c-hero-text: #f7f1e8;
+  --c-hero-muted: #d2bca4;
+  --c-footer-bg: #241a12;
+  --c-footer-text: #b9a68f;
+
+  --serif: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-bg: #18110b;
+    --c-bg-alt: #1f1710;
+    --c-surface: #251c14;
+    --c-text: #efe6da;
+    --c-text-secondary: #c4b4a0;
+    --c-text-muted: #8a7b6a;
+    --c-bean: #c08a5e;
+    --c-bean-light: #d4a279;
+    --c-ember: #d98a3d;
+    --c-ember-pale: #2e2117;
+    --c-wine: #a8505e;
+    --c-wine-pale: #2e1e24;
+    --c-border: #3a2c1f;
+    --c-divider: #3a2c1f;
+    --c-hero-text: #f7f1e8;
+    --c-footer-bg: #120d08;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── the banner that says this is not live ─── */
+.preview-bar {
+  background: var(--c-bean-deep);
+  color: var(--c-hero-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.6rem 1rem;
+}
+
+.preview-bar b { color: var(--c-hero-text); font-weight: 400; }
+
+/* ─── shared furniture ─── */
+.section { padding: 6.5rem 2rem; }
+.inner { max-width: 1120px; margin: 0 auto; }
+.narrow { max-width: 720px; margin: 0 auto; }
+
+.eyebrow {
+  font-size: 0.66rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--c-ember);
+  margin-bottom: 1rem;
+}
+
+h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.2; }
+
+h2.title {
+  font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+  margin-bottom: 1.25rem;
+}
+
+.prose {
+  color: var(--c-text-secondary);
+  font-size: 1.02rem;
+  line-height: 1.85;
+}
+
+.prose + .prose { margin-top: 1.1rem; }
+
+.rule {
+  width: 46px;
+  height: 1px;
+  background: var(--c-divider);
+  margin: 2.5rem 0;
+}
+
+.center { text-align: center; }
+.center .rule { margin-inline: auto; }
+
+/* ─── the mark ─── */
+.door-mark {
+  display: block;
+  aspect-ratio: 230 / 224;
+  color: currentColor;
+}
+
+/* ─── hero ─── */
+.hero {
+  position: relative;
+  min-height: 92vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 5rem 2rem;
+  background:
+    radial-gradient(ellipse at 50% 28%, rgba(180,102,31,0.22) 0%, transparent 62%),
+    linear-gradient(180deg, #4a2c17 0%, #241508 100%);
+  color: var(--c-hero-text);
+  overflow: hidden;
+}
+
+/* The steam: two slow plumes, decorative and nothing more, so they stop
+   entirely when the reader has asked for less movement. */
+.steam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.steam span {
+  position: absolute;
+  bottom: -18%;
+  width: 46vmin;
+  height: 46vmin;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,229,214,0.20) 0%, transparent 62%);
+  animation: rise 26s ease-in-out infinite;
+}
+
+.steam span:nth-child(1) { left: 18%; animation-delay: 0s; }
+.steam span:nth-child(2) { left: 58%; animation-delay: -13s; width: 34vmin; height: 34vmin; }
+
+@keyframes rise {
+  0%   { transform: translateY(0) scale(1);     opacity: 0; }
+  28%  { opacity: 0.9; }
+  100% { transform: translateY(-115vh) scale(1.5); opacity: 0; }
+}
+
+.hero-inner { position: relative; max-width: 760px; }
+
+.hero-est {
+  font-size: 0.68rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--c-hero-muted);
+  margin-bottom: 2.5rem;
+}
+
+.hero .door-mark {
+  height: 76px;
+  width: auto;
+  margin: 0 auto 2.25rem;
+  color: var(--c-hero-text);
+  opacity: 0.85;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 5.2vw, 3.9rem);
+  margin-bottom: 1.5rem;
+}
+
+.hero h1 em { font-style: italic; color: var(--c-hero-muted); }
+
+.hero-sub {
+  color: var(--c-hero-muted);
+  font-size: 1.04rem;
+  line-height: 1.85;
+  max-width: 560px;
+  margin: 0 auto 2.5rem;
+}
+
+.cta {
+  display: inline-block;
+  padding: 1rem 2.5rem;
+  background: var(--c-hero-text);
+  color: var(--c-bean-deep);
+  text-decoration: none;
+  font-size: 0.74rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.cta:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.3); }
+
+.hero-origins {
+  margin-top: 3rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--c-hero-muted);
+}
+
+.hero-origins span { white-space: nowrap; }
+.hero-origins i { font-style: normal; opacity: 0.5; padding: 0 0.75rem; }
+
+/* ─── the argument ─── */
+.thesis { background: var(--c-bg-alt); }
+
+.thesis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.pairs { display: flex; flex-direction: column; gap: 1.6rem; }
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--c-divider);
+}
+
+.pair:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.pair b {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.04rem;
+}
+
+.pair .from { color: var(--c-wine); text-align: right; }
+.pair .to   { color: var(--c-bean); }
+
+.pair i {
+  font-style: normal;
+  color: var(--c-text-muted);
+  font-size: 0.8rem;
+}
+
+/* ─── origins ─── */
+.origin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+  margin-top: 3.5rem;
+}
+
+.origin {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  padding: 2.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.origin-country {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.origin-where {
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-ember);
+  margin-bottom: 1.4rem;
+}
+
+.origin p { color: var(--c-text-secondary); font-size: 0.95rem; line-height: 1.8; }
+
+.origin-notes {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+/* The bean, drawn rather than photographed: there is no photography for this
+   unit yet, and a stock photo of someone else's coffee would be a lie told
+   early. */
+.bean {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 1.5rem;
+  color: var(--c-bean);
+  opacity: 0.8;
+}
+
+/* ─── the two pleasures ─── */
+.both { background: var(--c-bean-deep); color: var(--c-hero-text); }
+.both .eyebrow { color: var(--c-ember); }
+.both .prose { color: var(--c-hero-muted); }
+
+/* A grid, not a flex row: as flex items the two cups sized to their text,
+   outgrew the column and wrapped into a stack on a wide screen. */
+.both-cups {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 3rem 0 0;
+}
+
+.cup {
+  border: 1px solid rgba(247,241,232,0.18);
+  padding: 1.75rem 2rem;
+  min-width: 230px;
+  text-align: left;
+}
+
+.cup h3 { font-size: 1.15rem; margin-bottom: 0.4rem; }
+.cup p { font-size: 0.86rem; color: var(--c-hero-muted); line-height: 1.75; }
+.cup .tag {
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--c-ember);
+  margin-bottom: 0.8rem;
+}
+
+/* ─── the form ─── */
+.join { background: var(--c-bg-alt); }
+
+.form {
+  max-width: 560px;
+  margin: 3rem auto 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.field { position: relative; }
+
+.field input, .field select {
+  width: 100%;
+  padding: 0.95rem 0.2rem 0.6rem;
+  border: 0;
+  border-bottom: 1px solid var(--c-border);
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.3s;
+}
+
+.field input:focus, .field select:focus {
+  outline: none;
+  border-bottom-color: var(--c-ember);
+}
+
+.field label {
+  display: block;
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-top: 0.35rem;
+}
+
+.form .cta {
+  background: var(--c-bean);
+  color: var(--c-bg);
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  justify-self: start;
+}
+
+.note {
+  font-size: 0.82rem;
+  color: var(--c-text-muted);
+  line-height: 1.75;
+}
+
+.said {
+  display: none;
+  border: 1px solid var(--c-ember);
+  background: var(--c-ember-pale);
+  padding: 1.5rem 1.75rem;
+  margin-top: 2rem;
+}
+
+.said.on { display: block; }
+.said h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--c-bean); }
+.said p { font-size: 0.9rem; color: var(--c-text-secondary); }
+.said a { color: var(--c-bean); }
+
+/* ─── footer ─── */
+.footer {
+  background: var(--c-footer-bg);
+  color: var(--c-footer-text);
+  padding: 4rem 2rem 3rem;
+}
+
+.footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.footer-brand { font-family: var(--serif); font-size: 1.2rem; color: #f7f1e8; }
+.footer-brand span { font-style: italic; }
+.footer p { font-size: 0.8rem; line-height: 1.8; }
+.footer .door-mark { height: 38px; width: auto; margin: 0 auto; color: #fff; opacity: 0.25; }
+.footer-right { text-align: right; font-size: 0.8rem; line-height: 1.8; }
+.footer a { color: var(--c-footer-text); }
+
+/* ─── reveal ─── */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.8s ease, transform 0.8s ease; }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .steam { display: none; }
+  .cta:hover { transform: none; }
+}
+
+/* ─── narrow screens ─── */
+@media (max-width: 860px) {
+  .section { padding: 4.5rem 1.5rem; }
+  .thesis-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .footer-inner { grid-template-columns: 1fr; text-align: center; gap: 1.5rem; }
+  .footer-right { text-align: center; }
+  .hero { min-height: 88vh; padding: 4rem 1.5rem; }
+  .pair { grid-template-columns: 1fr; gap: 0.2rem; text-align: center; }
+  .pair .from { text-align: center; }
+  .both-cups { grid-template-columns: 1fr; }
+  .cup { min-width: 0; width: 100%; }
+}

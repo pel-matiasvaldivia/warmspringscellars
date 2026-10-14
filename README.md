@@ -100,6 +100,29 @@ ports:
 …or drop `ports` entirely, attach both containers to a shared network, and
 point NPM at `warmspringscellars:8080`.
 
+## The coffee unit
+
+`coffee/` is a second landing page for **warmspringscoffee.com**, a roastery
+the winery is weighing up: premium roasted coffee from Kenya, Somalia and
+Colombia, sold to the same list as the wine.
+
+It is served at `/coffee/` and **is not announced**. Nothing on the public
+site links to it, the page asks every crawler to leave it alone, and a banner
+across the top says plainly that it is a preview. That is obscurity, not a
+lock — anyone who learns the address can open it. To make it private for real,
+uncomment the `allow`/`deny` lines on `location /coffee/` in `nginx.conf`, the
+same two lines that guard the cellar desk.
+
+Its form stores nothing and says so on submit. Wiring it to the club's own
+desk is a small job — an interest table and one endpoint — and worth doing
+before the page is shown to anyone who might actually fill it in.
+
+**Before it is announced, read the sourcing comment above the Somalia card.**
+Somali coffee culture is old and real; Somali coffee *growing* is tiny and
+mostly revival-stage, and a traceable commercial lot is not something to
+assume. The copy claims only a preparation tradition and a highland lot, and
+names no region, washing station, certification or volume.
+
 ## Running the club
 
 The whole commercial flow, from the form to the doorstep, is described in

@@ -3,6 +3,7 @@ FROM nginx:1.27-alpine
 # nginx:alpine ships an "nginx" user (uid 101); run as it rather than root.
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY index.html /usr/share/nginx/html/index.html
+COPY coffee/    /usr/share/nginx/html/coffee/
 COPY images/    /usr/share/nginx/html/images/
 COPY fonts/     /usr/share/nginx/html/fonts/
 
