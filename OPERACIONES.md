@@ -67,7 +67,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 
 ---
 
-## 2. Las seis pestañas
+## 2. Las siete pestañas
 
 | Pestaña | Para qué |
 | --- | --- |
@@ -77,6 +77,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 | **Shipments** | Los envíos, de "listo para empacar" a "entregado" |
 | **Releases** | Los despachos de temporada (abril y octubre) |
 | **Books** | QuickBooks: qué facturas ya están en los libros y qué falta |
+| **Coffee** | La lista de espera de la tostaduría (§8) |
 
 Las solicitudes pendientes y los envíos sin entregar suben solos al principio de
 sus listas. Lo que requiere atención queda arriba.
@@ -138,7 +139,7 @@ error. Si de verdad hace falta otro, lo que corresponde es una solicitud nueva.
 
 Con Stripe activo, el alta solo se confirma cuando llega el webhook. Si el socio
 dice que pagó y en **Orders** no aparece `paid`, el problema está en el webhook,
-no en el socio (ver §8).
+no en el socio (ver §9).
 
 ### 3.4 Lo que se genera solo
 
@@ -305,7 +306,28 @@ fecha, ítem, cantidad, importe, moneda, referencia de la orden y si está pago.
 
 ---
 
-## 8. Cuando algo no cierra
+## 8. La lista del café
+
+Aparte de los libros, el escritorio tiene una pestaña **Coffee**: quienes
+pidieron que les avisen cuando abra Warm Springs Coffee, desde la página
+`/coffee/` (que todavía no está anunciada).
+
+La columna **Cellar member** es la que importa. La página les promete que los
+socios de la bodega se atienden primero, así que la tabla cruza el email contra
+las membresías activas y muestra el nivel de quien ya es socio. Ojo con la
+diferencia entre lo que la persona **dice** ("Says they are a member") y lo que
+la base **sabe**: no siempre coinciden, y esa es justamente la utilidad de la
+columna.
+
+El cruce es por email. Alguien que se asoció al vino con otra dirección no
+aparece marcado, y conviene mirarlo antes de pasarlo por alto.
+
+Tres estados: `new` (esperando), `invited` (ya se le escribió) y `archived`.
+Se mueven libremente entre sí; no hay nada irreversible.
+
+---
+
+## 9. Cuando algo no cierra
 
 | Síntoma | Dónde mirar |
 | --- | --- |
@@ -342,7 +364,7 @@ primer lugar donde mirar antes de preguntarle al socio.
 
 ---
 
-## 9. Cómo se publica
+## 10. Cómo se publica
 
 El sitio y la API son dos contenedores y **un solo puerto publicado**, el
 `8086`, pensado para quedar detrás de Nginx Proxy Manager. La API no se publica:
@@ -364,7 +386,7 @@ se versiona.
 
 ---
 
-## 10. Antes de cobrar de verdad
+## 11. Antes de cobrar de verdad
 
 - [ ] `SECRET_KEY` generada, guardada y **fija** en `.env`
 - [ ] `ADMIN_PASSWORD` puesta, y el rango de IP descomentado en `nginx.conf`

@@ -64,7 +64,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 
 ---
 
-## 2. The six tabs
+## 2. The seven tabs
 
 | Tab | What it is for |
 | --- | --- |
@@ -74,6 +74,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 | **Shipments** | Shipments, from ready-to-pack to delivered |
 | **Releases** | The seasonal despatches (April and October) |
 | **Books** | QuickBooks: what is filed, and what is still owed |
+| **Coffee** | The roastery's waiting list (§8) |
 
 Pending applications and undelivered shipments float to the top of their lists
 on their own. What needs attention is where you look first.
@@ -303,7 +304,27 @@ quantity, amount, currency, the order reference, and whether it is paid.
 
 ---
 
-## 8. When something does not add up
+## 8. The coffee list
+
+Beside the books, the desk has a **Coffee** tab: the people who asked to be
+told when Warm Springs Coffee opens, from the `/coffee/` page that is not
+announced yet.
+
+The **Cellar member** column is the one that matters. The page promises that
+cellar members are asked first, so the table matches each email against live
+memberships and shows the tier of anyone who holds one. Watch the gap between
+what a person **says** ("Says they are a member") and what the database
+**knows** — they do not always agree, and that gap is the column's whole point.
+
+The match is on email. Somebody who joined the wine club under a different
+address will not be flagged, and is worth a look before they are passed over.
+
+Three states: `new` (waiting), `invited` (written to) and `archived`. They move
+freely between each other; nothing here is irreversible.
+
+---
+
+## 9. When something does not add up
 
 | Symptom | Where to look |
 | --- | --- |
@@ -341,7 +362,7 @@ the first place to look, before asking the member.
 
 ---
 
-## 9. How it is deployed
+## 10. How it is deployed
 
 The site and the API are two containers behind **one published port**, `8086`,
 meant to sit behind Nginx Proxy Manager. The API is not published: only nginx
@@ -363,7 +384,7 @@ template is the only part that is versioned.
 
 ---
 
-## 10. Before taking real money
+## 11. Before taking real money
 
 - [ ] `SECRET_KEY` generated, stored and **fixed** in `.env`
 - [ ] `ADMIN_PASSWORD` set, and the address range uncommented in `nginx.conf`

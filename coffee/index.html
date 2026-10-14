@@ -217,8 +217,8 @@
     </form>
 
     <div class="said" id="said" role="status" aria-live="polite">
-      <h3>This is a preview</h3>
-      <p>Nothing was sent and nothing was stored &mdash; this page is not wired to the club yet, and it would be worse to pretend otherwise. When it goes live this form will reach the same desk the cellar's does. For now, write to <a href="mailto:club@warmspringscellar.com">club@warmspringscellar.com</a>.</p>
+      <h3 id="saidTitle">You are on the list</h3>
+      <p id="saidBody">We will write when the first roast is ready. Cellar members are asked first &mdash; if you are one, we already know.</p>
     </div>
   </div>
 </section>
@@ -276,14 +276,63 @@
     window.addEventListener('resize', sweep);
   }
 
-  // The form says what actually happened, which is nothing.
+  // The form reaches the club's own desk, at the same service the cellar's
+  // form posts to. It reports what actually happened: the panel is only shown
+  // once the server has said yes, and a refusal is shown in the server's own
+  // words rather than a cheerful message over a request that failed.
   var form = document.getElementById('joinForm');
   var said = document.getElementById('said');
+  var title = document.getElementById('saidTitle');
+  var bodyText = document.getElementById('saidBody');
+  var button = form.querySelector('button[type=submit]');
+
+  function show(heading, text, ok) {
+    title.textContent = heading;
+    bodyText.innerHTML = text;
+    said.classList.add('on');
+    said.style.borderColor = ok ? '' : 'var(--c-wine)';
+    said.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+  }
+
   form.addEventListener('submit', function (ev) {
     ev.preventDefault();
     if (!form.checkValidity()) { form.reportValidity(); return; }
-    said.classList.add('on');
-    said.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+
+    var payload = {
+      name: document.getElementById('f-name').value.trim(),
+      email: document.getElementById('f-email').value.trim(),
+      coming_from: document.getElementById('f-drinks').value
+    };
+
+    button.disabled = true;
+    var was = button.textContent;
+    button.textContent = 'Sending…';
+
+    fetch('/api/coffee-interest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+    }).then(function (r) {
+      if (!r.ok) {
+        show('That did not go through',
+             (r.data && r.data.error ? r.data.error : 'Please try again.'), false);
+        return;
+      }
+      form.reset();
+      show('You are on the list',
+           'We will write when the first roast is ready. Cellar members are asked ' +
+           'first &mdash; if you are one, we already know.', true);
+    }).catch(function () {
+      show('We could not reach the cellar',
+           'Something went wrong at our end. Write to ' +
+           '<a href="mailto:club@warmspringscellar.com">club@warmspringscellar.com</a> ' +
+           'and we will add you by hand.', false);
+    }).then(function () {
+      button.disabled = false;
+      button.textContent = was;
+    });
   });
 })();
 </script>

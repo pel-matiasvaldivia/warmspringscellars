@@ -113,9 +113,11 @@ lock — anyone who learns the address can open it. To make it private for real,
 uncomment the `allow`/`deny` lines on `location /coffee/` in `nginx.conf`, the
 same two lines that guard the cellar desk.
 
-Its form stores nothing and says so on submit. Wiring it to the club's own
-desk is a small job — an interest table and one endpoint — and worth doing
-before the page is shown to anyone who might actually fill it in.
+Its form reaches the club's own desk, at `POST /api/coffee-interest`, and the
+list is on the **Coffee** tab at `/admin/coffee`. The desk marks which of the
+people waiting already hold a wine allocation — matched on email against live
+memberships — because the page promises cellar members are asked first and
+that promise needs something to act on.
 
 The three origins are Kenya, Ethiopia and Colombia. Ethiopia replaced an
 earlier Somalia card: Somali coffee *culture* is old and real, but Somalia is
@@ -149,6 +151,7 @@ in `nginx.conf` too; the commented `allow`/`deny` lines are there for it.
 | The pick list, and tracking numbers | `/admin/shipments` |
 | Raise a release's orders | `/admin/releases` |
 | QuickBooks, and what the books are still owed | `/admin/accounting` |
+| The coffee unit's waiting list | `/admin/coffee` |
 
 ### The offer
 
