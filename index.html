@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Warm Springs Cellars — Wine Club | Sonoma County, EST. 1982</title>
-<meta name="description" content="Join the Warm Springs Cellars allocation list. Limited to 1,000 cases of single-vineyard wines from Sonoma Valley and Russian River Valley. Founded by Robert Rex & Cecilia Valdivia. EST. 1982.">
+<meta name="description" content="Join the Warm Springs Cellars allocation list. Limited to 1,000 cases of single-vineyard wines from Sonoma Valley and Russian River Valley. Wines by Cecilia Valdivia. EST. 1982.">
 <link rel="preload" href="fonts/caveat-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* Caveat, for the handwritten card. Self-hosted rather than pulled from a CDN:
@@ -376,6 +376,13 @@ body {
   gap: 4rem;
 }
 
+/* One winemaker. The card keeps a portrait's proportions instead of
+   stretching across a column meant for two. */
+.founders-grid--one {
+  grid-template-columns: minmax(0, 470px);
+  justify-content: center;
+}
+
 .founder-card {
   display: grid;
   grid-template-columns: 1fr;
@@ -468,6 +475,32 @@ body {
 }
 
 .founder-card:hover .founder-photo img { transform: scale(1.03); }
+
+/* The card and the two bands below it are the same kind of block — a person,
+   a role and a few paragraphs — so they are set the same way. These rules
+   never existed while the card sat in a two-column grid and the defaults
+   happened to look passable; alone in the middle of the page it needed
+   saying out loud. */
+.founder-info h3,
+.patron-name {
+  font-size: 1.75rem;
+  margin: 0.35rem 0 0.25rem;
+}
+
+.founder-role {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-wine);
+  margin-bottom: 1.1rem;
+}
+
+.founder-bio p + p { margin-top: 1.1rem; }
+
+.founder-bio p {
+  color: var(--c-text-secondary);
+  line-height: 1.85;
+}
 
 /* ─── QUOTE INTERLUDE ─── */
 .quote-interlude {
@@ -2124,7 +2157,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     <span class="nav-logo-type">Warm Springs <span>Cellars</span></span>
   </a>
   <ul class="nav-links">
-    <li><a href="#founders">Our Winemakers</a></li>
+    <li><a href="#founders">Our Winemaker</a></li>
     <li><a href="#philosophy">Story</a></li>
     <li><a href="#wines">Wines</a></li>
     <li><a href="#allocations">Allocation</a></li>
@@ -2138,7 +2171,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 </nav>
 
 <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu">
-  <a href="#founders">Our Winemakers</a>
+  <a href="#founders">Our Winemaker</a>
   <a href="#philosophy">Story</a>
   <a href="#wines">Wines</a>
   <a href="#allocations">Allocation</a>
@@ -2164,8 +2197,8 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <circle cx="40" cy="18" r="4" stroke="#fff" stroke-width="0.75" fill="none" opacity="0.4"/>
     </svg>
     <h1>A Thousand Cases.<br><em>Your Allocation Awaits.</em></h1>
-    <p class="hero-sub">Single-vineyard wines from Sonoma Valley, Russian River Valley and Fountain Grove. Handcrafted in limited production by Robert Rex &amp; Cecilia Valdivia. Reserved exclusively for our members.</p>
-    <p class="hero-founders">Robert Rex & Cecilia Valdivia &middot; Founders & Winemakers</p>
+    <p class="hero-sub">Single-vineyard wines from Sonoma Valley, Russian River Valley and Fountain Grove. Handcrafted in limited production by Cecilia Valdivia. Reserved exclusively for our members.</p>
+    <p class="hero-founders">Cecilia Valdivia &middot; Winemaker</p>
     <a href="#join" class="hero-cta">Request Your Allocation</a>
   </div>
   <a href="#founders" class="hero-scroll">Discover</a>
@@ -2175,38 +2208,15 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 <section class="founders" id="founders">
   <div class="section-inner">
     <div class="founders-intro">
-      <p class="section-eyebrow">The Winemakers</p>
-      <h2 class="section-title">Two Paths, One Cellar</h2>
-      <p class="section-prose">A chemist from Iowa and a winemaker from Argentina. Bound by a shared conviction: that great wine is made in the vineyard, finished with patience, and shared with the few who truly appreciate it.</p>
+      <p class="section-eyebrow">The Winemaker</p>
+      <h2 class="section-title">The Hands in the Cellar</h2>
+      <p class="section-prose">A winemaker from Argentina, a consulting chemist whose counsel shaped how we think about the wine, and a friend who believed early. One conviction between them: that great wine is made in the vineyard, finished with patience, and shared with the few who truly appreciate it.</p>
     </div>
-    <div class="founders-grid">
+    <div class="founders-grid founders-grid--one">
 
       <div class="founder-card">
         <div class="founder-photo">
-          <img src="images/robert_rex.jpg" alt="Robert Rex, Founder &amp; Winemaker" loading="lazy"
-               style="object-position: center 18%;"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="founder-photo-placeholder" style="display:none;">
-            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="30" cy="22" r="10" stroke="#722f3a" stroke-width="1" fill="none"/>
-              <path d="M10 55C10 42 18 34 30 34C42 34 50 42 50 55" stroke="#722f3a" stroke-width="1" fill="none"/>
-            </svg>
-            <span>Photo: Robert Rex</span>
-          </div>
-        </div>
-        <div class="founder-info">
-          <h3 class="serif">Robert Rex</h3>
-          <p class="founder-role">Founder & Winemaker</p>
-          <div class="founder-bio">
-            <p>A native of Iowa who found his calling in Berkeley, Robert discovered wine through a tasting club while studying Chemistry at UC Berkeley in 1961. By 1976, he was a partner in Berkeley's first commercial winery, where he trained under the legendary Andr&eacute; Tchelistcheff &mdash; the father of modern California winemaking.</p>
-            <p>A true Renaissance man &mdash; chemist, graphic designer, woodworker, and accomplished gourmet cook &mdash; Robert brings a scientist's precision and an artist's intuition to every vintage. His five decades of winemaking experience culminate in Warm Springs Cellars, where small lots and single vineyards allow him to practice the kind of uncompromising craft that larger operations cannot sustain.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="founder-card">
-        <div class="founder-photo">
-          <img src="images/cecilia-valdivia.jpeg" alt="Cecilia Valdivia, Co-Founder &amp; Winemaker" loading="lazy"
+          <img src="images/cecilia-valdivia.jpeg" alt="Cecilia Valdivia, Winemaker" loading="lazy"
                style="object-position: center 30%;"
                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="founder-photo-placeholder" style="display:none;">
@@ -2219,14 +2229,29 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
         </div>
         <div class="founder-info">
           <h3 class="serif">Cecilia Valdivia</h3>
-          <p class="founder-role">Co-Founder & Winemaker</p>
+          <p class="founder-role">Winemaker</p>
           <div class="founder-bio">
             <p>Born in Argentina and raised in the wine traditions of South America, Cecilia brings a worldview to Sonoma County winemaking that bridges continents. Her palate was shaped by the Malbecs of Mendoza before she crossed into California's coastal valleys, where she found the cool-climate elegance that matched her vision.</p>
-            <p>At Warm Springs Cellars, Cecilia is the hands in the vineyard and the instinct in the cellar. Her approach is tactile and intuitive &mdash; she walks the rows, tastes the fruit daily during harvest, and makes blending decisions that honor each vineyard's voice. Together with Robert, she has built a winery where science and sensibility meet in every bottle.</p>
+            <p>At Warm Springs Cellars, Cecilia is the hands in the vineyard and the instinct in the cellar. Her approach is tactile and intuitive &mdash; she walks the rows, tastes the fruit daily during harvest, and makes blending decisions that honor each vineyard's voice. Science and sensibility meet in every bottle she signs.</p>
           </div>
         </div>
       </div>
 
+    </div>
+
+    <div class="patron">
+      <div class="patron-photo">
+        <img src="images/robert_rex.jpg" alt="Robert Rex" loading="lazy"
+             style="object-position: center 18%;">
+      </div>
+      <div class="patron-text">
+        <p class="section-eyebrow">In Counsel</p>
+        <h3 class="serif patron-name">Robert Rex</h3>
+        <p class="founder-role">Expert Consultant</p>
+        <p>A native of Iowa who found his calling in Berkeley, Robert discovered wine through a tasting club while studying Chemistry at UC Berkeley in 1961. By 1976 he was a partner in Berkeley&rsquo;s first commercial winery, where he trained under Andr&eacute; Tchelistcheff &mdash; the father of modern California winemaking.</p>
+        <p>He collaborates with Warm Springs Cellars as a consultant, and what he brings is not a pair of hands in the cellar but a way of thinking: what restraint is for, when to intervene and when to wait, why a wine should be allowed to finish arguing with itself before anyone judges it. Five decades of chemistry and craft, offered as counsel.</p>
+        <p>The winery is not his to run &mdash; the decisions are Cecilia&rsquo;s. The questions, often, are his.</p>
+      </div>
     </div>
 
     <div class="patron patron--nophoto">
@@ -2257,7 +2282,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 <section class="quote-interlude">
   <div class="quote-inner">
     <blockquote>&ldquo;We don't make wine for everyone. We make it for the few who understand that the best things in life are worth waiting for.&rdquo;</blockquote>
-    <cite>Robert Rex & Cecilia Valdivia</cite>
+    <cite>Cecilia Valdivia</cite>
   </div>
 </section>
 
@@ -2268,7 +2293,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <div>
         <p class="section-eyebrow">Our Philosophy</p>
         <h2 class="section-title">Small by Design,<br>Not by Accident</h2>
-        <p class="section-prose">Since 1982, Warm Springs Cellars has chosen restraint over scale. Robert and Cecilia farm five vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
+        <p class="section-prose">Since 1982, Warm Springs Cellars has chosen restraint over scale. Cecilia farms five vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
         <div class="philosophy-details" style="margin-top: 2.5rem;">
           <div class="detail-item">
             <h3 class="serif">Single-Vineyard Focus</h3>
@@ -2276,7 +2301,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           </div>
           <div class="detail-item">
             <h3 class="serif">Clean Winemaking</h3>
-            <p>Drawing from Robert's chemistry background and Cecilia's instinct for balance, we craft wines that are low in sulfites and histamines &mdash; pure expressions of fruit and terroir, nothing more.</p>
+            <p>Cecilia's instinct for balance, sharpened by Robert Rex's counsel as a consulting chemist, gives us wines that are low in sulfites and histamines &mdash; pure expressions of fruit and terroir, nothing more.</p>
           </div>
           <div class="detail-item">
             <h3 class="serif">A Small Winery, Kept Current</h3>
@@ -2421,7 +2446,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           <li>Two shipments annually (Spring &amp; Fall)</li>
           <li>20% discount on all purchases</li>
           <li>4 complimentary tastings per visit, three visits a year</li>
-          <li>Annual harvest dinner with Robert &amp; Cecilia</li>
+          <li>Annual harvest dinner with Cecilia</li>
           <li>First access to single-barrel selections</li>
           <li>Complimentary shipping on all orders</li>
         </ul>
@@ -2438,7 +2463,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           <li>Two shipments annually (Spring &amp; Fall)</li>
           <li>25% discount on all purchases</li>
           <li>6 complimentary tastings per visit, three visits a year</li>
-          <li>Annual harvest dinner with Robert &amp; Cecilia</li>
+          <li>Annual harvest dinner with Cecilia</li>
           <li>Complimentary shipping on all orders</li>
         </ul>
         <p class="tier-price">From $620 <small>per shipment &middot; shipping included</small></p>
@@ -2493,7 +2518,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           <p class="card-greeting" id="cardGreeting">Dear friend,</p>
           <p class="card-note" id="cardNote"></p>
           <div class="card-rule"></div>
-          <p class="card-sign">Robert &amp; Cecilia</p>
+          <p class="card-sign">Cecilia</p>
         </figure>
 
         <div class="pack-personalise">
@@ -2555,12 +2580,12 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <div class="section-inner">
     <p class="section-eyebrow">The Member Experience</p>
     <h2 class="section-title">Beyond the Bottle</h2>
-    <p class="section-prose">Membership is an invitation into the life of the winery. Every season brings a new reason to gather with Robert and Cecilia.</p>
+    <p class="section-prose">Membership is an invitation into the life of the winery. Every season brings a new reason to gather at the cellar.</p>
     <div class="exp-grid">
       <div class="exp-item">
         <p class="exp-season">Spring</p>
         <h3 class="serif">Barrel Tasting Weekend</h3>
-        <p>Walk the cellar with Robert and Cecilia and taste the vintage still in barrel. Shape your palate for what's to come.</p>
+        <p>Walk the cellar with Cecilia and taste the vintage still in barrel. Shape your palate for what's to come.</p>
       </div>
       <div class="exp-item">
         <p class="exp-season">Summer</p>
@@ -2570,12 +2595,12 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <div class="exp-item">
         <p class="exp-season">Fall</p>
         <h3 class="serif">Harvest Day</h3>
-        <p>Pick alongside our crew at dawn, then crush, press, and taste the first juice of the vintage. Cecilia leads, Robert cooks lunch.</p>
+        <p>Pick alongside our crew at dawn, then crush, press, and taste the first juice of the vintage. Cecilia leads, and lunch is cooked on the spot.</p>
       </div>
       <div class="exp-item">
         <p class="exp-season">Winter</p>
         <h3 class="serif">Library Tasting</h3>
-        <p>A private session exploring older vintages from the archive with Robert. Discover how our wines evolve with time in bottle.</p>
+        <p>A private session exploring older vintages from the archive, often with Robert Rex in the room. Discover how our wines evolve with time in bottle.</p>
       </div>
       <div class="exp-item">
         <p class="exp-season">Year-Round</p>
@@ -2585,7 +2610,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <div class="exp-item">
         <p class="exp-season">Year-Round</p>
         <h3 class="serif">Winemaker Access</h3>
-        <p>A direct line to Robert and Cecilia. Ask about the vintage, food pairings, or cellaring. This is your winery.</p>
+        <p>A direct line to Cecilia. Ask about the vintage, food pairings, or cellaring. This is your winery.</p>
       </div>
     </div>
   </div>
@@ -2598,21 +2623,21 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     <h2 class="section-title">In Their Words</h2>
     <div class="testimonial-grid">
       <div class="testimonial">
-        <blockquote>"I've been on the list since 2015. Every shipment feels like a gift from someone who knows my palate. The harvest dinner with Robert and Cecilia alone is worth membership."</blockquote>
+        <blockquote>"I've been on the list since 2015. Every shipment feels like a gift from someone who knows my palate. The harvest dinner alone is worth membership."</blockquote>
         <cite>
           <strong>Margaret L.</strong>
           Founder's Reserve Member, San Francisco
         </cite>
       </div>
       <div class="testimonial">
-        <blockquote>"After years of big-name Napa clubs, Warm Springs reminded me why I fell in love with wine. The scale is human. Robert's chemistry background and Cecilia's intuition &mdash; you taste both in every glass."</blockquote>
+        <blockquote>"After years of big-name Napa clubs, Warm Springs reminded me why I fell in love with wine. The scale is human. Cecilia's intuition, and a chemist's counsel behind it &mdash; you taste both in every glass."</blockquote>
         <cite>
           <strong>David &amp; Karen R.</strong>
           Full Case Members, Portland
         </cite>
       </div>
       <div class="testimonial">
-        <blockquote>"The barrel tasting was unforgettable. Cecilia walked us through every barrel, and Robert cooked us the best meal we had in Sonoma. The 2021 Cabernet is simply world-class."</blockquote>
+        <blockquote>"The barrel tasting was unforgettable. Cecilia walked us through every barrel, and fed us the best meal we had in Sonoma. The 2021 Cabernet is simply world-class."</blockquote>
         <cite>
           <strong>James T.</strong>
           Founder's Reserve Member, Los Angeles
@@ -2634,7 +2659,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           <span class="faq-icon" aria-hidden="true"></span>
         </button>
         <div class="faq-a" id="faq-a1" role="region" aria-labelledby="faq-q1">
-          <p>You'll receive two shipments per year, in spring and fall. Each shipment is curated by Robert and Cecilia based on your chosen tier. We notify you in advance with the option to customize quantities.</p>
+          <p>You'll receive two shipments per year, in spring and fall. Each shipment is curated by Cecilia based on your chosen tier. We notify you in advance with the option to customize quantities.</p>
         </div>
       </div>
       <div class="faq-item reveal">
@@ -2670,7 +2695,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           <span class="faq-icon" aria-hidden="true"></span>
         </button>
         <div class="faq-a" id="faq-a5" role="region" aria-labelledby="faq-q5">
-          <p>Robert's chemistry background informs our approach: minimal intervention, low sulfites, no additives. Our wines are crafted to be pure expressions of fruit and place &mdash; nothing artificial, nothing hidden.</p>
+          <p>Our approach is informed by Robert Rex's counsel as a consulting chemist: minimal intervention, low sulfites, no additives. Our wines are crafted to be pure expressions of fruit and place &mdash; nothing artificial, nothing hidden.</p>
         </div>
       </div>
       <div class="faq-item reveal">
@@ -2691,7 +2716,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <div class="section-inner">
     <p class="section-eyebrow">Join the List</p>
     <h2 class="section-title serif">Request Your Allocation</h2>
-    <p class="section-prose">Space on our list is limited by what we produce. Submit your request below and Robert or Cecilia will be in touch within 48 hours.</p>
+    <p class="section-prose">Space on our list is limited by what we produce. Submit your request below and Cecilia will be in touch within 48 hours.</p>
     <form class="join-form" id="joinForm" novalidate>
       <div class="form-row">
         <div class="field">
@@ -2786,7 +2811,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
         <path d="M15 24.5l6.5 6.5L33 18" style="--len: 30"/>
       </svg>
       <h3>Your request is with us</h3>
-      <p id="joinSuccessMsg">Robert or Cecilia will be in touch within 48 hours. Watch your inbox &mdash; and keep an eye on the spam folder, just in case.</p>
+      <p id="joinSuccessMsg">Cecilia will be in touch within 48 hours. Watch your inbox &mdash; and keep an eye on the spam folder, just in case.</p>
     </div>
   </div>
 </section>
@@ -2798,7 +2823,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <p class="footer-brand">Warm Springs <span>Cellars</span></p>
       <p class="footer-legal">
         Kenwood, Sonoma Valley, California<br>
-        EST. 1982 &middot; Robert Rex &amp; Cecilia Valdivia<br>
+        EST. 1982 &middot; Cecilia Valdivia, Winemaker<br>
         All wines produced and bottled on estate.<br><br>
         &copy; 2026 Warm Springs Cellars. All rights reserved.<br>
         You must be 21+ to purchase. Please drink responsibly.
@@ -3337,7 +3362,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       var tierName = tier.options[tier.selectedIndex].textContent.split('—')[0].trim();
       $('#joinSuccessMsg').textContent =
         (body.first_name ? body.first_name + ', your' : 'Your') + ' request for ' + tierName +
-        ' is with Robert and Cecilia. They read every one, and you will hear from us ' +
+        ' is with Cecilia. She reads every one, and you will hear from us ' +
         'either way — keep an eye on your spam folder, just in case.';
 
       form.style.display = 'none';

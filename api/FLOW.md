@@ -10,7 +10,7 @@ from what actually happened rather than from the current state of a record.
          ▼
    APPLICATION ──────── declined ──▶ (notified, ends)
     (pending)
-         │ approved by Robert or Cecilia in /admin
+         │ approved at the cellar desk in /admin
          ▼
       OFFER ─────────── expired ───▶ (ends; can be re-sent)
    (signed link,

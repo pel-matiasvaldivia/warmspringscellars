@@ -3,7 +3,7 @@
 Cómo entrar al sistema y atender las solicitudes, los pagos, las facturas y los
 envíos del Warm Springs Cellars Wine Club.
 
-La pantalla está en inglés porque es la que ven Robert y Cecilia; en este manual
+La pantalla está en inglés porque es la que ve quien atiende el escritorio; en este manual
 los nombres de los botones van entre comillas tal como aparecen ahí.
 
 *There is an English version of this manual at [`OPERATIONS.md`](OPERATIONS.md).*

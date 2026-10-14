@@ -6,9 +6,9 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | Filename                 | Photo                                                   | Used in                                  |
 | ------------------------ | ------------------------------------------------------- | ---------------------------------------- |
 | `cellar-exterior.jpeg`   | The winery building with the arched wooden doors         | Hero — faded behind the headline          |
-| `robert_rex.jpg`         | Robert Rex in the vineyard, straw hat, holding a bottle  | Our Winemakers — left card                |
-| `cecilia-valdivia.jpeg`  | Cecilia Valdivia leaning on a barrel, glass in hand      | Our Winemakers — right card               |
-| `richard-deane.jpg`      | Richard Deane — the one of him with Cecilia and Robert   | Our Winemakers — the Richard Deane band   |
+| `robert_rex.jpg`         | Robert Rex in the vineyard, straw hat, holding a bottle  | Our Winemaker — the consultant band       |
+| `cecilia-valdivia.jpeg`  | Cecilia Valdivia leaning on a barrel, glass in hand      | Our Winemaker — the card                  |
+| `richard-deane.jpg`      | Richard Deane — the one of him with Cecilia and Robert   | Our Winemaker — the Richard Deane band    |
 | `door-mark.svg`          | Generated: the winery's mark, from the label artwork     | Inlined in the header beside the wordmark |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
