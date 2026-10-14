@@ -9,7 +9,10 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `robert_rex.jpg`         | Robert Rex in the vineyard, straw hat, holding a bottle  | Our Winemaker — the consultant band       |
 | `cecilia-valdivia.jpeg`  | Cecilia Valdivia leaning on a barrel, glass in hand      | Our Winemaker — the card                  |
 | `richard-deane.jpg`      | Richard Deane — the one of him with Cecilia and Robert   | Our Winemaker — the Richard Deane band    |
-| `door-mark.svg`          | Generated: the winery's mark, from the label artwork     | Inlined in the header beside the wordmark |
+| `door-mark.svg`          | Generated: the winery's mark, from the label artwork     | Inlined once in the page, used five times |
+| `favicon-small.svg`      | Generated: the mark's solid cut                         | The tab icon                              |
+| `favicon.svg`            | Generated: the full mark in wine, standalone            | Source for the touch icon; general use    |
+| `favicon-16/32/180.png`  | Generated: rasterised from the two above                | Tab icon fallbacks, Apple touch icon      |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
@@ -57,6 +60,29 @@ mark takes the header's own colour.
 
 Not taken: the "EST 1982" lettering, which is set as text. At header size it
 would be illegible anyway.
+
+The page inlines the mark **once**, as a `<symbol>`, and points at it with
+`<use>` from the header, the age gate, the hero, the handwritten card and the
+footer. Five inline copies would have meant five identical mask ids colliding
+in one document, and 100 KB where 20 KB does.
+
+All five of those places used to draw an invented house — a gable, a rounded
+rectangle and a circle, nothing to do with the winery. They are the real mark
+now.
+
+### The tab icon
+
+```bash
+python3 tools/extract_doormark.py     # writes favicon.svg and favicon-small.svg
+node tools/render_favicons.mjs        # the three PNGs, via a headless browser
+```
+
+A browser draws a favicon at 16px, where the line work inside the doors is
+thinner than a pixel and turns into a smudge — the detailed mark genuinely
+does not survive it. So the tab gets `favicon-small.svg`: the masses alone,
+roof and medallion and door, which is the same mark with its detail switched
+off rather than a different one. The 180px Apple touch icon keeps the full
+drawing, on cream, because Apple renders it large and wants it opaque.
 
 ## The shipment photograph
 

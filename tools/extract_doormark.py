@@ -22,6 +22,15 @@ import pymupdf
 
 SRC = "labels/21CS_WSC_final_label.ai"
 OUT = "images/door-mark.svg"
+FAVICON = "images/favicon.svg"
+
+# The browser tab cannot ask the page what colour it is, so the favicon is the
+# one place the mark carries its own ink rather than currentColor. Padding is
+# added because a tab shrinks it to 16px and a glyph flush to the edges reads
+# as a smudge.
+FAVICON_SMALL = "images/favicon-small.svg"
+FAVICON_INK = "#722f3a"
+FAVICON_PAD = 18
 
 # The mark's box on the front panel, in PDF points, measured off a 150dpi
 # render of the panel: the apex of the roof down to the floor line under the
@@ -138,6 +147,36 @@ def main():
     with open(OUT, "w") as fh:
         fh.write(svg)
     print(f"{len(paths)} paths -> {OUT}  ({len(svg)} bytes)")
+
+    pad = FAVICON_PAD
+    fav = svg.replace(
+        f'viewBox="{fmt(BOX.x0)} {fmt(BOX.y0)} {fmt(BOX.width)} {fmt(BOX.height)}"',
+        f'viewBox="{fmt(BOX.x0 - pad)} {fmt(BOX.y0 - pad)} '
+        f'{fmt(BOX.width + 2 * pad)} {fmt(BOX.height + 2 * pad)}"',
+        1,
+    ).replace('fill="currentColor"', f'fill="{FAVICON_INK}"')
+    with open(FAVICON, "w") as fh:
+        fh.write(fav)
+    print(f"{' ' * 9} -> {FAVICON}  ({len(fav)} bytes)")
+
+    # A tab renders this at 16px, where the line work inside the doors is
+    # thinner than a pixel and dissolves into a smudge. So the small size gets
+    # the masses alone — roof, medallion, door — which is the same mark with
+    # its detail turned off rather than a different one.
+    masses = [p_ for p_ in paths if f'"{MASS}"' in p_]
+    solid = "\n".join(
+        p_.replace(f'class="{MASS}"', f'fill="{FAVICON_INK}" stroke="{FAVICON_INK}"')
+        for p_ in masses
+    )
+    small = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="{fmt(BOX.x0 - pad)} {fmt(BOX.y0 - pad)} '
+        f'{fmt(BOX.width + 2 * pad)} {fmt(BOX.height + 2 * pad)}" '
+        f'aria-hidden="true">\n{solid}\n</svg>\n'
+    )
+    with open(FAVICON_SMALL, "w") as fh:
+        fh.write(small)
+    print(f"{' ' * 9} -> {FAVICON_SMALL}  ({len(small)} bytes, {len(masses)} paths)")
 
 
 if __name__ == "__main__":

@@ -11,3 +11,6 @@ api/var/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# Only ever installed to run tools/render_favicons.mjs.
+node_modules/
