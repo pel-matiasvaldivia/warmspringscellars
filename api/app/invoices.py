@@ -22,7 +22,7 @@ MUTED = (0.52, 0.47, 0.49)
 SELLER = [
     "Warm Springs Cellars",
     "Kenwood, Sonoma Valley, California",
-    "club@warmspringscellar.com · (707) 318-0167",
+    "club@warmspringscellar.com · 707.318-0167",
 ]
 
 
