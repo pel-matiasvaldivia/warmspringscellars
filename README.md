@@ -106,12 +106,20 @@ point NPM at `warmspringscellars:8080`.
 the winery is weighing up: premium roasted coffee from Kenya, Ethiopia and
 Colombia, sold to the same list as the wine.
 
-It is served at `/coffee/` and **is not announced**. Nothing on the public
-site links to it, the page asks every crawler to leave it alone, and a banner
-across the top says plainly that it is a preview. That is obscurity, not a
-lock — anyone who learns the address can open it. To make it private for real,
-uncomment the `allow`/`deny` lines on `location /coffee/` in `nginx.conf`, the
-same two lines that guard the cellar desk.
+It is served at `/coffee/` and **reachable from the winery's nav**, as a
+"Coffee" item between Members and Request Access, in the desktop list and the
+mobile menu. It is the one nav item that leaves the page rather than scrolling
+it, which is why it wears the underline the others only grow on hover; the
+scroll-spy and menu handlers are both scoped to `a[href^="#"]`, so a real path
+is simply not one of their links. The page links back from its footer.
+
+It is still **not announced**: the page asks crawlers to leave it alone and a
+banner across the top says it is a preview. Those two are now the only things
+holding it back, and anyone on the site can read it. When the roastery is
+ready to be public, remove the `robots` meta and the `.preview-bar`; to go the
+other way and close it off, uncomment the `allow`/`deny` lines on
+`location /coffee/` in `nginx.conf` — the same two lines that guard the cellar
+desk — and take the nav item out.
 
 Its form reaches the club's own desk, at `POST /api/coffee-interest`, and the
 list is on the **Coffee** tab at `/admin/coffee`. The desk marks which of the

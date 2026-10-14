@@ -1725,6 +1725,11 @@ body.gated .hero-content > * { animation-play-state: paused; }
   padding-bottom: 3px;
 }
 
+/* The one nav item that leaves the page says so, quietly: the underline the
+   others grow on hover is already there, waiting. */
+.nav-links a.nav-away::after { transform: scaleX(1); opacity: 0.35; }
+.nav-links a.nav-away:hover::after { opacity: 1; }
+
 .nav-links a::after {
   content: "";
   position: absolute;
@@ -2192,6 +2197,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     <li><a href="#allocations">Allocation</a></li>
     <li><a href="#shipment">The Box</a></li>
     <li><a href="#experience">Members</a></li>
+    <li><a href="/coffee/" class="nav-away">Coffee</a></li>
     <li><a href="#join">Request Access</a></li>
   </ul>
   <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
@@ -2206,6 +2212,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <a href="#allocations">Allocation</a>
   <a href="#shipment">The Box</a>
   <a href="#experience">Members</a>
+  <a href="/coffee/" class="nav-away">Coffee</a>
   <div class="mobile-menu-rule"></div>
   <a href="#join">Request Access</a>
 </div>
