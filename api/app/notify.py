@@ -29,7 +29,7 @@ def _html(body: str) -> str:
 <span style="color:#9a8890">Kenwood, Sonoma Valley</span></p>
 </td></tr></table>
 <p style="font:11px/1.5 system-ui,sans-serif;color:#9a8890;max-width:520px;margin:14px auto 0">
-You are receiving this because you asked for an allocation at warmspringscellars.com.
+You are receiving this because you asked for an allocation at warmspringscellar.com.
 You must be 21 or older to purchase. Please drink responsibly.</p>
 </td></tr></table></body></html>"""
 

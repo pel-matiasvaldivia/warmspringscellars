@@ -267,7 +267,7 @@ def ledger_with(monkeypatch, tmp_path, stub, **kwargs) -> QuickBooksLedger:
     store = TokenStore(Database(tmp_path / "qbo.sqlite3"))
     return QuickBooksLedger(
         client_id="abc", client_secret="shh",
-        redirect_uri="https://warmspringscellars.com/admin/accounting/callback",
+        redirect_uri="https://warmspringscellar.com/admin/accounting/callback",
         store=store, **kwargs,
     )
 

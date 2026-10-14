@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
 
     environment:
-      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://warmspringscellars.com}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://warmspringscellar.com}
       # Signs the offer links. Generate once and keep it: changing it
       # invalidates every invitation already in someone's inbox.
       #   openssl rand -base64 48
@@ -68,8 +68,8 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-club@warmspringscellars.com}
-      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-club@warmspringscellars.com}
+      MAIL_FROM: ${MAIL_FROM:-club@warmspringscellar.com}
+      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-club@warmspringscellar.com}
 
     # The database, the invoice PDFs and the outbox. Back this up.
     volumes:

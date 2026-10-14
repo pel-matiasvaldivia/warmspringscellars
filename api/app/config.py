@@ -54,8 +54,8 @@ class Settings:
     smtp_user: str = field(default_factory=lambda: _env("SMTP_USER"))
     smtp_password: str = field(default_factory=lambda: _env("SMTP_PASSWORD"))
     smtp_starttls: bool = field(default_factory=lambda: _bool("SMTP_STARTTLS", True))
-    mail_from: str = field(default_factory=lambda: _env("MAIL_FROM", "club@warmspringscellars.com"))
-    mail_reply_to: str = field(default_factory=lambda: _env("MAIL_REPLY_TO", "club@warmspringscellars.com"))
+    mail_from: str = field(default_factory=lambda: _env("MAIL_FROM", "club@warmspringscellar.com"))
+    mail_reply_to: str = field(default_factory=lambda: _env("MAIL_REPLY_TO", "club@warmspringscellar.com"))
 
     offer_days: int = field(default_factory=lambda: int(_env("OFFER_DAYS", "14")))
     currency: str = field(default_factory=lambda: _env("CURRENCY", "usd"))

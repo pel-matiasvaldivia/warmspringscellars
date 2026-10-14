@@ -156,7 +156,7 @@ async def create_application(request: Request) -> JSONResponse:
     if rate_limited(client_key(request)):
         return JSONResponse(
             {"ok": False, "error": "That is a lot of requests from one place. "
-                                   "Write to club@warmspringscellars.com instead."},
+                                   "Write to club@warmspringscellar.com instead."},
             status_code=429,
         )
 
