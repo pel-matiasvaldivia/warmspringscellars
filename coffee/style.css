@@ -1,23 +1,25 @@
 /* Warm Springs Coffee — the second unit.
    Same house, different room: the type system and the mark come straight from
-   the winery's page, the palette is roast rather than wine. Kept in its own
-   file because this page is a sibling of index.html, not a copy of it, and the
-   two should be able to drift apart without one breaking the other. */
+   the winery's page, the palette is its own. Green, for the plant rather than
+   the roast — coffee is a cherry on a shrub for years and a brown bean for
+   about a fortnight, and the green is what the three origins have in common.
+   Kept in its own file because this page is a sibling of index.html, not a
+   copy of it, and the two should drift apart without one breaking the other. */
 
 :root {
-  --c-bg: #faf7f2;
-  --c-bg-alt: #f3ece3;
+  --c-bg: #f8faf6;
+  --c-bg-alt: #ecf1e8;
   --c-surface: #ffffff;
-  --c-text: #241a12;
-  --c-text-secondary: #5a4736;
-  --c-text-muted: #9a8a78;
+  --c-text: #17251a;
+  --c-text-secondary: #41563f;
+  --c-text-muted: #869184;
 
-  /* The roast: from green through to the darkest bean. */
-  --c-bean: #4a2c17;
-  --c-bean-deep: #311c0d;
-  --c-bean-light: #6b422a;
-  --c-ember: #b4661f;          /* the accent — a cup held to the light */
-  --c-ember-pale: #f4e5d6;
+  /* The plant: leaf, shade and new growth. */
+  --c-leaf: #2f5d3a;
+  --c-leaf-deep: #15301f;
+  --c-leaf-light: #4a7d54;
+  --c-sprout: #6d9c4a;         /* the accent — the green of a young cherry */
+  --c-sprout-pale: #e7f0df;
 
   /* The winery's own colour, used only where the two units meet. */
   --c-wine: #722f3a;
@@ -25,11 +27,11 @@
 
   --c-border: #e4dacd;
   --c-divider: #ded2c3;
-  --c-hero-bg: var(--c-bean-deep);
-  --c-hero-text: #f7f1e8;
-  --c-hero-muted: #d2bca4;
-  --c-footer-bg: #241a12;
-  --c-footer-text: #b9a68f;
+  --c-hero-bg: var(--c-leaf-deep);
+  --c-hero-text: #f2f7ee;
+  --c-hero-muted: #b8cfb2;
+  --c-footer-bg: #15241a;
+  --c-footer-text: #9db39a;
 
   --serif: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -37,22 +39,22 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --c-bg: #18110b;
-    --c-bg-alt: #1f1710;
-    --c-surface: #251c14;
-    --c-text: #efe6da;
-    --c-text-secondary: #c4b4a0;
-    --c-text-muted: #8a7b6a;
-    --c-bean: #c08a5e;
-    --c-bean-light: #d4a279;
-    --c-ember: #d98a3d;
-    --c-ember-pale: #2e2117;
+    --c-bg: #0f1711;
+    --c-bg-alt: #141f17;
+    --c-surface: #19261c;
+    --c-text: #e4ecdf;
+    --c-text-secondary: #afc2aa;
+    --c-text-muted: #7a8a77;
+    --c-leaf: #83b58c;
+    --c-leaf-light: #9bc9a2;
+    --c-sprout: #97c46e;
+    --c-sprout-pale: #1b2a1d;
     --c-wine: #a8505e;
     --c-wine-pale: #2e1e24;
-    --c-border: #3a2c1f;
-    --c-divider: #3a2c1f;
-    --c-hero-text: #f7f1e8;
-    --c-footer-bg: #120d08;
+    --c-border: #27351f;
+    --c-divider: #27351f;
+    --c-hero-text: #f2f7ee;
+    --c-footer-bg: #0a120c;
   }
 }
 
@@ -72,7 +74,7 @@ body {
 
 /* ─── the banner that says this is not live ─── */
 .preview-bar {
-  background: var(--c-bean-deep);
+  background: var(--c-leaf-deep);
   color: var(--c-hero-muted);
   font-size: 0.68rem;
   letter-spacing: 0.22em;
@@ -92,7 +94,7 @@ body {
   font-size: 0.66rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--c-ember);
+  color: var(--c-sprout);
   margin-bottom: 1rem;
 }
 
@@ -138,8 +140,8 @@ h2.title {
   text-align: center;
   padding: 5rem 2rem;
   background:
-    radial-gradient(ellipse at 50% 28%, rgba(180,102,31,0.22) 0%, transparent 62%),
-    linear-gradient(180deg, #4a2c17 0%, #241508 100%);
+    radial-gradient(ellipse at 50% 28%, rgba(109,156,74,0.26) 0%, transparent 62%),
+    linear-gradient(180deg, #2f5d3a 0%, #0f2415 100%);
   color: var(--c-hero-text);
   overflow: hidden;
 }
@@ -159,7 +161,7 @@ h2.title {
   width: 46vmin;
   height: 46vmin;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(244,229,214,0.20) 0%, transparent 62%);
+  background: radial-gradient(circle, rgba(226,240,216,0.20) 0%, transparent 62%);
   animation: rise 26s ease-in-out infinite;
 }
 
@@ -209,7 +211,7 @@ h2.title {
   display: inline-block;
   padding: 1rem 2.5rem;
   background: var(--c-hero-text);
-  color: var(--c-bean-deep);
+  color: var(--c-leaf-deep);
   text-decoration: none;
   font-size: 0.74rem;
   letter-spacing: 0.26em;
@@ -260,7 +262,7 @@ h2.title {
 }
 
 .pair .from { color: var(--c-wine); text-align: right; }
-.pair .to   { color: var(--c-bean); }
+.pair .to   { color: var(--c-leaf); }
 
 .pair i {
   font-style: normal;
@@ -294,7 +296,7 @@ h2.title {
   font-size: 0.66rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--c-ember);
+  color: var(--c-sprout);
   margin-bottom: 1.4rem;
 }
 
@@ -316,13 +318,13 @@ h2.title {
   width: 42px;
   height: 42px;
   margin-bottom: 1.5rem;
-  color: var(--c-bean);
+  color: var(--c-leaf);
   opacity: 0.8;
 }
 
 /* ─── the two pleasures ─── */
-.both { background: var(--c-bean-deep); color: var(--c-hero-text); }
-.both .eyebrow { color: var(--c-ember); }
+.both { background: var(--c-leaf-deep); color: var(--c-hero-text); }
+.both .eyebrow { color: var(--c-sprout); }
 .both .prose { color: var(--c-hero-muted); }
 
 /* A grid, not a flex row: as flex items the two cups sized to their text,
@@ -335,7 +337,7 @@ h2.title {
 }
 
 .cup {
-  border: 1px solid rgba(247,241,232,0.18);
+  border: 1px solid rgba(242,247,238,0.18);
   padding: 1.75rem 2rem;
   min-width: 230px;
   text-align: left;
@@ -347,7 +349,7 @@ h2.title {
   font-size: 0.62rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--c-ember);
+  color: var(--c-sprout);
   margin-bottom: 0.8rem;
 }
 
@@ -377,7 +379,7 @@ h2.title {
 
 .field input:focus, .field select:focus {
   outline: none;
-  border-bottom-color: var(--c-ember);
+  border-bottom-color: var(--c-sprout);
 }
 
 .field label {
@@ -390,7 +392,7 @@ h2.title {
 }
 
 .form .cta {
-  background: var(--c-bean);
+  background: var(--c-leaf);
   color: var(--c-bg);
   border: 0;
   cursor: pointer;
@@ -406,16 +408,16 @@ h2.title {
 
 .said {
   display: none;
-  border: 1px solid var(--c-ember);
-  background: var(--c-ember-pale);
+  border: 1px solid var(--c-sprout);
+  background: var(--c-sprout-pale);
   padding: 1.5rem 1.75rem;
   margin-top: 2rem;
 }
 
 .said.on { display: block; }
-.said h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--c-bean); }
+.said h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--c-leaf); }
 .said p { font-size: 0.9rem; color: var(--c-text-secondary); }
-.said a { color: var(--c-bean); }
+.said a { color: var(--c-leaf); }
 
 /* ─── footer ─── */
 .footer {
@@ -433,7 +435,7 @@ h2.title {
   align-items: center;
 }
 
-.footer-brand { font-family: var(--serif); font-size: 1.2rem; color: #f7f1e8; }
+.footer-brand { font-family: var(--serif); font-size: 1.2rem; color: #f2f7ee; }
 .footer-brand span { font-style: italic; }
 .footer p { font-size: 0.8rem; line-height: 1.8; }
 .footer .door-mark { height: 38px; width: auto; margin: 0 auto; color: #fff; opacity: 0.25; }

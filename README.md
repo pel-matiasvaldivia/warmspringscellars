@@ -103,7 +103,7 @@ point NPM at `warmspringscellars:8080`.
 ## The coffee unit
 
 `coffee/` is a second landing page for **warmspringscoffee.com**, a roastery
-the winery is weighing up: premium roasted coffee from Kenya, Somalia and
+the winery is weighing up: premium roasted coffee from Kenya, Ethiopia and
 Colombia, sold to the same list as the wine.
 
 It is served at `/coffee/` and **is not announced**. Nothing on the public
@@ -117,11 +117,15 @@ Its form stores nothing and says so on submit. Wiring it to the club's own
 desk is a small job — an interest table and one endpoint — and worth doing
 before the page is shown to anyone who might actually fill it in.
 
-**Before it is announced, read the sourcing comment above the Somalia card.**
-Somali coffee culture is old and real; Somali coffee *growing* is tiny and
-mostly revival-stage, and a traceable commercial lot is not something to
-assume. The copy claims only a preparation tradition and a highland lot, and
-names no region, washing station, certification or volume.
+The three origins are Kenya, Ethiopia and Colombia. Ethiopia replaced an
+earlier Somalia card: Somali coffee *culture* is old and real, but Somalia is
+not an established export origin — the growing is tiny and mostly
+revival-stage — while the ceremony that card described is Ethiopian to begin
+with. Every claim on the page now names a real growing region.
+
+The palette is green rather than roast-brown. Coffee is a cherry on a shrub
+for years and a brown bean for about a fortnight, and the green is the part
+the three origins have in common.
 
 ## Running the club
 
