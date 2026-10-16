@@ -126,29 +126,43 @@ def singular(rgb: np.ndarray, ground: np.ndarray | None = None) -> np.ndarray:
     return rgb * (1 - mask) + np.asarray(ground, float) * mask
 
 
-def recoloured(rgb: np.ndarray, doors=INK) -> np.ndarray:
-    """The artwork with the doors repainted, edges and all.
+def weights(rgb: np.ndarray, doors=ART_DOORS) -> np.ndarray:
+    """Each pixel as parts ground, doors and line work, adding up to one.
 
     A hand-rolled "replace this colour" pass would leave a fringe: every edge
     in the drawing is an antialiased mix of two inks, and those mixed pixels
-    match neither. So each pixel is unmixed into how much ground, doors and
-    line work it holds — three knowns, so the mix is solvable — and then put
-    back together with the new colour in the doors' place. The line work and
-    the ground come through untouched, and the edges land where they should
-    because they are rebuilt from the same weights that described them.
+    match neither. Unmixing says how much of each ink is in a pixel, which is
+    solvable because the three inks are known, and anything rebuilt from
+    those parts keeps the edges the drawing already had.
     """
-    inks = np.array([ART_GROUND, ART_DOORS, ART_LINE], float)
-    # The fourth row makes the weights a mix rather than any three numbers
-    # that happen to hit the colour: it asks them to add up to one.
+    inks = np.array([ART_GROUND, doors, ART_LINE], float)
+    # The fourth row makes these a mix rather than any three numbers that
+    # happen to hit the colour: it asks them to add up to one.
     basis = np.vstack([inks.T, np.ones(3)])
-    weights = (np.linalg.pinv(basis) @
-               np.concatenate([rgb.reshape(-1, 3), np.ones((rgb[..., 0].size, 1))],
-                              axis=1).T).T
-    weights = np.clip(weights, 0, None)
-    weights /= np.maximum(weights.sum(axis=1, keepdims=True), 1e-6)
+    flat = np.concatenate([rgb.reshape(-1, 3), np.ones((rgb[..., 0].size, 1))], axis=1)
+    w = np.clip((np.linalg.pinv(basis) @ flat.T).T, 0, None)
+    w /= np.maximum(w.sum(axis=1, keepdims=True), 1e-6)
+    return w.reshape(*rgb.shape[:2], 3)
 
-    out = np.array([ART_GROUND, doors, ART_LINE], float)
-    return (weights @ out).reshape(rgb.shape)
+
+def recoloured(rgb: np.ndarray, doors=INK) -> np.ndarray:
+    """The artwork with the doors repainted, edges and all."""
+    return weights(rgb) @ np.array([ART_GROUND, doors, ART_LINE], float)
+
+
+def as_print(rgb: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """The artwork as something printed rather than something pasted on.
+
+    Returns how much ink each pixel carries and what colour that ink is. The
+    ground carries none, which is the whole point: these labels are applied
+    straight to the glass, so where the drawing is empty the bottle has to
+    show through instead of a rectangle of black paper.
+    """
+    w = weights(rgb, doors=INK)
+    cover = np.clip(w[..., 1] + w[..., 2], 0, 1)
+    ink = (w[..., 1:2] * np.array(INK, float) +
+           w[..., 2:] * np.array(ART_LINE, float))
+    return cover, ink / np.maximum(cover[..., None], 1e-6)
 
 
 def rebrand(rgb: np.ndarray, doors=INK) -> np.ndarray:

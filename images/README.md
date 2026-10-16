@@ -220,10 +220,27 @@ renders, `WarmSpringsCellars_Cabernet.png` (Bordeaux) and
 `WarmSpringsCellars_Pinot.png` (Burgundy), both already wearing older artwork.
 The tool learns the studio lighting from clean glass above and below the old
 label, repaints the band with it to erase that artwork, then wraps the new
-label around the cylinder — how far it reaches follows from the label's trim
-width against the bottle's real circumference. Paper is lit as paper, not as
-glass, which matters most on the Burgundy: that bottle is darkest dead centre,
-so borrowing its own profile would drop a shadow through the wine's name.
+artwork around the cylinder — how far it reaches follows from the trim width
+against the bottle's real circumference.
+
+It is **printed, not pasted**, and that is the point of the picture. These
+bottles are decorated directly: the ink is fired onto the glass, which costs
+several times what a paper label costs and is what the wines are known for,
+so the shot has to show it. In practice that means the drawing's ground is
+nothing at all — there is no panel, no edge, no shadow cast onto the glass,
+and the bottle goes on being a bottle between the strokes. Only the ink is
+lit, as a matte film on a cylinder under the studio's key, with a floor high
+enough that a stroke keeps reading white well into the turn where the glass
+behind it has gone black. Then the bottle's own highlight is carried back
+over the top of the artwork: a label stands off the glass and interrupts the
+reflection, a fired print lies under the same gloss, and that unbroken
+highlight is the thing the eye reads as the expensive one.
+
+One correction the press would make and a downsampler will not: the artwork
+is three times the resolution it ends up at, so a hairline arrives as a
+half-covered pixel and the dark glass drinks it. A gamma on coverage gives
+the fine type back the weight it had, which matters most on the Burgundy —
+its label is a 4.5in trim, so every line on it lands smaller.
 
 **`pale_bottles.py`** does for the Sauvignon Blanc and the Rosé what the two
 above do for the reds, because none of their assumptions survive a pale bottle:

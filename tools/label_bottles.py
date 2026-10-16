@@ -12,13 +12,17 @@ from scratch:
      core shadow right of centre and the rim light on the right edge.
   3. Repaint the label band with that profile, which erases the old artwork and
      leaves a clean bottle.
-  4. Wrap the new label around the cylinder: a column at screen offset s sits at
-     angle asin(s), so the artwork compresses towards the edges exactly as paper
-     on glass does. How far it wraps follows from the label's real width and the
-     bottle's real circumference, not from taste.
-  5. Light the label as paper rather than glass — the same key and rim, but with
-     the core shadow lifted, since paper scatters where glass goes black — then
-     add the edge catch and the shadow the paper casts onto the bottle.
+  4. Wrap the new artwork around the cylinder: a column at screen offset s sits
+     at angle asin(s), so it compresses towards the edges exactly as something
+     printed on glass does. How far it reaches follows from the artwork's real
+     width and the bottle's real circumference, not from taste.
+  5. Print it rather than paste it. These bottles are decorated directly —
+     the ink is fired onto the glass, which is the expensive way to do it and
+     the thing the wines are known for — so the drawing's ground is nothing at
+     all and the glass shows between the strokes. Only the ink is lit, as a
+     matte film on a cylinder, and the bottle's own highlight is carried over
+     the top of it, because a print lies under the same gloss as the glass
+     while a paper label stands off it and breaks the reflection.
 
 Run from the repo root:  python3 tools/label_bottles.py
 Requires Pillow and numpy. Labels come from tools/extract_labels.py.
@@ -28,6 +32,8 @@ import os
 
 import numpy as np
 from PIL import Image, ImageFilter
+
+import brandmark
 
 LABEL_DIR = "images/labels"
 OUT_DIR = "images/renders"
@@ -47,7 +53,7 @@ BASES = {
     # bottle itself measures 92, so the artwork sat a sixth too small and the
     # wine's name came out unreadable beside the other four. The band is set
     # from the bottle instead: 4.50in of label at the render's own scale,
-    # ending where the old one did, which is where the paper really stops.
+    # ending where the old one did, which is where the artwork really stops.
     "burgundy": {
         "file": "images/WarmSpringsCellars_Pinot.png",
         "band": (691, 1105),
@@ -77,7 +83,9 @@ CAPSULE_CEILING = 0.78
 CAPSULE_VALUE = 0.55
 
 FEATHER = 26            # rows the repainted band fades over at each end
-PAPER_BLACK = 44.0      # what matte black label stock reflects under this key
+PRINT_FLOOR = 0.58      # what the ink still returns where the key does not reach
+GLOSS = 0.55            # how much of the bottle's highlight carries over the ink
+INK_GAIN = 0.78         # gamma on coverage, to keep fine strokes from thinning
 KEY_ANGLE = np.radians(-30.0)   # studio key, upper left of the bottle
 RIM_ANGLE = np.radians(70.0)    # weak fill down the far edge
 
@@ -257,6 +265,7 @@ def build(wine, spec):
 
     # ── Scale ─────────────────────────────────────────────────────────────
     label = np.asarray(Image.open(f"{LABEL_DIR}/front-{wine}.png").convert("RGB")).astype(float)
+    coverage, pigment = brandmark.as_print(label)
     LH, LW = label.shape[:2]
     label_w_in, label_h_in = spec["label_in"]
     px_per_in = (y1 - y0) / label_h_in
@@ -265,7 +274,7 @@ def build(wine, spec):
     radius_px = (right[mid] - left[mid]) / 2
     radius_in = radius_px / px_per_in
     circumference_in = 2 * np.pi * radius_in
-    # How far the paper reaches around the glass, as a half-angle.
+    # How far the artwork reaches around the glass, as a half-angle.
     theta_max = np.radians(min(label_w_in / circumference_in * 180.0, 78.0))
 
     grain = grain_field(img, left, right, base["clean_rows"][0])
@@ -306,52 +315,42 @@ def build(wine, spec):
     orig = out[ys[0]:ys[-1] + 1]
     out[ys[0]:ys[-1] + 1] = orig * (1 - blend[..., None]) + glass * blend[..., None]
 
-    # ── 2. Wrap the label ────────────────────────────────────────────────
+    # ── 2. Print the artwork onto the glass ──────────────────────────────
     # The band lifts towards the sides, because the camera sits above the
-    # label's centre and the rim of a cylinder reads as an ellipse.
+    # artwork's centre and a line around a cylinder reads as an ellipse.
     bow = base["bow"] * (1 - np.cos(theta))
     v = (Y + bow - y0) / (y1 - y0)
     uu = (theta / theta_max + 1) / 2
 
-    on_label = on_bottle & (np.abs(theta) <= theta_max) & (v >= 0) & (v <= 1)
-    art = sample(label, uu * (LW - 1), np.clip(v, 0, 1) * (LH - 1))
+    printed = on_bottle & (np.abs(theta) <= theta_max) & (v >= 0) & (v <= 1)
+    xs_art, ys_art = uu * (LW - 1), np.clip(v, 0, 1) * (LH - 1)
+    cover = sample(coverage[..., None], xs_art, ys_art)[..., 0] * printed
+    # The artwork is three times the resolution it ends up at, so a hairline
+    # arrives as a half-covered pixel and the glass drinks it. A press does
+    # not thin a rule down for being fine; this gives the small type back the
+    # weight the downsampling took, without touching anything already solid.
+    cover = cover ** INK_GAIN
+    ink = sample(pigment, xs_art, ys_art)
 
-    # The artwork's own background is near-black ink on white paper stock. Map
-    # it onto what matte black paper actually reflects — never zero, or the
-    # label punches a hole through the bottle.
-    bg = np.percentile(label, 35)
-    art = np.clip((art - bg) / max(255.0 - bg, 1e-6), 0, 1)
-    art = PAPER_BLACK + (255.0 - PAPER_BLACK) * art
-
-    # Paper is diffuse, so it cannot borrow the glass's own profile. On the
-    # Burgundy render the glass is darkest dead centre — it is dark and
-    # translucent, lit from behind the shoulders — and copying that would put
-    # a shadow straight through the wine's name. Light it instead as a matte
-    # cylinder under this studio's key, with a touch of rim on the far side.
+    # Ink laid on the bottle, not paper laid against it: the drawing's ground
+    # carries no ink at all, so the glass goes on being glass between the
+    # strokes and there is no panel to have an edge. What is left to light is
+    # the ink itself, as a matte film on a cylinder under this studio's key.
+    # Its floor is high, because a stroke of enamel keeps reading white deep
+    # into the turn where the glass behind it has long gone black.
     key = np.clip(np.cos(theta - KEY_ANGLE), 0, 1) ** 1.1
     rim = np.clip(np.cos(theta - RIM_ANGLE), 0, 1) ** 6
-    paper = (0.42 + 0.58 * key + 0.12 * rim) / 1.06
-    paper *= gain_at(Y)
-    art = art * paper[..., None] + grain_px * 0.45
+    lit = (PRINT_FLOOR + (1 - PRINT_FLOOR) * key + 0.14 * rim) * gain_at(Y)
 
     band = out[ys[0]:ys[-1] + 1]
-    band[:] = np.where(on_label[..., None], art, band)
+    band[:] = band * (1 - cover[..., None]) + ink * lit[..., None] * cover[..., None]
 
-    # ── 3. Sell the paper: a catch of light on its edge, and its shadow ──
-    # Smooth falloffs, not hard masks — a thresholded edge speckles.
-    def ramp(d, width):
-        return np.clip(1 - np.abs(d) / width, 0, 1)
-
-    side = ramp(np.abs(theta) - theta_max, np.radians(1.6)) * on_label
-    band[:] = np.minimum(band + 22 * side[..., None], 255)
-
-    top = ramp(v, 0.006) * on_label
-    band[:] = np.minimum(band + 16 * top[..., None], 255)
-
-    # The paper stands off the glass, so its bottom edge casts a short shadow.
-    below = on_bottle & ~on_label & (np.abs(theta) <= theta_max) & (v > 1)
-    drop = np.clip(1 - (v - 1) / 0.022, 0, 1) * below
-    band[:] = band * (1 - 0.30 * drop[..., None])
+    # ── 3. Sell the print: the bottle's own gloss runs across it ─────────
+    # This is the tell. A label stands off the glass and interrupts the
+    # highlight; a fired-on print is under the same varnish as the rest of
+    # the bottle, so the key light travels over the artwork without a seam.
+    gloss = np.clip(glass.mean(axis=2) - np.median(glass.mean(axis=2)), 0, None)
+    band[:] = np.minimum(band + GLOSS * gloss[..., None] * cover[..., None], 255)
 
     out[ys[0]:ys[-1] + 1] = band
     return np.clip(out, 0, 255).astype(np.uint8)

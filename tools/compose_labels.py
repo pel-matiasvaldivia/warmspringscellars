@@ -77,7 +77,7 @@ def inside_doors(rgb: np.ndarray) -> np.ndarray:
     neighbourhood is made of: plum under the hatching, bare ground under the
     name. The radius only has to beat the width of a stroke.
     """
-    weights = _unmix(rgb)
+    weights = brandmark.weights(rgb, doors=brandmark.INK)
     radius = max(round(min(rgb.shape[:2]) * 0.012), 2)
 
     def spread(plane):
@@ -88,16 +88,6 @@ def inside_doors(rgb: np.ndarray) -> np.ndarray:
     return spread(weights[..., 1]) > spread(weights[..., 0])
 
 
-def _unmix(rgb: np.ndarray) -> np.ndarray:
-    """Each pixel as parts ground, doors and line work. See brandmark."""
-    inks = np.array([brandmark.ART_GROUND, brandmark.INK, brandmark.ART_LINE], float)
-    basis = np.vstack([inks.T, np.ones(3)])
-    flat = np.concatenate([rgb.reshape(-1, 3), np.ones((rgb[..., 0].size, 1))], axis=1)
-    w = np.clip((np.linalg.pinv(basis) @ flat.T).T, 0, None)
-    w /= np.maximum(w.sum(axis=1, keepdims=True), 1e-6)
-    return w.reshape(*rgb.shape[:2], 3)
-
-
 def coverage(rgb: np.ndarray) -> np.ndarray:
     """How much ink each pixel of the film carries, 0 to 1.
 
@@ -105,7 +95,7 @@ def coverage(rgb: np.ndarray) -> np.ndarray:
     prints nothing where it is the hatching, which leaves the hatching as
     bare glass — the same holes the reds show in white.
     """
-    w = _unmix(rgb)
+    w = brandmark.weights(rgb, doors=brandmark.INK)
     enclosed = inside_doors(rgb)
     return np.clip(w[..., 1] + w[..., 2] * ~enclosed, 0, 1)
 
