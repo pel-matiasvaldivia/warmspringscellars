@@ -100,6 +100,14 @@ ports:
 …or drop `ports` entirely, attach both containers to a shared network, and
 point NPM at `warmspringscellars:8080`.
 
+## Email signatures
+
+`email-signatures/` holds a signature block for each winemaker, built for
+Microsoft 365 by `email-signatures/build.py`. Tables and inline styles only,
+because Outlook on Windows renders mail through Word. Its README says what to
+check before they go out — the two mailbox addresses are a guess at the
+convention, and the town disagrees with the printed labels.
+
 ## Running the club
 
 The whole commercial flow, from the form to the doorstep, is described in

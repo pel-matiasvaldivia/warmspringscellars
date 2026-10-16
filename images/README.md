@@ -16,7 +16,8 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `logo-warm-springs-cellars[-dark].jpg` | Generated: the full lockup, flat          | Nothing on the page — for use off-site    |
 | `logo-warm-springs-cellars[-light].png` | Generated: the lockup on transparency    | Nothing on the page — for use off-site    |
 | `signature-robert-rex.png`   | Generated: his signature, from the label            | Nothing on the page — email signatures    |
-| `signature-cecilia-valdivia.png` | Generated: hers, from the label                 | Nothing on the page — email signatures    |
+| `signature-cecilia-valdivia.png` | Generated: hers, from the label                 | Nothing on the page — her handwriting     |
+| `logo-email[-cream].png`     | Generated: the lockup at 240px                      | The Outlook signatures in `email-signatures/` |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
