@@ -12,12 +12,10 @@ python3 email-signatures/build.py
 | `robert-rex.html` | The same, his details. |
 | `*.preview.html` | Open in a browser to see it. Not for pasting — it points at the logo on disk. |
 
-## Before these go out
-
-**Check the town.** These say Kenwood, Sonoma Valley, which is what the site
-says. The printed labels say Glen Ellen. Warm Springs Road runs between the
-two, so both may be defensible, but the signature and the bottle should not
-disagree.
+The town is **Glen Ellen**, which is what the bottles say: "PRODUCED AND
+BOTTLED BY WARM SPRINGS CELLARS, GLEN ELLEN, CALIFORNIA". The site used to
+say Kenwood and was changed to match, so the signature, the site and the
+label now agree.
 
 ## Putting one in Outlook
 

@@ -13,7 +13,7 @@ from pathlib import Path
 from .catalogue import Tier
 from .mail import Mailer, Message
 
-SIGNOFF = "Cecilia Valdivia, Owner & Winemaker\nWarm Springs Cellars, Kenwood, Sonoma Valley"
+SIGNOFF = "Cecilia Valdivia, Owner & Winemaker\nWarm Springs Cellars, Glen Ellen, Sonoma Valley"
 
 
 def _html(body: str) -> str:
@@ -26,7 +26,7 @@ def _html(body: str) -> str:
  color:#722f3a;margin:0 0 22px">Warm Springs Cellars</p>
 {body}
 <p style="margin:26px 0 0;font-size:13px;color:#5c4650">Cecilia Valdivia, Owner &amp; Winemaker<br>
-<span style="color:#9a8890">Kenwood, Sonoma Valley</span></p>
+<span style="color:#9a8890">Glen Ellen, Sonoma Valley</span></p>
 </td></tr></table>
 <p style="font:11px/1.5 system-ui,sans-serif;color:#9a8890;max-width:520px;margin:14px auto 0">
 You are receiving this because you asked for an allocation at warmspringscellar.com.

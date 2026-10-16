@@ -39,7 +39,7 @@ SANS = "Arial, Helvetica, sans-serif"
 PHONE = "707.318-0167"
 PHONE_HREF = "+17073180167"
 SITE = "warmspringscellar.com"
-PLACE = "Kenwood, Sonoma Valley, California"
+PLACE = "Glen Ellen, Sonoma Valley, California"
 
 PEOPLE = [
     {"slug": "cecilia-valdivia", "name": "Cecilia Valdivia",
