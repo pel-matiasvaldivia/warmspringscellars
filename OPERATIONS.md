@@ -64,7 +64,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 
 ---
 
-## 2. The six tabs
+## 2. The seven tabs
 
 | Tab | What it is for |
 | --- | --- |
@@ -74,6 +74,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 | **Shipments** | Shipments, from ready-to-pack to delivered |
 | **Releases** | The seasonal despatches (April and October) |
 | **Books** | QuickBooks: what is filed, and what is still owed |
+| **Mail** | How outgoing mail is configured, and a button to test it |
 
 Pending applications and undelivered shipments float to the top of their lists
 on their own. What needs attention is where you look first.
@@ -427,14 +428,42 @@ the domain rather than the server:
 An invitation that lands in a junk folder is an approved application nobody
 answers, and on the desk it looks exactly like one that was ignored.
 
-### 8.6 Test before promising
+### 8.6 Test before promising: the **Mail** tab
 
-1. Fill `.env`, `docker compose up -d`, and check that the `SMTP_HOST` notice
-   is gone from the top of the desk.
-2. Approve a test application made to an address outside the tenant (Gmail will
-   do, and it also shows whether SPF and DKIM passed: "Show original").
-3. If it does not arrive: `docker compose logs api | grep -i smtp`. The adapter
-   logs the refusal as the server worded it, code included.
+No real application has to be approved to find out whether mail goes out. The
+**Mail** tab on the desk answers the three questions in the order they break.
+
+**"How it is configured"** reads `.env` and says it in words: where mail goes
+out, whether it is encrypted, how it authenticates, as which mailbox. Each row
+carries a mark: *right* is right, *works today* works today and will stop —
+which is what it says about a password against Microsoft 365 — *wrong* is
+wrong, and *not sending* means no server is configured and nothing leaves. It
+is read on every page load and touches no network.
+
+**"Check the connection"** opens the real connection: connects, encrypts,
+authenticates, hangs up. **It sends nothing and nobody receives anything.** It
+lists every step that did work before the one that failed, which is most of the
+diagnosis: knowing the connection opened and STARTTLS succeeded before the
+password was refused says something very different from "mail is broken".
+
+**"Send a test message"** sends one real message to whatever address is typed
+in. Use one **outside** the tenant — a Gmail address will do, and it also shows
+whether SPF and DKIM passed under "Show original" — because a message that
+travels inside the tenant proves nothing about the ones that leave. The message
+names the server and the mechanism that sent it, so a forwarded copy is
+evidence. Nobody on the club's list is written to, and nothing about a member
+or an order changes.
+
+At the foot of the page, **"If it does not work"** lists the errors that
+actually turn up — `535 5.7.139`, `AADSTS7000215`, a token accepted but the
+send refused — and what each one means.
+
+> **What the tab cannot tell you.** A connection that works is not a message
+> that arrives. That is SPF, DKIM and somebody's spam filter (§8.5), and only
+> a real send to a real address answers it.
+
+If something still does not add up: `docker compose logs api | grep -i smtp`.
+The adapter logs the refusal as the server worded it, code included.
 
 ---
 
@@ -507,8 +536,9 @@ template is the only part that is versioned.
 - [ ] Stripe approved for alcohol sales — **they ask for it explicitly**
 - [ ] Webhook pointed at `/api/payments/webhook`, subscribed to
       `checkout.session.completed`
-- [ ] SMTP configured, and tested with a trial approval to your own address
-      (§8). On Microsoft 365, with OAuth2 (§8.3) rather than a password
+- [ ] SMTP configured, and tested from the **Mail** tab with a send to an
+      address outside the tenant (§8.6). On Microsoft 365, with OAuth2 (§8.3)
+      rather than a password
 - [ ] SPF, DKIM and DMARC published for `warmspringscellar.com` (§8.5)
 - [ ] `SHIPPABLE_STATES` checked against the winery's actual permits
 - [ ] QuickBooks: app created, redirect URI registered, the item created, and

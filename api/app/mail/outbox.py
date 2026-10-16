@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
-from .base import Message
+from .base import Message, Probe
 
 
 class OutboxMailer:
@@ -23,6 +23,19 @@ class OutboxMailer:
         self._dir = directory
         self._sender = sender
         directory.mkdir(parents=True, exist_ok=True)
+
+    def verify(self) -> Probe:
+        """There is no server to reach, so this checks the one thing there is."""
+        steps = [f"No server is configured: mail is written to {self._dir}."]
+        try:
+            probe = self._dir / ".writable"
+            probe.write_text("")
+            probe.unlink()
+        except OSError as exc:
+            return Probe(False, steps, f"and that directory cannot be written: {exc}")
+        steps.append("The directory is writable, so nothing is being lost — "
+                     "but nothing is reaching anybody either.")
+        return Probe(True, steps)
 
     def send(self, message: Message) -> str:
         msg = EmailMessage()

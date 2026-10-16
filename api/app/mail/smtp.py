@@ -21,7 +21,8 @@ from datetime import datetime, timezone
 from email.message import EmailMessage
 from typing import Callable
 
-from .base import Message
+from .base import Message, Probe
+from .oauth import OAuthError
 
 
 class SmtpMailer:
@@ -57,6 +58,55 @@ class SmtpMailer:
         elif self._user:
             server.login(self._user, self._password)
 
+    def verify(self) -> Probe:
+        """Connect, encrypt, authenticate, hang up. Send nothing.
+
+        Everything that goes wrong with outgoing mail goes wrong in one of
+        those four steps, and all of them can be tried without putting a
+        message in anybody's inbox. What it cannot tell you is whether the
+        message would arrive: that is SPF, DKIM and a spam filter, and only
+        a real send to a real address answers it.
+        """
+        steps: list[str] = []
+        try:
+            with smtplib.SMTP(self._host, self._port, timeout=self._timeout) as server:
+                _code, greeting = server.ehlo()
+                steps.append(f"Connected to {self._host}:{self._port} — "
+                             f"{_first_line(greeting)}")
+
+                if self._starttls:
+                    server.starttls()
+                    server.ehlo()
+                    steps.append("STARTTLS accepted: the connection is encrypted.")
+
+                offered = (server.esmtp_features.get("auth") or "").upper().split()
+                if offered:
+                    steps.append("The server offers " + ", ".join(offered) + ".")
+
+                if self.mechanism == "none":
+                    steps.append("Not authenticating: this deployment is a relay "
+                                 "that authorises by address.")
+                else:
+                    if offered and self.mechanism not in offered:
+                        return Probe(False, steps, _not_offered(self.mechanism, offered))
+                    self._authenticate(server)
+                    steps.append(f"Authenticated as {self._user} over "
+                                 f"{self.mechanism}.")
+
+                steps.append("Closed without sending anything.")
+        except OAuthError as exc:
+            return Probe(False, steps, f"No access token, so there was nothing to "
+                                       f"authenticate with: {exc}")
+        except smtplib.SMTPAuthenticationError as exc:
+            return Probe(False, steps, f"The server refused the credentials: "
+                                       f"{_said(exc)}")
+        except smtplib.SMTPException as exc:
+            return Probe(False, steps, f"The server refused: {exc}")
+        except OSError as exc:
+            return Probe(False, steps,
+                         f"Could not reach {self._host}:{self._port} — {exc}")
+        return Probe(True, steps)
+
     def send(self, message: Message) -> str:
         msg = EmailMessage()
         msg["From"] = self._sender
@@ -78,3 +128,26 @@ class SmtpMailer:
             self._authenticate(server)
             server.send_message(msg)
         return f"smtp://{self._host}:{self._port}"
+
+
+def _first_line(greeting: bytes | str) -> str:
+    text = greeting.decode("utf-8", "replace") if isinstance(greeting, bytes) else str(greeting)
+    return text.splitlines()[0].strip() if text.strip() else "(no greeting)"
+
+
+def _said(exc: smtplib.SMTPAuthenticationError) -> str:
+    """The server's own sentence. Microsoft's carries the only useful code."""
+    detail = exc.smtp_error
+    if isinstance(detail, bytes):
+        detail = detail.decode("utf-8", "replace")
+    return f"{exc.smtp_code} {detail.splitlines()[0].strip()}" if detail else str(exc)
+
+
+def _not_offered(mechanism: str, offered: list[str]) -> str:
+    if mechanism == "XOAUTH2":
+        return ("The server does not offer XOAUTH2, only " + ", ".join(offered) +
+                ". On Microsoft 365 that usually means the host is wrong: "
+                "submission is smtp.office365.com, not the relay connector.")
+    return ("The server does not offer LOGIN, only " + ", ".join(offered) +
+            ". On Microsoft 365 that means basic authentication is switched "
+            "off for this mailbox, and OAuth2 is the way in.")

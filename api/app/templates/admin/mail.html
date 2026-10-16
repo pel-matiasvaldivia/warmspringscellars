@@ -1,0 +1,121 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>Outgoing mail</h1>
+<p class="sub">Every invitation, receipt and despatch notice leaves through here.</p>
+
+<div class="card">
+  <h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.05rem;margin-bottom:.2rem">
+    How it is configured</h2>
+  <p class="log" style="margin-bottom:.9rem">
+    Read from <code>.env</code> at start-up. Changing any of it means a restart.</p>
+
+  <table>
+    {% for check in checks %}
+    <tr>
+      <th style="width:9rem">{{ check.label }}</th>
+      <td style="width:5.5rem">
+        {% if check.state != 'info' %}<span class="pill {{ check.state }}">{{
+          {'ok':'right','warn':'works today','bad':'wrong','off':'not sending'}[check.state] }}</span>{% endif %}
+      </td>
+      <td>{{ check.detail }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.05rem;margin-bottom:.2rem">
+      Does the server let us in?</h2>
+    <p class="log" style="margin-bottom:.9rem">
+      Connects, encrypts, authenticates and hangs up. Nothing is sent and
+      nobody is written to.</p>
+
+    {% if probe %}
+      <ul class="steps">
+        {% for step in probe.steps %}<li>{{ step }}</li>{% endfor %}
+        {% if not probe.ok %}<li class="no">{{ probe.error }}</li>{% endif %}
+      </ul>
+      <p style="margin-top:.8rem">
+        <span class="pill {{ 'ok' if probe.ok else 'bad' }}">{{
+          'the handshake works' if probe.ok else 'it does not' }}</span></p>
+      {% if probe.ok and live %}
+        <p class="log" style="margin-top:.6rem">
+          Which says the club can reach the server and is allowed to send.
+          It says nothing about whether a message lands in an inbox rather
+          than a junk folder — only a real one answers that.</p>
+      {% endif %}
+    {% endif %}
+
+    <p style="margin-top:1rem">
+      <a class="btn" href="/admin/mail?verify=1">{{
+        'Check again' if probe else 'Check the connection' }}</a></p>
+  </div>
+
+  <div class="card">
+    <h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.05rem;margin-bottom:.2rem">
+      Send a test message</h2>
+
+    {% if live %}
+      <p class="log" style="margin-bottom:.9rem">
+        One real message, from <code>{{ mail_from }}</code>, to an address you
+        choose. Use one <b>outside</b> the tenant — a Gmail address will do, and
+        it will also show you whether SPF and DKIM passed.</p>
+    {% else %}
+      <p class="log" style="margin-bottom:.9rem">
+        With no server configured this writes a file to
+        <code>{{ outbox_dir }}</code> instead of sending. Useful to see the
+        message; not useful to see whether mail works.</p>
+    {% endif %}
+
+    <form method="post" action="/admin/mail/test">
+      <label for="to">Send it to</label>
+      <div class="row">
+        <input id="to" name="to" type="email" required
+               placeholder="you@gmail.com" value="" style="flex:1 1 15rem">
+        <button class="btn" type="submit">Send</button>
+      </div>
+    </form>
+
+    <p class="log" style="margin-top:.9rem">
+      Nobody on the club's list is written to, and nothing about a member or an
+      order changes. The message says which server and which mechanism sent it,
+      so a forwarded copy is evidence rather than a claim.</p>
+
+    {% if suggested %}
+      <p class="log" style="margin-top:.4rem">
+        Replies to club mail go to <code>{{ suggested }}</code>.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.05rem;margin-bottom:.6rem">
+    If it does not work</h2>
+  <table>
+    <tr><th>535 5.7.139</th>
+        <td>Microsoft 365 has basic authentication switched off for that
+            mailbox. It is not the password: move to OAuth2 — three settings
+            in <code>.env</code>, documented in the operations manual, §8.3.</td></tr>
+    <tr><th>AADSTS7000215</th>
+        <td>The client secret is wrong, or has expired. They do expire, and the
+            day one lapses mail stops going out without the settings having
+            changed.</td></tr>
+    <tr><th>AADSTS700016</th>
+        <td>The application id or the tenant id does not match a registration
+            in that tenant.</td></tr>
+    <tr><th>Token accepted, send refused</th>
+        <td>The application has a token but no right over the mailbox. In
+            Exchange Online PowerShell:
+            <code>Add-MailboxPermission</code> for the app's service
+            principal.</td></tr>
+    <tr><th>Sent, never arrived</th>
+        <td>Not an SMTP problem. SPF, DKIM and DMARC for
+            <code>{{ from_domain }}</code>, and the recipient's
+            junk folder.</td></tr>
+    <tr><th>Timed out</th>
+        <td>Outbound port {{ port }} is blocked, which some hosts do by
+            default. Ask the provider rather than changing anything here.</td></tr>
+  </table>
+</div>
+{% endblock %}

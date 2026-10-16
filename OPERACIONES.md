@@ -67,7 +67,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 
 ---
 
-## 2. Las seis pestañas
+## 2. Las siete pestañas
 
 | Pestaña | Para qué |
 | --- | --- |
@@ -77,6 +77,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 | **Shipments** | Los envíos, de "listo para empacar" a "entregado" |
 | **Releases** | Los despachos de temporada (abril y octubre) |
 | **Books** | QuickBooks: qué facturas ya están en los libros y qué falta |
+| **Mail** | Cómo está configurado el correo saliente, y un botón para probarlo |
 
 Las solicitudes pendientes y los envíos sin entregar suben solos al principio de
 sus listas. Lo que requiere atención queda arriba.
@@ -429,15 +430,42 @@ dominio, no del servidor:
 Una invitación que cae en correo no deseado es una solicitud aprobada que nadie
 contesta, y en el escritorio se ve igual que una que fue ignorada.
 
-### 8.6 Probar antes de prometer
+### 8.6 Probar antes de prometer: la pestaña **Mail**
 
-1. Cargar `.env`, `docker compose up -d` y mirar que arriba del escritorio no
-   quede el aviso de `SMTP_HOST`.
-2. Aprobar una solicitud de prueba hecha a una dirección de afuera del tenant
-   (Gmail sirve, y además muestra si el SPF y el DKIM pasaron: en Gmail, "Show
-   original").
-3. Si no llega: `docker compose logs api | grep -i smtp`. El adaptador
-   registra el rechazo tal como lo dijo el servidor, con el código incluido.
+No hace falta aprobar una solicitud de verdad para saber si el correo sale.
+La pestaña **Mail** del escritorio responde las tres preguntas en el orden en
+que se rompen:
+
+**"How it is configured"** lee el `.env` y lo dice en palabras: por dónde sale,
+si va cifrado, cómo se autentica, con qué casilla. Cada fila lleva una marca:
+*right* está bien, *works today* funciona hoy y va a dejar de funcionar —es lo
+que dice de una contraseña contra Microsoft 365—, *wrong* está mal, y *not
+sending* es que no hay servidor configurado y nada sale. Se lee en cada carga
+de la página y no toca la red.
+
+**"Check the connection"** abre la conexión de verdad: conecta, cifra, se
+autentica y corta. **No manda nada y nadie recibe nada.** Lista cada paso que
+sí funcionó antes del que falló, que es la mitad del diagnóstico: saber que la
+conexión se abrió y el STARTTLS pasó antes de que rechazaran la contraseña
+dice algo muy distinto que "no anda el correo".
+
+**"Send a test message"** manda un mensaje real a la dirección que se le
+escriba. Conviene una de **afuera** del tenant —un Gmail sirve, y además
+muestra si el SPF y el DKIM pasaron: "Show original"— porque un mensaje que
+viaja dentro del tenant no prueba nada sobre los que salen. El mensaje dice qué
+servidor y qué mecanismo lo mandaron, así que reenviado sirve de prueba. No
+escribe a nadie de la lista del club ni cambia nada de un socio o una orden.
+
+Abajo de todo, **"If it does not work"** tiene los errores que de verdad
+aparecen —`535 5.7.139`, `AADSTS7000215`, el token aceptado pero el envío
+rechazado— y qué significa cada uno.
+
+> **Lo que la pestaña no puede decir.** Que la conexión funcione no es que el
+> mensaje llegue. Eso es SPF, DKIM y el filtro de spam del otro lado (§8.5), y
+> solo lo contesta un envío real a una dirección real.
+
+Si algo no cierra: `docker compose logs api | grep -i smtp`. El adaptador
+registra el rechazo tal como lo dijo el servidor, con el código incluido.
 
 ---
 
@@ -509,8 +537,9 @@ se versiona.
 - [ ] Stripe aprobado para venta de alcohol — **lo pide expresamente**
 - [ ] Webhook apuntado a `/api/payments/webhook` y suscripto a
       `checkout.session.completed`
-- [ ] SMTP configurado y probado con una aprobación de prueba a un mail propio
-      (§8). En Microsoft 365, con OAuth2 (§8.3) antes que con contraseña
+- [ ] SMTP configurado y probado desde la pestaña **Mail**, con un envío a una
+      dirección de afuera del tenant (§8.6). En Microsoft 365, con OAuth2
+      (§8.3) antes que con contraseña
 - [ ] SPF, DKIM y DMARC publicados en `warmspringscellar.com` (§8.5)
 - [ ] `SHIPPABLE_STATES` revisada contra los permisos reales de la bodega
 - [ ] QuickBooks: app creada, URI de retorno registrada, el ítem creado

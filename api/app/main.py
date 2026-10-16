@@ -33,7 +33,7 @@ from .config import SHIPPABLE_STATES, settings
 from .db import Database, log
 from .flow import ALLOWED, Flow, FlowError
 from .invoices import ensure_pdf, money
-from .mail import build_mailer
+from .mail import build_mailer, check as mail_check
 from .notify import send_decline, send_invitation, send_receipt, send_shipment_notice
 from .payments import WebhookError, build_provider
 from .payments.fake import FakeProvider, unb64
@@ -610,3 +610,49 @@ def admin_accounting_export(unsynced: int = 0,
         body, media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{name}"'},
     )
+
+
+# ── outgoing mail ────────────────────────────────────────────────────────
+# Three questions, in the order they go wrong: are the settings right, does
+# the server let us in, and does a message actually arrive. The first is free
+# and shown on every load; the other two cost a network round trip and happen
+# when somebody asks for them.
+def _mechanism() -> str:
+    return getattr(mailer, "mechanism", "none" if mailer.live else "outbox")
+
+
+@app.get("/admin/mail", response_class=HTMLResponse)
+def admin_mail(request: Request, verify: int = 0,
+               actor: str = Depends(require_admin)) -> HTMLResponse:
+    # A GET because it changes nothing: it can be refreshed, and a browser
+    # that re-sends it is not a browser that sends mail twice.
+    probe = mailer.verify() if verify else None
+    return admin_page(
+        request, "mail.html", "mail",
+        checks=mail_check.configuration(settings, _mechanism()),
+        probe=probe,
+        live=mailer.live,
+        mechanism=_mechanism(),
+        outbox_dir=settings.outbox_dir,
+        mail_from=settings.mail_from,
+        from_domain=settings.mail_from.rpartition('@')[2],
+        port=settings.smtp_port,
+        suggested=settings.mail_reply_to,
+    )
+
+
+@app.post("/admin/mail/test")
+def admin_mail_test(to: str = Form(...),
+                    actor: str = Depends(require_admin)) -> RedirectResponse:
+    to = to.strip()
+    if "@" not in to or " " in to:
+        return RedirectResponse(f"/admin/mail?done=That is not an address: {to}",
+                                status_code=303)
+    try:
+        where = mailer.send(mail_check.trial_message(settings, to, _mechanism()))
+    except Exception as exc:  # noqa: BLE001 — whatever went wrong belongs on the page
+        return RedirectResponse(
+            f"/admin/mail?done=Not sent. {type(exc).__name__}: {exc}", status_code=303)
+    sent = f"Sent to {to} via {where}." if mailer.live else \
+        f"Not sent — written to {where}, because SMTP_HOST is unset."
+    return RedirectResponse(f"/admin/mail?done={sent}", status_code=303)

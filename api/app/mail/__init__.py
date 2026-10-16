@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from ..config import Settings
-from .base import Mailer, Message
+from .base import Mailer, Message, Probe
+from .check import Check, configuration, trial_message
 from .oauth import ClientCredentialsToken, OAuthError
 from .outbox import OutboxMailer
 from .smtp import SmtpMailer
 
-__all__ = ["ClientCredentialsToken", "Mailer", "Message", "OAuthError",
-           "OutboxMailer", "SmtpMailer", "build_mailer"]
+__all__ = ["Check", "ClientCredentialsToken", "Mailer", "Message", "OAuthError",
+           "OutboxMailer", "Probe", "SmtpMailer", "build_mailer", "configuration",
+           "trial_message"]
 
 
 def build_mailer(settings: Settings) -> Mailer:
