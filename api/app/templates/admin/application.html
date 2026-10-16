@@ -53,7 +53,7 @@
     {% endif %}
 
     {% if offers %}
-      <h2 style="font:400 1rem Georgia,serif;margin:1.5rem 0 .5rem">Invitations</h2>
+      <h2 style="margin:1.5rem 0 .5rem">Invitations</h2>
       <table>
         <tr><th>Sent</th><th>Status</th><th>Expires</th><th>Link</th></tr>
         {% for o in offers %}
@@ -74,7 +74,7 @@
 </div>
 
 <div class="card">
-  <h2 style="font:400 1rem Georgia,serif;margin-bottom:.75rem">What happened</h2>
+  <h2 style="margin-bottom:.75rem">What happened</h2>
   {% for e in events %}
     <div class="log"><time>{{ e.created_at[:16].replace('T',' ') }}</time>
       — {{ e.subject }} {{ e.action }}{% if e.actor != 'system' %} by {{ e.actor }}{% endif %}
