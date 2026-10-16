@@ -1,5 +1,5 @@
 # Intermediate renders: regenerate with tools/label_bottles.py. The inputs
-# (labels/*.ai and images/WarmSpringsCellars_*.png) are versioned instead.
+# (labels/*.ai and images/WarmSpringsCellar*_*.png) are versioned instead.
 images/renders/
 
 # Secrets for the club service. .env.example is the template that is committed.

@@ -18,6 +18,8 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `signature-robert-rex.png`   | Generated: his signature, from the label            | Nothing on the page — email signatures    |
 | `signature-cecilia-valdivia.png` | Generated: hers, from the label                 | Nothing on the page — her handwriting     |
 | `logo-email[-cream].png`     | Generated: the lockup at 240px                      | The Outlook signatures in `email-signatures/` |
+| `sauvignon-blanc-bottle.png` | Generated: the white, on transparency               | Nothing on the page yet — the card needs copy |
+| `rose-bottle.png`            | Generated: the rosé, on transparency                | Nothing on the page yet — the card needs copy |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
@@ -185,13 +187,33 @@ source pixels and would need scaling with it.
 
 ```bash
 python3 tools/extract_labels.py    # labels/*.ai           -> images/labels/front-<wine>.png
+python3 tools/compose_labels.py    # the two with no file  -> images/labels/front-<wine>.png
 python3 tools/label_bottles.py     # + the base renders    -> images/renders/<wine>.png
 python3 tools/cutout_bottles.py    # strip the backdrop    -> images/<wine>-bottle.png
+python3 tools/pale_bottles.py      # the white and the rosé -> images/<wine>-bottle.png
 ```
 
 **`extract_labels.py`** rasterises the official label files. They are PDF
 inside, one page carrying the front and back panels side by side, with layers
-for the print separations and for guides — only "Color comp" is rendered.
+for the print separations and for guides — only "Color comp" is rendered. What
+comes out is not quite what was printed: `tools/brandmark.py` takes the final s
+off the script word and repaints the doors in the brand's ink on the way past,
+because the name and the colour both moved after the print run and the .ai
+files are the archive of it. Both changes are measured against the script
+word's own bounding box, so they land the same on every label and on the
+lockup at 600dpi.
+
+**`compose_labels.py`** draws the two fronts that have no .ai file — the
+Sauvignon Blanc and the Rosé. Their labels are clear film rather than paper,
+one ink printed straight onto flint glass, so the tool takes the Cabernet's
+drawing apart into the three inks it was made of and keeps only the coverage:
+the doors print solid, the hatching inside them prints nothing and lets the
+wine through, the wordmark and the rules print. Which white stroke is drawing
+and which is hatching is settled by blurring the two inks far enough to
+swallow a stroke and asking what each pixel's surroundings are made of. The
+vintage, varietal and vineyard are then set again underneath, on the lines the
+Zinfandel uses, sized by cap height so a substituted face changes the shapes
+and not the layout.
 
 **`label_bottles.py`** puts each label on a bottle. The winery supplied two
 renders, `WarmSpringsCellars_Cabernet.png` (Bordeaux) and
@@ -203,7 +225,18 @@ width against the bottle's real circumference. Paper is lit as paper, not as
 glass, which matters most on the Burgundy: that bottle is darkest dead centre,
 so borrowing its own profile would drop a shadow through the wine's name.
 
-**`cutout_bottles.py`** lifts the bottles off the grey studio sweep. Separating
+**`pale_bottles.py`** does for the Sauvignon Blanc and the Rosé what the two
+above do for the reds, because none of their assumptions survive a pale bottle:
+the mockups came already on transparency, already lit, and light enough that a
+"find the dark bottle, flood away the backdrop" pass reads the glass as sky.
+The silhouette comes from the alpha channel instead, the film is multiplied
+onto the glass rather than lit as paper, and the work is done at twice the
+output size and brought back down — which is what keeps enlarged glass from
+looking soft beside a label drawn at 300dpi. The output is tied to the reds'
+scale in pixels per inch, so the sets stand together; these two are taller
+because the bottles are.
+
+**`cutout_bottles.py`** lifts the five reds off the grey studio sweep. Separating
 a black bottle from its own reflection is the hard part, since the reflection
 is dark too; it is found by scanning up for the lowest row both wide enough and
 dark enough to be the glass itself.
@@ -228,5 +261,5 @@ preserve that on screen; if `OUTPUT_HEIGHT` changes, `--bottle-scale` in
 `index.html` must change with it.
 
 Source material stays in the repo so the output is reproducible: `labels/*.ai`
-and `images/WarmSpringsCellars_*.png`. The intermediate renders in
+and `images/WarmSpringsCellar*_*.png`. The intermediate renders in
 `images/renders/` are git-ignored. None of it ships in the container image.
