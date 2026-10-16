@@ -87,12 +87,12 @@ def test_draining_files_the_invoice_and_then_its_payment(client):
     # The document carries what an accountant needs: who, how much, and the
     # split between wine and the shipping it travelled on.
     assert invoice.customer.email == "matias@example.com"
-    assert invoice.total_cents == 34000
+    assert invoice.total_cents == 27500
     # Every tier on offer now includes carriage, so there is one line. The
     # split is still exercised, in the adapter tests below.
     assert [line.kind for line in invoice.lines] == ["wine"]
-    assert sum(line.total_cents for line in invoice.lines) == 34000
-    assert fake.payments[number].amount_cents == 34000
+    assert sum(line.total_cents for line in invoice.lines) == 27500
+    assert fake.payments[number].amount_cents == 27500
 
 
 def test_a_payment_waits_for_the_invoice_it_links_to(client):
@@ -202,7 +202,7 @@ def test_the_export_carries_every_line_of_every_invoice(client):
     assert rows[0]["Email"] == "matias@example.com"
     assert rows[0]["Item"] == "Wine Club Allocation"
     assert rows[0]["Paid"] == "Yes"
-    assert float(rows[0]["ItemAmount"]) == 340.00
+    assert float(rows[0]["ItemAmount"]) == 275.00
 
 
 def test_the_export_can_be_narrowed_to_what_is_not_filed_yet(client):

@@ -22,19 +22,20 @@
     {% if app.status == 'pending' %}
       <form method="post" action="/admin/applications/{{ app.id }}/approve">
         <label>Allocations to offer</label>
-        {% for t in selectable %}
+        {# Every tier in the catalogue, invite-only ones among them: those come
+           unticked, so offering one is a deliberate act rather than the
+           default. Naming a tier in the markup meant the form went stale the
+           day the catalogue changed. #}
+        {% for t in tiers %}
           <div style="display:flex;gap:.5rem;align-items:center;margin:.3rem 0">
-            <input type="checkbox" name="tiers" value="{{ t.key }}" checked
+            <input type="checkbox" name="tiers" value="{{ t.key }}"
+                   {% if not t.invite_only %}checked{% endif %}
                    style="width:auto" id="t-{{ t.key }}">
             <label for="t-{{ t.key }}" style="margin:0;text-transform:none;letter-spacing:0;
-                   font-size:.85rem;color:var(--text)">{{ t.name }} — {{ t.price }}</label>
+                   font-size:.85rem;color:var(--text)">{{ t.name }} —
+              {% if t.invite_only %}by invitation{% else %}{{ t.price }}{% endif %}</label>
           </div>
         {% endfor %}
-        <div style="display:flex;gap:.5rem;align-items:center;margin:.3rem 0">
-          <input type="checkbox" name="tiers" value="inner-circle" style="width:auto" id="t-inner">
-          <label for="t-inner" style="margin:0;text-transform:none;letter-spacing:0;
-                 font-size:.85rem;color:var(--text)">The Inner Circle — by invitation</label>
-        </div>
         <p style="margin-top:1rem"><button class="btn" type="submit">Approve &amp; send the invitation</button></p>
       </form>
 

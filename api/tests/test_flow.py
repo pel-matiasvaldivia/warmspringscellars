@@ -113,8 +113,6 @@ def test_request_to_shipment(client):
     offer_page = client.get(f"/club/offer/{token}")
     assert offer_page.status_code == 200
     assert "Founder" in offer_page.text and "The Full Case" in offer_page.text
-    # The invite-only tier is never ticked by default, so it is not on offer.
-    assert "The Inner Circle" not in offer_page.text
 
     pay(client, token, "founders-reserve")
 
@@ -125,7 +123,7 @@ def test_request_to_shipment(client):
 
     order = client.main.db.one('SELECT * FROM "order" WHERE membership_id = ?', (membership["id"],))
     assert order["status"] == "paid"
-    assert order["total_cents"] == 34000              # Founder's Reserve includes shipping
+    assert order["total_cents"] == 27500              # Founder's Reserve includes shipping
     assert order["reference"].startswith("WSC-")
 
     invoice = client.main.db.one("SELECT * FROM invoice WHERE order_id = ?", (order["id"],))
@@ -425,8 +423,11 @@ def test_health_says_what_is_still_a_stub(client):
 def test_the_catalogue_is_served_for_the_landing_page(client):
     body = client.get("/api/catalogue").json()
     keys = [t["key"] for t in body["tiers"]]
-    assert keys == ["founders-reserve", "full-case", "inner-circle"]
-    assert body["tiers"][-1]["invite_only"] is True
+    assert keys == ["founders-reserve", "full-case"]
+    # Both are chooseable today. The field is still read and still honoured —
+    # see test_a_tier_that_was_not_offered_is_refused — so a
+    # by-invitation tier can come back without touching the code.
+    assert all(t["invite_only"] is False for t in body["tiers"])
 
 
 def test_states_are_the_ones_we_can_ship_to(client):

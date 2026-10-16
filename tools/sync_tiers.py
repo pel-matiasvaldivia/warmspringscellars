@@ -66,7 +66,7 @@ def options(tiers: list[dict]) -> str:
 
 
 def build(catalogue: dict) -> tuple[str, str]:
-    per_year = {1: "once", 2: "twice", 4: "four times"}.get(
+    per_year = {1: "once", 2: "twice", 3: "three times", 4: "four times"}.get(
         catalogue["shipments_per_year"], f"{catalogue['shipments_per_year']} times")
     cards = "\n\n".join(card(t) for t in catalogue["tiers"])
     opts = options(catalogue["tiers"]).replace("{n}", per_year)

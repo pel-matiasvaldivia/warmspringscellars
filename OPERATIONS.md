@@ -107,8 +107,10 @@ members.
 ### 3.2 Approve or decline
 
 Under **"The invitation"**, tick the tiers that person will be able to choose
-from. The three selectable ones come ticked; **The Inner Circle comes unticked
-because it is by invitation** — tick it only if you really mean to offer it.
+from. Every tier in the catalogue is listed, and the ones a member may choose
+for themselves come ticked. **A by-invitation tier comes unticked** — tick it
+only if you really mean to offer it. There is none today: the catalogue holds
+The Founder's Reserve and The Full Case, both open.
 
 **"Approve & send the invitation"** does four things at once: approves the
 application, creates the offer with the ticked tiers, emails the member, and
@@ -281,8 +283,8 @@ happens.
 
 Intuit **replaces the refresh token on every use** — which is why tokens live in
 the database and not in `.env` — and **expires it after a hundred days unused**.
-A club that invoices twice a year is precisely a club that will find itself
-disconnected.
+A club that invoices three times a year is precisely a club that will find
+itself disconnected.
 
 The page shows the deadline as **"Re-authorise before"**. It is not a detail:
 past that date the only repair is pressing "Connect to QuickBooks" again. The

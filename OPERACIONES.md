@@ -110,8 +110,10 @@ alguien ansioso no es dos socios.
 ### 3.2 Aprobar o declinar
 
 En **"The invitation"** se tildan los niveles que esa persona va a poder elegir.
-Vienen tildados los tres seleccionables; **The Inner Circle viene destildado
-porque es por invitación** — tildalo solo si de verdad querés ofrecerlo.
+Se listan todos los niveles del catálogo, y vienen tildados los que el socio
+puede elegir por su cuenta. **Un nivel por invitación viene destildado** —
+tildalo solo si de verdad querés ofrecerlo. Hoy no hay ninguno: el catálogo
+tiene The Founder's Reserve y The Full Case, los dos abiertos.
 
 **"Approve & send the invitation"** hace cuatro cosas en un paso: aprueba la
 solicitud, crea la oferta con los niveles tildados, le manda el mail al socio y
@@ -282,7 +284,7 @@ Con `QBO_AUTOSYNC=true` el envío sale solo con cada pago. Conviene dejarlo en
 
 Intuit **reemplaza el token de refresco en cada uso** —por eso los tokens viven
 en la base de datos y no en `.env`— y **lo vence si no se usa por cien días**.
-Un club que factura dos veces al año es, justamente, un club que se va a
+Un club que factura tres veces al año es, justamente, un club que se va a
 encontrar desconectado.
 
 La pantalla muestra la fecha límite en **"Re-authorise before"**. No es un dato

@@ -359,7 +359,7 @@ def admin_application(request: Request, app_id: int,
         request, "application.html", "applications",
         app=application, offers=offers, events=events,
         offer_urls={o["id"]: flow.offer_url(int(o["id"])) for o in offers},
-        selectable=catalogue().selectable,
+        tiers=catalogue().tiers,
     )
 
 
