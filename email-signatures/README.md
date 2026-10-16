@@ -14,10 +14,6 @@ python3 email-signatures/build.py
 
 ## Before these go out
 
-**Check the two addresses.** Nobody told me the real mailboxes, so the build
-uses `cecilia@` and `robert@` as the obvious convention. They are one line
-each in `build.py`.
-
 **Check the town.** These say Kenwood, Sonoma Valley, which is what the site
 says. The printed labels say Glen Ellen. Warm Springs Road runs between the
 two, so both may be defensible, but the signature and the bottle should not

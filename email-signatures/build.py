@@ -14,9 +14,7 @@ Two decisions worth stating:
     live somewhere public; LOGO_URL is where it will be once the site serves
     it. For a signature pasted into one person's Outlook the image travels
     with the message and any address works.
-  * The addresses here are a convention, not a fact. Nobody told me the real
-    mailboxes, so they are first-name@ and marked in the README. Check them
-    before these go out.
+  * The addresses are the winery's own, confirmed: firstname.lastname@.
 
 Run from the repo root:  python3 email-signatures/build.py
 """
@@ -45,9 +43,9 @@ PLACE = "Kenwood, Sonoma Valley, California"
 
 PEOPLE = [
     {"slug": "cecilia-valdivia", "name": "Cecilia Valdivia",
-     "role": "Owner &amp; Winemaker", "email": "cecilia@warmspringscellar.com"},
+     "role": "Owner &amp; Winemaker", "email": "cecilia.valdivia@warmspringscellar.com"},
     {"slug": "robert-rex", "name": "Robert Rex",
-     "role": "Expert Consultant", "email": "robert@warmspringscellar.com"},
+     "role": "Expert Consultant", "email": "robert.rex@warmspringscellar.com"},
 ]
 
 
