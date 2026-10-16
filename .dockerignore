@@ -17,6 +17,7 @@ labels/
 # Artwork and renders the page never requests: it ships only the finished
 # cutouts that tools/cutout_bottles.py produces.
 images/WarmSpringsCellars_*.png
+images/logo-warm-springs-cellars*.jpg
 images/shipment-box-source.jpg
 images/labels/
 images/renders/

@@ -13,6 +13,7 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `favicon-small.svg`      | Generated: the mark's solid cut                         | The tab icon                              |
 | `favicon.svg`            | Generated: the full mark in wine, standalone            | Source for the touch icon; general use    |
 | `favicon-16/32/180.png`  | Generated: rasterised from the two above                | Tab icon fallbacks, Apple touch icon      |
+| `logo-warm-springs-cellars[-dark].jpg` | Generated: the full lockup                | Nothing on the page — for use off-site    |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
@@ -69,6 +70,26 @@ in one document, and 100 KB where 20 KB does.
 All five of those places used to draw an invented house — a gable, a rounded
 rectangle and a circle, nothing to do with the winery. They are the real mark
 now.
+
+### The logo, for use off the site
+
+```bash
+python3 tools/export_logo.py    # -> images/logo-warm-springs-cellars[-dark].jpg
+```
+
+The full lockup — gable, medallion, EST 1982, doors, ground line and the
+WARM SPRINGS / Cellars wordmark — at 600dpi, for slides, letterheads and
+anyone who asks for "the logo". The wordmark is outlined in the label, not
+live type, so this needs none of the brand's fonts. Two versions: as printed
+(light ink on the label's near-black) and wine on cream for a white page.
+
+Why this one is a raster while the door mark is vector: the mask trick works
+only where white line work sits on a burgundy mass and can be cut out of it.
+The wordmark and the medallion's interior are white on the bare ground with
+no mass behind them, so masking them leaves a hole where the brand's name
+should be. The page only needs the mark, so the vector stays there and the
+lockup is rendered instead. Neither file ships in the container; the page
+does not request them.
 
 ### The tab icon
 
