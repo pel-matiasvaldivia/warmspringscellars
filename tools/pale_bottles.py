@@ -13,8 +13,9 @@ that are about cylinders rather than about dark glass. What is different:
 
   * the silhouette comes from the alpha channel, which is exact, instead of
     being traced out of the luminance;
-  * the label is film, not paper, so it is multiplied onto the glass rather
-    than lit as a separate diffuse surface, and it casts nothing;
+  * these labels are printed onto the glass like the reds are, so they get
+    the same treatment — no panel, no edge, no cast shadow, and the bottle's
+    own highlight carried back over the ink;
   * the sources are small, so the work is done at twice the output size and
     brought back down at the end, which is also what keeps the upscaled
     glass from looking soft next to a label drawn at 300dpi.
@@ -34,7 +35,8 @@ from PIL import Image, ImageFilter
 
 import brandmark
 from label_bottles import (CAPSULE_CEILING, CAPSULE_CHROMA, CAPSULE_HUE,
-                           CAPSULE_VALUE, FEATHER, capsule_rows,
+                           CAPSULE_VALUE, FEATHER, GLOSS, INK_GAIN, KEY_ANGLE,
+                           PRINT_FLOOR, RIM_ANGLE, capsule_rows,
                            lighting_profile, retint, sample, silhouette,
                            vertical_gain)
 
@@ -138,7 +140,7 @@ def build(name, spec):
     band = out[ys[0]:ys[-1] + 1]
     band[:] = band * (1 - blend[..., None]) + glass * blend[..., None]
 
-    # ── 2. Wrap the film ─────────────────────────────────────────────────
+    # ── 2. Print the artwork onto the glass ──────────────────────────────
     px_per_in = (y1 - y0) / spec["label_in"][1]
     radius_in = (right[(y0 + y1) // 2] - left[(y0 + y1) // 2]) / 2 / px_per_in
     theta_max = np.radians(min(spec["label_in"][0] / (2 * np.pi * radius_in) * 180.0, 78.0))
@@ -148,18 +150,26 @@ def build(name, spec):
     uu = (theta / theta_max + 1) / 2
     on_label = on_bottle & (np.abs(theta) <= theta_max) & (v >= 0) & (v <= 1)
 
-    ink_at = sample(cover[..., None], uu * (LW - 1), np.clip(v, 0, 1) * (LH - 1))[..., 0]
-    ink_at = np.where(on_label, ink_at, 0.0)
+    laid = sample(cover[..., None], uu * (LW - 1), np.clip(v, 0, 1) * (LH - 1))[..., 0]
+    laid = np.where(on_label, laid, 0.0) ** INK_GAIN
 
-    # Ink on clear film takes the light the glass under it is taking, so it
-    # is shaded by that glass rather than lit as a surface of its own. Half
-    # strength: a printed solid darkens in shadow far less than glass does.
-    shade = np.clip(band.mean(axis=2) / max(float(np.median(glass.mean(axis=2))), 1e-6),
-                    0.45, 1.6)
-    shade = 1 + (shade - 1) * 0.5
-    ink = np.array(brandmark.INK, float) * shade[..., None]
+    # The same lighting the reds get, for the same reason: one ink fired onto
+    # a cylinder, lit by this studio's key, with a floor under it because a
+    # printed solid holds its colour where the glass behind it has gone dark.
+    key = np.clip(np.cos(theta - KEY_ANGLE), 0, 1) ** 1.1
+    rim = np.clip(np.cos(theta - RIM_ANGLE), 0, 1) ** 6
+    lit = (PRINT_FLOOR + (1 - PRINT_FLOOR) * key + 0.14 * rim) * gain_at(Y)
+    ink = np.array(brandmark.INK, float) * lit[..., None]
 
-    band[:] = band * (1 - ink_at[..., None]) + ink * ink_at[..., None]
+    band[:] = band * (1 - laid[..., None]) + ink * laid[..., None]
+
+    # ── 3. Sell the print: the bottle's own gloss runs across it ─────────
+    # It shows further here than on the reds. Flint glass carries a hard
+    # highlight down its left side, and watching that highlight cross the
+    # doors instead of stopping at a paper edge is the whole difference.
+    gloss = np.clip(glass.mean(axis=2) - np.median(glass.mean(axis=2)), 0, None)
+    band[:] = np.minimum(band + GLOSS * gloss[..., None] * laid[..., None], 255)
+
     out[ys[0]:ys[-1] + 1] = band
 
     rgba = np.dstack([np.clip(out, 0, 255), alpha]).astype(np.uint8)

@@ -6,6 +6,36 @@
 <title>{% block title %}Warm Springs Cellar{% endblock %}</title>
 <meta name="robots" content="noindex, nofollow">
 <style>
+/* The same two faces the landing page uses, from the same /fonts/ on the
+   same host — nginx serves that directory and proxies these pages, so one
+   copy covers both. Behind a different front door, or running the service
+   on its own in development, the files simply 404 and font-display: swap
+   leaves the stack below to do its job. */
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/playfair-display-400.woff2') format('woff2');
+  font-weight: 400 900; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/playfair-display-400-italic.woff2') format('woff2');
+  font-weight: 400 900; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/lato-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/lato-400-italic.woff2') format('woff2');
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/lato-700.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
 :root {
   --bg: #faf8f5;
   --bg-alt: #f3eeea;
@@ -32,16 +62,16 @@
 }
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: 'Optima','Candara','Noto Sans','Segoe UI',system-ui,sans-serif;
+  font-family: 'Lato','Optima','Candara','Segoe UI',system-ui,sans-serif;
   background: var(--bg); color: var(--text); line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
-.serif { font-family: 'Didot','Bodoni MT','Noto Serif Display',Georgia,serif; }
+.serif { font-family: 'Playfair Display','Didot','Bodoni MT',Georgia,serif; }
 a { color: var(--wine); }
 .wrap { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
 .masthead { text-align: center; margin-bottom: 2.5rem; }
 .masthead .logo {
-  font-family: 'Didot','Bodoni MT',Georgia,serif;
+  font-family: 'Playfair Display','Didot','Bodoni MT',Georgia,serif;
   font-size: 1.05rem; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--wine); text-decoration: none;
 }
@@ -51,7 +81,7 @@ a { color: var(--wine); }
   color: var(--wine); margin-bottom: 0.75rem;
 }
 h1 {
-  font-family: 'Didot','Bodoni MT',Georgia,serif;
+  font-family: 'Playfair Display','Didot','Bodoni MT',Georgia,serif;
   font-weight: 400; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height: 1.2;
   text-wrap: balance; margin-bottom: 1rem;
 }

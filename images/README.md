@@ -18,8 +18,8 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `signature-robert-rex.png`   | Generated: his signature, from the label            | Nothing on the page — email signatures    |
 | `signature-cecilia-valdivia.png` | Generated: hers, from the label                 | Nothing on the page — her handwriting     |
 | `logo-email[-cream].png`     | Generated: the lockup at 240px                      | The Outlook signatures in `email-signatures/` |
-| `sauvignon-blanc-bottle.png` | Generated: the white, on transparency               | Nothing on the page yet — the card needs copy |
-| `rose-bottle.png`            | Generated: the rosé, on transparency                | Nothing on the page yet — the card needs copy |
+| `sauvignon-blanc-bottle.png` | Generated: the white, on transparency               | The Wines — sixth card                    |
+| `rose-bottle.png`            | Generated: the rosé, on transparency                | The Wines — seventh card                  |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
@@ -243,11 +243,13 @@ the fine type back the weight it had, which matters most on the Burgundy —
 its label is a 4.5in trim, so every line on it lands smaller.
 
 **`pale_bottles.py`** does for the Sauvignon Blanc and the Rosé what the two
-above do for the reds, because none of their assumptions survive a pale bottle:
+above do for the reds — including the printed finish: no panel, no edge, no
+cast shadow, and the bottle's highlight carried over the ink, which shows
+further on flint glass than on black because the highlight is harder. It is a
+separate tool because none of the reds' assumptions survive a pale bottle:
 the mockups came already on transparency, already lit, and light enough that a
 "find the dark bottle, flood away the backdrop" pass reads the glass as sky.
-The silhouette comes from the alpha channel instead, the film is multiplied
-onto the glass rather than lit as paper, and the work is done at twice the
+The silhouette comes from the alpha channel instead, and the work is done at twice the
 output size and brought back down — which is what keeps enlarged glass from
 looking soft beside a label drawn at 300dpi. The output is tied to the reds'
 scale in pixels per inch, so the sets stand together; these two are taller

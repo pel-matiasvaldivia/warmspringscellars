@@ -13,6 +13,8 @@
 <link rel="icon" href="images/favicon-16.png" sizes="16x16" type="image/png">
 <link rel="apple-touch-icon" href="images/favicon-180.png">
 <meta name="theme-color" content="#5c0037">
+<link rel="preload" href="fonts/playfair-display-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/caveat-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* Caveat, for the handwritten card. Self-hosted rather than pulled from a CDN:
@@ -27,6 +29,68 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
                  U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC,
                  U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* The two that set the page. Didot and Optima were the intent, and both are
+   fonts somebody either owns or does not: on a machine without them the
+   stack fell through to whatever the system calls a serif, which is what
+   made the page read as a template. Playfair Display stands in for the
+   Didot — a true high-contrast didone, so the hairlines and the ball
+   terminals survive — and Lato for the Optima, humanist and a little warm
+   where a grotesque would be flat. They lead their stacks rather than
+   backing them: the point of carrying the files is that the page looks the
+   same to everybody, and leaving Didot in front would have meant one design
+   on a Mac and another everywhere else.
+   SIL Open Font License, see fonts/OFL.txt. */
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('fonts/playfair-display-400.woff2') format('woff2');
+  font-weight: 400 900;      /* variable */
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('fonts/playfair-display-400-italic.woff2') format('woff2');
+  font-weight: 400 900;      /* variable */
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lato';
+  src: url('fonts/lato-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lato';
+  src: url('fonts/lato-400-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lato';
+  src: url('fonts/lato-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 :root {
@@ -53,7 +117,7 @@
   --c-divider: #ddd2ca;
   --c-footer-bg: #2c1e24;
   --c-footer-text: #b8a0a6;
-  --bottle-scale: 980;   /* tools/cutout_bottles.py OUTPUT_HEIGHT */
+  --bottle-scale: 1106;  /* the tallest render: see images/README.md */
   --shadow-card: 0 1px 4px rgba(92,0,55,0.05), 0 4px 16px rgba(92,0,55,0.03);
   --shadow-card-hover: 0 2px 8px rgba(92,0,55,0.08), 0 10px 28px rgba(92,0,55,0.05);
 }
@@ -119,7 +183,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Optima', 'Candara', 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Lato', 'Optima', 'Candara', 'Segoe UI', system-ui, sans-serif;
   background: var(--c-bg);
   color: var(--c-text);
   line-height: 1.65;
@@ -128,7 +192,7 @@ body {
 }
 
 .serif {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', 'Times New Roman', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', 'Times New Roman', serif;
 }
 
 /* ─── NAV ─── */
@@ -160,7 +224,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.1rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -275,9 +339,13 @@ body {
 }
 
 .hero h1 {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: clamp(2.6rem, 5.5vw, 4.2rem);
   font-weight: 400;
+  /* A didone fits tighter than the Georgia this was set for: at display
+     size its hairlines read as space, and the default tracking opens the
+     word up. */
+  letter-spacing: -0.012em;
   color: var(--c-hero-text);
   line-height: 1.12;
   text-wrap: balance;
@@ -358,9 +426,10 @@ body {
 }
 
 .section-title {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: clamp(1.9rem, 3.5vw, 2.8rem);
   font-weight: 400;
+  letter-spacing: -0.008em;
   line-height: 1.2;
   text-wrap: balance;
   margin-bottom: 1.5rem;
@@ -534,7 +603,7 @@ body {
 }
 
 .quote-inner blockquote {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: clamp(1.3rem, 2.8vw, 1.9rem);
   font-style: italic;
   font-weight: 400;
@@ -585,9 +654,10 @@ body {
 .stat-stack { text-align: center; }
 
 .stat-number {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 5rem;
   font-weight: 400;
+  letter-spacing: -0.015em;
   color: rgba(255,255,255,0.9);
   line-height: 1;
 }
@@ -621,7 +691,7 @@ body {
 }
 
 .detail-item h3 {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.15rem;
   font-weight: 400;
   margin-bottom: 0.5rem;
@@ -640,13 +710,17 @@ body {
 
 .wines-grid {
   margin-top: 4rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  /* Wrapping flex rather than a grid, because seven wines do not divide into
+     a row: a grid leaves the last two hanging at the left of an empty row,
+     and this centres them under the five. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
   gap: 3rem 1.5rem;
-  align-items: start;
 }
 
-.wine-card { text-align: center; }
+.wine-card { flex: 1 1 185px; max-width: 232px; text-align: center; }
 
 .wine-stage {
   position: relative;
@@ -654,7 +728,7 @@ body {
   align-items: flex-end;
   justify-content: center;
   /* A fixed stage height stands every bottle on one shelf line. */
-  --stage: 330px;
+  --stage: 372px;
   height: var(--stage);
   margin-bottom: 1.75rem;
 }
@@ -705,7 +779,7 @@ body {
 .wine-card:hover .wine-stage::after { width: 120px; opacity: 0.72; }
 
 .wine-vintage {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.5rem;
   font-weight: 400;
   color: var(--c-wine);
@@ -713,7 +787,7 @@ body {
 }
 
 .wine-name {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.15rem;
   font-weight: 400;
   margin-top: 0.5rem;
@@ -893,7 +967,7 @@ body {
 }
 
 .shipment-steps .step-n {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 0.72rem;
   letter-spacing: 0.1em;
   color: var(--c-wine);
@@ -1002,7 +1076,7 @@ body {
 
 .join-banner-text strong {
   display: block;
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.05rem;
   font-weight: 400;
   margin-bottom: 0.1rem;
@@ -1121,7 +1195,7 @@ body.banner-up .to-top { bottom: 6.2rem; }
 .tier-card.featured .tier-label { color: var(--c-wine); }
 
 .tier-name {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.5rem;
   font-weight: 400;
   color: var(--c-text);
@@ -1161,14 +1235,14 @@ body.banner-up .to-top { bottom: 6.2rem; }
 .tier-card.featured .tier-details li::before { background: var(--c-wine); }
 
 .tier-price {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.1rem;
   color: var(--c-text);
   margin-bottom: 1.5rem;
 }
 
 .tier-price small {
-  font-family: 'Optima', 'Candara', system-ui, sans-serif;
+  font-family: 'Lato', 'Optima', 'Candara', system-ui, sans-serif;
   font-size: 0.7rem;
   color: var(--c-text-muted);
 }
@@ -1228,7 +1302,7 @@ body.banner-up .to-top { bottom: 6.2rem; }
 }
 
 .exp-item h3 {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.1rem;
   font-weight: 400;
   color: var(--c-hero-text);
@@ -1303,7 +1377,7 @@ body.banner-up .to-top { bottom: 6.2rem; }
 }
 
 .faq-item h3 {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1rem;
   font-weight: 400;
   color: var(--c-text);
@@ -1436,7 +1510,7 @@ body.banner-up .to-top { bottom: 6.2rem; }
 }
 
 .footer-brand {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 0.95rem;
   letter-spacing: 0.1em;
   color: rgba(255,255,255,0.6);
@@ -1528,7 +1602,7 @@ body.banner-up .to-top { bottom: 6.2rem; }
 }
 
 .age-gate-inner h2 {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.6rem;
   font-weight: 400;
   color: var(--c-text);
@@ -1598,7 +1672,8 @@ body.banner-up .to-top { bottom: 6.2rem; }
   .stat-divider { margin: 1.5rem auto; }
   .tier-grid { grid-template-columns: 1fr; max-width: 420px; gap: 1.25rem; }
   .exp-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-  .wines-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 2.5rem 1.25rem; margin-top: 2.5rem; }
+  .wines-grid { gap: 2.5rem 1.25rem; margin-top: 2.5rem; }
+  .wine-card { flex-basis: 140px; }
   .shipment-grid { grid-template-columns: 1fr; gap: 2.5rem; margin-top: 2.5rem; padding-top: 2.5rem; }
   .shipment-caption { text-align: left; font-size: 0.68rem; }
   .pack-card { padding: 1.5rem 1.5rem 1.3rem; }
@@ -1612,7 +1687,7 @@ body.banner-up .to-top { bottom: 6.2rem; }
   .join-banner-text span { display: none; }
   .join-banner-cta { padding: 0.7rem 1.2rem; letter-spacing: 0.14em; }
   body.banner-up .to-top { bottom: 5.4rem; }
-  .wine-stage { --stage: 225px; }
+  .wine-stage { --stage: 254px; }
   .wine-stage::before { width: 150px; height: 150px; }
   .wine-notes { font-size: 0.8rem; }
   .faq-grid { grid-template-columns: 1fr; }
@@ -1790,7 +1865,7 @@ body.gated .hero-content > * { animation-play-state: paused; }
 .mobile-menu.open { opacity: 1; visibility: visible; }
 
 .mobile-menu a {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.6rem;
   color: var(--c-text);
   text-decoration: none;
@@ -1826,7 +1901,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 /* The last link is the primary action — give it the weight of one. */
 .mobile-menu a:last-of-type {
   font-size: 0.72rem;
-  font-family: 'Optima', 'Candara', 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Lato', 'Optima', 'Candara', 'Segoe UI', system-ui, sans-serif;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--c-wine);
@@ -1853,7 +1928,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   border: 0;
   cursor: pointer;
   text-align: left;
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.05rem;
   color: var(--c-text);
   transition: color 0.25s;
@@ -1991,7 +2066,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
 .join-success h3 {
-  font-family: 'Didot', 'Bodoni MT', 'Noto Serif Display', 'Georgia', serif;
+  font-family: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', serif;
   font-size: 1.7rem;
   color: var(--c-hero-text);
   margin-bottom: 0.85rem;
@@ -2316,11 +2391,11 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <div>
         <p class="section-eyebrow">Our Philosophy</p>
         <h2 class="section-title">Small by Design,<br>Not by Accident</h2>
-        <p class="section-prose">Since 1982, Warm Springs Cellar has chosen restraint over scale. Cecilia farms five vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
+        <p class="section-prose">Since 1982, Warm Springs Cellar has chosen restraint over scale. Cecilia farms seven vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
         <div class="philosophy-details" style="margin-top: 2.5rem;">
           <div class="detail-item">
             <h3 class="serif">Single-Vineyard Focus</h3>
-            <p>Each wine tells the story of one vineyard, one season. Wolf Run and Los Chamizal in Sonoma Valley, Four Palms in Russian River Valley, Alpicella and Running Rabbit Ranch in Fountain Grove.</p>
+            <p>Each wine tells the story of one vineyard, one season. Wolf Run, Los Chamizal, Peterson and Deerfield in Sonoma Valley, Four Palms in Russian River Valley, Alpicella and Running Rabbit Ranch in Fountain Grove.</p>
           </div>
           <div class="detail-item">
             <h3 class="serif">Clean Winemaking</h3>
@@ -2328,7 +2403,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           </div>
           <div class="detail-item">
             <h3 class="serif">A Small Winery, Kept Current</h3>
-            <p>A compact winery, established in 1982 and updated since for premium fermentation &mdash; temperature-controlled tanks, small-lot vessels, and a barrel room sized to the five blocks we farm. Everything the wine needs, and nothing it does not.</p>
+            <p>A compact winery, established in 1982 and updated since for premium fermentation &mdash; temperature-controlled tanks, small-lot vessels, and a barrel room sized to the seven blocks we farm. Everything the wine needs, and nothing it does not.</p>
           </div>
           <div class="detail-item">
             <h3 class="serif">Winemaker Direct</h3>
@@ -2349,7 +2424,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           </div>
           <div class="stat-divider"></div>
           <div class="stat-stack">
-            <div class="stat-number stat-number-sm" data-count="5">5</div>
+            <div class="stat-number stat-number-sm" data-count="7">7</div>
             <div class="stat-label">Vineyard Sources</div>
           </div>
         </div>
@@ -2363,7 +2438,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <div class="section-inner">
     <p class="section-eyebrow">Current Releases</p>
     <h2 class="section-title">The Wines</h2>
-    <p class="section-prose">Five wines. Five vineyards. Each bottling is a single season from a single site, and when it is gone it is gone.</p>
+    <p class="section-prose">Seven wines. Seven vineyards. Each bottling is a single season from a single site, and when it is gone it is gone.</p>
     <div class="wines-grid">
 
       <article class="wine-card">
@@ -2444,6 +2519,30 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           <span>16.1% alc.</span>
           <span>1,650 bottles</span>
         </div>
+      </article>
+
+      <article class="wine-card">
+        <div class="wine-stage">
+          <img class="wine-bottle" style="--h: 1082;" src="images/sauvignon-blanc-bottle.png"
+               alt="Warm Springs Cellar 2026 Sauvignon Blanc, Peterson Vineyard" loading="lazy">
+        </div>
+        <div class="wine-vintage">2026</div>
+        <h3 class="wine-name">Sauvignon Blanc</h3>
+        <p class="wine-origin">Peterson Vineyard<br>Sonoma Valley</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">Picked in the dark and pressed whole-cluster, so nothing in it tastes of the press. Peterson sits where the valley narrows and the fog holds past nine, which is what keeps the acid in a Sonoma white. Grapefruit pith, wet stone, and a finish that stays dry.</p>
+      </article>
+
+      <article class="wine-card">
+        <div class="wine-stage">
+          <img class="wine-bottle" style="--h: 1106;" src="images/rose-bottle.png"
+               alt="Warm Springs Cellar 2026 Ros&eacute; Syrah, Deerfield Vineyard" loading="lazy">
+        </div>
+        <div class="wine-vintage">2026</div>
+        <h3 class="wine-name">Ros&eacute; Syrah</h3>
+        <p class="wine-origin">Deerfield Vineyard<br>Sonoma Valley</p>
+        <div class="wine-divider"></div>
+        <p class="wine-notes">Syrah picked early and for this wine, not bled off a red &mdash; the difference is a ros&eacute; with fruit in it rather than one with only colour. Four hours on the skins, then pressed. Strawberry, blood orange, and a saline edge that puts it on the table rather than the porch.</p>
       </article>
 
     </div>
@@ -2552,6 +2651,8 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
             <button type="button" class="pack-wine" data-wine="pinot" aria-pressed="false">Pinot Noir</button>
             <button type="button" class="pack-wine" data-wine="sangiovese" aria-pressed="false">Sangiovese</button>
             <button type="button" class="pack-wine" data-wine="zinfandel" aria-pressed="false">Zinfandel</button>
+            <button type="button" class="pack-wine" data-wine="sauvignon-blanc" aria-pressed="false">Sauvignon Blanc</button>
+            <button type="button" class="pack-wine" data-wine="rose" aria-pressed="false">Ros&eacute;</button>
           </div>
         </div>
       </div>
@@ -3159,7 +3260,14 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
                 "across the palate. Pair it with anything. Wine is social glue.",
     zinfandel: "Block 7 at Los Chamizal — Peter Haywood's vineyard, and Robert's " +
                "favourite of the eight blocks Peter marked out. Bold, complex, " +
-               "and the flavour goes on forever. It will knock your socks off."
+               "and the flavour goes on forever. It will knock your socks off.",
+    'sauvignon-blanc': "Peterson, where the valley narrows and the fog stays " +
+                       "past nine. Picked in the dark, pressed whole-cluster, " +
+                       "nothing of the press in it. Cold, but not straight " +
+                       "from the back of the fridge.",
+    rose: "Syrah off Deerfield, picked early and for this wine rather than " +
+          "bled off a red. Four hours on the skins, then pressed. It wants " +
+          "food on the table, not a sunset."
   };
 
   var cardGreeting = $('#cardGreeting');

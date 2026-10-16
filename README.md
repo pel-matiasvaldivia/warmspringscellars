@@ -7,7 +7,8 @@ nginx from a container image built in CI.
 index.html      the whole site — markup, styles and scripts in one file
 images/         winery photography and bottle shots (see images/README.md)
 labels/         the official label artwork, as supplied (.ai)
-fonts/          Caveat, self-hosted for the handwritten card (OFL)
+fonts/          Playfair Display, Lato and Caveat, self-hosted (OFL)
+                  refresh with: python3 tools/fetch_fonts.py
 tools/          regenerate the bottle shots, and sync the tiers into the page
 api/            the club: applications, offers, payments, invoices, shipments
 nginx.conf      serves the site and proxies the club service
