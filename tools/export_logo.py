@@ -36,6 +36,11 @@ from PIL import Image
 SRC = "labels/21CS_WSC_final_label.ai"
 OUT_LIGHT = "images/logo-warm-springs-cellars.jpg"
 OUT_DARK = "images/logo-warm-springs-cellars-dark.jpg"
+# The same drawing on transparency, for anything that is not a flat cream or
+# a flat near-black: one in the wine for light backgrounds, one in the label's
+# own near-white for dark ones.
+OUT_PNG_WINE = "images/logo-warm-springs-cellars.png"
+OUT_PNG_LIGHT_INK = "images/logo-warm-springs-cellars-light.png"
 
 # The lockup's box on the front panel, in PDF points: the roof's apex down
 # through the tail of the script.
@@ -80,14 +85,27 @@ def artwork() -> np.ndarray:
     return ink[rows.min():rows.max() + 1, cols.min():cols.max() + 1]
 
 
-def render(ink: np.ndarray, fg, bg) -> Image.Image:
+def padded(ink: np.ndarray) -> np.ndarray:
     h, w = ink.shape
     pad = int(round(max(h, w) * PAD))
     canvas = np.zeros((h + 2 * pad, w + 2 * pad), np.float32)
     canvas[pad:pad + h, pad:pad + w] = ink
-    coverage = canvas[..., None]
+    return canvas
+
+
+def render(ink: np.ndarray, fg, bg) -> Image.Image:
+    coverage = padded(ink)[..., None]
     out = np.array(bg, np.float32) * (1 - coverage) + np.array(fg, np.float32) * coverage
     return Image.fromarray(out.round().astype(np.uint8))
+
+
+def render_transparent(ink: np.ndarray, fg) -> Image.Image:
+    """The same coverage as alpha, so it composites onto any background."""
+    coverage = padded(ink)
+    rgba = np.zeros((*coverage.shape, 4), np.uint8)
+    rgba[..., 0], rgba[..., 1], rgba[..., 2] = fg
+    rgba[..., 3] = (coverage * 255).round().astype(np.uint8)
+    return Image.fromarray(rgba, "RGBA")
 
 
 def main() -> None:
@@ -97,6 +115,11 @@ def main() -> None:
         img = render(ink, fg, bg)
         img.save(path, quality=95, subsampling=0, optimize=True)
         print(f"{img.width}x{img.height}  -> {path}")
+
+    for path, fg in ((OUT_PNG_WINE, WINE), (OUT_PNG_LIGHT_INK, LABEL_INK)):
+        img = render_transparent(ink, fg)
+        img.save(path, optimize=True)
+        print(f"{img.width}x{img.height}  -> {path}  (transparent)")
 
 
 if __name__ == "__main__":

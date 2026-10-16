@@ -13,7 +13,10 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `favicon-small.svg`      | Generated: the mark's solid cut                         | The tab icon                              |
 | `favicon.svg`            | Generated: the full mark in wine, standalone            | Source for the touch icon; general use    |
 | `favicon-16/32/180.png`  | Generated: rasterised from the two above                | Tab icon fallbacks, Apple touch icon      |
-| `logo-warm-springs-cellars[-dark].jpg` | Generated: the full lockup                | Nothing on the page — for use off-site    |
+| `logo-warm-springs-cellars[-dark].jpg` | Generated: the full lockup, flat          | Nothing on the page — for use off-site    |
+| `logo-warm-springs-cellars[-light].png` | Generated: the lockup on transparency    | Nothing on the page — for use off-site    |
+| `signature-robert-rex.png`   | Generated: his signature, from the label            | Nothing on the page — email signatures    |
+| `signature-cecilia-valdivia.png` | Generated: hers, from the label                 | Nothing on the page — email signatures    |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
@@ -90,6 +93,31 @@ no mass behind them, so masking them leaves a hole where the brand's name
 should be. The page only needs the mark, so the vector stays there and the
 lockup is rendered instead. Neither file ships in the container; the page
 does not request them.
+
+### The winemakers' signatures
+
+```bash
+python3 tools/export_signatures.py   # -> images/signature-*.png
+```
+
+Both are already printed on every bottle, so these are the real signatures and
+not a font pretending to be one. They are stored differently inside the
+artwork, and that decides how each is taken and how large each can honestly
+be:
+
+| | In the label | Exported |
+| --- | --- | --- |
+| Robert Rex | vector paths | 945 × 414, as crisp as you like |
+| Cecilia Valdivia | a 150 × 122 bitmap behind a soft mask | 444 × 389, and that is the ceiling |
+
+Her signature is the mask, not the image: the bitmap under it is two flat
+near-whites and reads as blank on its own. Three times its own size is as far
+as it goes before the upscaling starts showing; at the size a mail client
+displays a signature it is comfortable.
+
+Neither is cut from a render of the page. The typeset "Robert Rex" is printed
+across the tail of his signature, so a rectangular crop would drag the type in
+with it; his strokes are copied onto a page of their own instead.
 
 ### The tab icon
 

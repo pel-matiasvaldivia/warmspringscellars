@@ -18,6 +18,8 @@ labels/
 # cutouts that tools/cutout_bottles.py produces.
 images/WarmSpringsCellars_*.png
 images/logo-warm-springs-cellars*.jpg
+images/logo-warm-springs-cellars*.png
+images/signature-*.png
 images/shipment-box-source.jpg
 images/labels/
 images/renders/
