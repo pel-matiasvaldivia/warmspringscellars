@@ -30,7 +30,10 @@ const JOBS = [
   { svg: 'images/favicon.svg', out: 'images/favicon-180.png', size: 180, bg: '#faf8f5' },
 ];
 
-const browser = await chromium.launch();
+// Whatever Chromium this machine already has, when it has one: a sandbox
+// ships a browser but not always the build this playwright would download.
+const executablePath = process.env.CHROMIUM_PATH || undefined;
+const browser = await chromium.launch(executablePath ? { executablePath } : {});
 for (const { svg, out, size, bg } of JOBS) {
   const art = readFileSync(join(ROOT, svg), 'utf8');
   const page = await browser.newPage({

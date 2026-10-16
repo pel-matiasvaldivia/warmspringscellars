@@ -13,8 +13,8 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `favicon-small.svg`      | Generated: the mark's solid cut                         | The tab icon                              |
 | `favicon.svg`            | Generated: the full mark in wine, standalone            | Source for the touch icon; general use    |
 | `favicon-16/32/180.png`  | Generated: rasterised from the two above                | Tab icon fallbacks, Apple touch icon      |
-| `logo-warm-springs-cellars[-dark].jpg` | Generated: the full lockup, flat          | Nothing on the page — for use off-site    |
-| `logo-warm-springs-cellars[-light].png` | Generated: the lockup on transparency    | Nothing on the page — for use off-site    |
+| `logo-warm-springs-cellar[-dark].jpg` | Generated: the full lockup, flat          | Nothing on the page — for use off-site    |
+| `logo-warm-springs-cellar[-light].png` | Generated: the lockup on transparency    | Nothing on the page — for use off-site    |
 | `signature-robert-rex.png`   | Generated: his signature, from the label            | Nothing on the page — email signatures    |
 | `signature-cecilia-valdivia.png` | Generated: hers, from the label                 | Nothing on the page — her handwriting     |
 | `logo-email[-cream].png`     | Generated: the lockup at 240px                      | The Outlook signatures in `email-signatures/` |
@@ -78,11 +78,11 @@ now.
 ### The logo, for use off the site
 
 ```bash
-python3 tools/export_logo.py    # -> images/logo-warm-springs-cellars[-dark].jpg
+python3 tools/export_logo.py    # -> images/logo-warm-springs-cellar[-dark].jpg
 ```
 
 The full lockup — gable, medallion, EST 1982, doors, ground line and the
-WARM SPRINGS / Cellars wordmark — at 600dpi, for slides, letterheads and
+WARM SPRINGS / Cellar wordmark — at 600dpi, for slides, letterheads and
 anyone who asks for "the logo". The wordmark is outlined in the label, not
 live type, so this needs none of the brand's fonts. Two versions: as printed
 (light ink on the label's near-black) and wine on cream for a white page.

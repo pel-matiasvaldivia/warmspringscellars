@@ -29,7 +29,7 @@ FAVICON = "images/favicon.svg"
 # added because a tab shrinks it to 16px and a glyph flush to the edges reads
 # as a smudge.
 FAVICON_SMALL = "images/favicon-small.svg"
-FAVICON_INK = "#722f3a"
+FAVICON_INK = "#5c0037"
 FAVICON_PAD = 18
 
 # The mark's box on the front panel, in PDF points, measured off a 150dpi

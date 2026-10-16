@@ -13,7 +13,7 @@ from pathlib import Path
 from .catalogue import Tier
 from .mail import Mailer, Message
 
-SIGNOFF = "Cecilia Valdivia, Owner & Winemaker\nWarm Springs Cellars, Glen Ellen, Sonoma Valley"
+SIGNOFF = "Cecilia Valdivia, Owner & Winemaker\nWarm Springs Cellar, Glen Ellen, Sonoma Valley"
 
 
 def _html(body: str) -> str:
@@ -23,7 +23,7 @@ def _html(body: str) -> str:
  border:1px solid #e2d8d0;padding:32px 28px;font:15px/1.65 Georgia,serif;color:#2c1e24">
 <tr><td>
 <p style="font:600 11px/1 system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;
- color:#722f3a;margin:0 0 22px">Warm Springs Cellars</p>
+ color:#5c0037;margin:0 0 22px">Warm Springs Cellar</p>
 {body}
 <p style="margin:26px 0 0;font-size:13px;color:#5c4650">Cecilia Valdivia, Owner &amp; Winemaker<br>
 <span style="color:#9a8890">Glen Ellen, Sonoma Valley</span></p>
@@ -51,7 +51,7 @@ and you can skip a season whenever you need to.
     html = _html(f"""
 <p style="margin:0 0 14px">Dear {app['first_name']},</p>
 <p style="margin:0 0 14px">A place has opened on our list, and we have kept you an allocation.</p>
-<p style="margin:0 0 22px"><a href="{url}" style="display:inline-block;background:#722f3a;
+<p style="margin:0 0 22px"><a href="{url}" style="display:inline-block;background:#5c0037;
  color:#fff;text-decoration:none;padding:13px 28px;font:600 11px/1 system-ui,sans-serif;
  letter-spacing:.2em;text-transform:uppercase">Choose your allocation</a></p>
 <p style="margin:0 0 10px;font-size:13px;color:#5c4650">The invitation is open until
@@ -59,7 +59,7 @@ and you can skip a season whenever you need to.
 you need to.</p>
 <p style="margin:0;font-size:12px;color:#9a8890;word-break:break-all">{url}</p>""")
 
-    return mailer.send(Message(to=app["email"], subject="Your allocation at Warm Springs Cellars",
+    return mailer.send(Message(to=app["email"], subject="Your allocation at Warm Springs Cellar",
                                text=text, html=html, reply_to=reply_to))
 
 
@@ -81,7 +81,7 @@ and this season the list is full — so we cannot offer you an allocation right 
 <p style="margin:0">We keep every request. When a place opens we work through them in the
 order they arrived, and yours is in that queue.</p>""")
 
-    return mailer.send(Message(to=app["email"], subject="Your request at Warm Springs Cellars",
+    return mailer.send(Message(to=app["email"], subject="Your request at Warm Springs Cellar",
                                text=text, html=html, reply_to=reply_to))
 
 

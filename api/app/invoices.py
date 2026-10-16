@@ -15,12 +15,12 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas as pdfcanvas
 
-WINE_RED = (0.447, 0.184, 0.227)      # #722f3a
+WINE_RED = (0.447, 0.184, 0.227)      # #5c0037
 INK = (0.173, 0.118, 0.141)
 MUTED = (0.52, 0.47, 0.49)
 
 SELLER = [
-    "Warm Springs Cellars",
+    "Warm Springs Cellar",
     "Glen Ellen, Sonoma Valley, California",
     "club@warmspringscellar.com · 707.318-0167",
 ]
@@ -42,7 +42,7 @@ def render_pdf(path: Path, *, invoice: sqlite3.Row, order: sqlite3.Row,
 
     c.setFillColorRGB(*WINE_RED)
     c.setFont("Times-Roman", 19)
-    c.drawString(left, y, "Warm Springs Cellars")
+    c.drawString(left, y, "Warm Springs Cellar")
     c.setFillColorRGB(*MUTED)
     c.setFont("Helvetica", 8)
     c.drawRightString(right, y + 4, "INVOICE")

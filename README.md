@@ -1,6 +1,6 @@
-# Warm Springs Cellars — Wine Club
+# Warm Springs Cellar — Wine Club
 
-Static landing page for the Warm Springs Cellars allocation list, served by
+Static landing page for the Warm Springs Cellar allocation list, served by
 nginx from a container image built in CI.
 
 ```

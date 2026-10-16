@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Warm Springs Cellars — Wine Club | Sonoma County, EST. 1982</title>
-<meta name="description" content="Join the Warm Springs Cellars allocation list. Limited to 1,000 cases of single-vineyard wines from Sonoma Valley and Russian River Valley. Wines by Cecilia Valdivia. EST. 1982.">
+<title>Warm Springs Cellar — Wine Club | Sonoma County, EST. 1982</title>
+<meta name="description" content="Join the Warm Springs Cellar allocation list. Limited to 1,000 cases of single-vineyard wines from Sonoma Valley and Russian River Valley. Wines by Cecilia Valdivia. EST. 1982.">
 <!-- The tab icon, from the same label artwork as everything else. The SVG is
      the solid cut of the mark: a browser draws a favicon at 16px, where the
      line work inside the doors is thinner than a pixel and turns to smudge. -->
@@ -12,7 +12,7 @@
 <link rel="icon" href="images/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="images/favicon-16.png" sizes="16x16" type="image/png">
 <link rel="apple-touch-icon" href="images/favicon-180.png">
-<meta name="theme-color" content="#722f3a">
+<meta name="theme-color" content="#5c0037">
 <link rel="preload" href="fonts/caveat-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* Caveat, for the handwritten card. Self-hosted rather than pulled from a CDN:
@@ -37,25 +37,25 @@
   --c-text: #2c1e24;
   --c-text-secondary: #5c4650;
   --c-text-muted: #9a8890;
-  --c-wine: #722f3a;
-  --c-wine-light: #8b3d4a;
-  --c-wine-deep: #5a1f2a;
-  --c-wine-pale: #f0e3e6;
-  --c-wine-bg: #fdf6f7;
+  --c-wine: #5c0037;
+  --c-wine-light: #7a1a56;
+  --c-wine-deep: #43002a;
+  --c-wine-pale: #f1e2ea;
+  --c-wine-bg: #fdf5f9;
   --c-gold: #a38840;
   --c-gold-dim: #8b7535;
   --c-border: #e2d8d0;
   --c-border-light: #ede6e0;
   --c-card-bg: #ffffff;
-  --c-hero-bg: var(--c-wine);
+  --c-hero-bg: #722f57;
   --c-hero-text: #faf8f5;
-  --c-hero-muted: #d4b8be;
+  --c-hero-muted: #d8b6c8;
   --c-divider: #ddd2ca;
   --c-footer-bg: #2c1e24;
   --c-footer-text: #b8a0a6;
   --bottle-scale: 980;   /* tools/cutout_bottles.py OUTPUT_HEIGHT */
-  --shadow-card: 0 1px 4px rgba(114,47,58,0.05), 0 4px 16px rgba(114,47,58,0.03);
-  --shadow-card-hover: 0 2px 8px rgba(114,47,58,0.08), 0 10px 28px rgba(114,47,58,0.05);
+  --shadow-card: 0 1px 4px rgba(92,0,55,0.05), 0 4px 16px rgba(92,0,55,0.03);
+  --shadow-card-hover: 0 2px 8px rgba(92,0,55,0.08), 0 10px 28px rgba(92,0,55,0.05);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -67,19 +67,19 @@
     --c-text: #ede6e0;
     --c-text-secondary: #c0b0b6;
     --c-text-muted: #86747a;
-    --c-wine: #a8505e;
-    --c-wine-light: #c06878;
-    --c-wine-deep: #8b3d4a;
-    --c-wine-pale: #2e1e24;
+    --c-wine: #c2628f;
+    --c-wine-light: #d583ab;
+    --c-wine-deep: #7a1a56;
+    --c-wine-pale: #2e1826;
     --c-wine-bg: #241a1e;
     --c-gold: #c4a44e;
     --c-gold-dim: #a38840;
     --c-border: #3a2c32;
     --c-border-light: #302428;
     --c-card-bg: #241a1e;
-    --c-hero-bg: #3a1e28;
+    --c-hero-bg: #3a1e2f;
     --c-hero-text: #ede6e0;
-    --c-hero-muted: #9a7a82;
+    --c-hero-muted: #9a7288;
     --c-divider: #3a2c32;
     --c-footer-bg: #0e080a;
     --c-footer-text: #86747a;
@@ -96,19 +96,19 @@
   --c-text: #ede6e0;
   --c-text-secondary: #c0b0b6;
   --c-text-muted: #86747a;
-  --c-wine: #a8505e;
-  --c-wine-light: #c06878;
-  --c-wine-deep: #8b3d4a;
-  --c-wine-pale: #2e1e24;
+  --c-wine: #c2628f;
+  --c-wine-light: #d583ab;
+  --c-wine-deep: #7a1a56;
+  --c-wine-pale: #2e1826;
   --c-wine-bg: #241a1e;
   --c-gold: #c4a44e;
   --c-gold-dim: #a38840;
   --c-border: #3a2c32;
   --c-border-light: #302428;
   --c-card-bg: #241a1e;
-  --c-hero-bg: #3a1e28;
+  --c-hero-bg: #3a1e2f;
   --c-hero-text: #ede6e0;
-  --c-hero-muted: #9a7a82;
+  --c-hero-muted: #9a7288;
   --c-divider: #3a2c32;
   --c-footer-bg: #0e080a;
   --c-footer-text: #86747a;
@@ -145,7 +145,7 @@ body {
 
 .nav.scrolled {
   background: var(--c-bg);
-  box-shadow: 0 1px 8px rgba(114,47,58,0.06);
+  box-shadow: 0 1px 8px rgba(92,0,55,0.06);
 }
 
 .nav.at-hero .nav-logo { color: var(--c-hero-text); }
@@ -218,7 +218,7 @@ body {
   background:
     radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.15) 0%, transparent 50%),
-    linear-gradient(170deg, #8b3d4a 0%, #722f3a 35%, #5a1f2a 70%, #3d1520 100%);
+    linear-gradient(170deg, #8b3d6c 0%, #722f57 35%, #5a1f42 70%, #3d152d 100%);
 }
 
 /* Cellar exterior photo, faded into the hero */
@@ -466,7 +466,7 @@ body {
   justify-content: center;
   gap: 1rem;
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(114,47,58,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse at 50% 40%, rgba(92,0,55,0.06) 0%, transparent 70%),
     linear-gradient(180deg, var(--c-wine-pale) 0%, var(--c-bg-alt) 100%);
 }
 
@@ -579,7 +579,7 @@ body {
   justify-content: center;
   background:
     radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.04) 0%, transparent 70%),
-    linear-gradient(180deg, #8b3d4a 0%, #5a1f2a 100%);
+    linear-gradient(180deg, #8b3d6c 0%, #5a1f42 100%);
 }
 
 .stat-stack { text-align: center; }
@@ -872,7 +872,7 @@ body {
 .pack-card .card-rule {
   width: 38px;
   height: 1px;
-  background: rgba(114,47,58,0.28);
+  background: rgba(92,0,55,0.28);
   margin: 0.5rem 0 0.4rem;
 }
 
@@ -1376,7 +1376,7 @@ body.banner-up .to-top { bottom: 6.2rem; }
 }
 
 .join-form select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23d4b8be' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23d8b6c8' stroke-width='1.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
@@ -2164,7 +2164,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   <div class="age-gate-inner">
     <svg class="door-mark age-gate-mark" aria-hidden="true"><use href="#door-mark"/></svg>
     <h2 class="serif">Welcome</h2>
-    <p class="age-gate-brand">Warm Springs Cellars</p>
+    <p class="age-gate-brand">Warm Springs Cellar</p>
     <p>You must be of legal drinking age to enter this site.</p>
     <div class="age-btns">
       <button class="age-btn age-btn-yes" id="ageYes">I am 21+</button>
@@ -2183,7 +2183,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
          in currentColor and masked, so it follows the header's colour over the
          hero photograph and over cream alike. -->
     <svg class="door-mark" aria-hidden="true"><use href="#door-mark"/></svg>
-    <span class="nav-logo-type">Warm Springs <span>Cellars</span></span>
+    <span class="nav-logo-type">Warm Springs <span>Cellar</span></span>
   </a>
   <ul class="nav-links">
     <li><a href="#founders">Our Winemaker</a></li>
@@ -2244,8 +2244,8 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="founder-photo-placeholder" style="display:none;">
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="30" cy="22" r="10" stroke="#722f3a" stroke-width="1" fill="none"/>
-              <path d="M10 55C10 42 18 34 30 34C42 34 50 42 50 55" stroke="#722f3a" stroke-width="1" fill="none"/>
+              <circle cx="30" cy="22" r="10" stroke="#5c0037" stroke-width="1" fill="none"/>
+              <path d="M10 55C10 42 18 34 30 34C42 34 50 42 50 55" stroke="#5c0037" stroke-width="1" fill="none"/>
             </svg>
             <span>Photo: Cecilia Valdivia</span>
           </div>
@@ -2255,7 +2255,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           <p class="founder-role">Owner &amp; Winemaker</p>
           <div class="founder-bio">
             <p>Born in Argentina and raised in the wine traditions of South America, Cecilia brings a worldview to Sonoma County winemaking that bridges continents. Her palate was shaped by the Malbecs of Mendoza before she crossed into California's coastal valleys, where she found the cool-climate elegance that matched her vision.</p>
-            <p>At Warm Springs Cellars, Cecilia is the hands in the vineyard and the instinct in the cellar. Her approach is tactile and intuitive &mdash; she walks the rows, tastes the fruit daily during harvest, and makes blending decisions that honor each vineyard's voice. Science and sensibility meet in every bottle she signs.</p>
+            <p>At Warm Springs Cellar, Cecilia is the hands in the vineyard and the instinct in the cellar. Her approach is tactile and intuitive &mdash; she walks the rows, tastes the fruit daily during harvest, and makes blending decisions that honor each vineyard's voice. Science and sensibility meet in every bottle she signs.</p>
           </div>
         </div>
       </div>
@@ -2272,7 +2272,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
         <h3 class="serif patron-name">Robert Rex</h3>
         <p class="founder-role">Expert Consultant</p>
         <p>A native of Iowa who found his calling in Berkeley, Robert discovered wine through a tasting club while studying Chemistry at UC Berkeley in 1961. By 1976 he was a partner in Berkeley&rsquo;s first commercial winery, where he trained under Andr&eacute; Tchelistcheff &mdash; the father of modern California winemaking.</p>
-        <p>He collaborates with Warm Springs Cellars as a consultant, and what he brings is not a pair of hands in the cellar but a way of thinking: what restraint is for, when to intervene and when to wait, why a wine should be allowed to finish arguing with itself before anyone judges it. Five decades of chemistry and craft, offered as counsel.</p>
+        <p>He collaborates with Warm Springs Cellar as a consultant, and what he brings is not a pair of hands in the cellar but a way of thinking: what restraint is for, when to intervene and when to wait, why a wine should be allowed to finish arguing with itself before anyone judges it. Five decades of chemistry and craft, offered as counsel.</p>
         <p>The winery is Cecilia&rsquo;s, and so are the decisions. The questions, often, are his.</p>
       </div>
     </div>
@@ -2294,7 +2294,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
         <h3 class="serif patron-name">Richard Deane</h3>
         <p class="founder-role">Friend, and First Believer</p>
         <p>Every small winery carries a name that never appears on a label. Ours is Richard Deane.</p>
-        <p>Robert&rsquo;s friend first and longest &mdash; the kind of friendship counted in harvests rather than years &mdash; Richard believed in Warm Springs Cellars when believing was all there was to go on. He put his own means behind it, and something rarer than money: the patience to let a small winery stay small while it got good.</p>
+        <p>Robert&rsquo;s friend first and longest &mdash; the kind of friendship counted in harvests rather than years &mdash; Richard believed in Warm Springs Cellar when believing was all there was to go on. He put his own means behind it, and something rarer than money: the patience to let a small winery stay small while it got good.</p>
         <p>He is not in the vineyard at dawn, and he would be the first to say so. What he gives is quieter and cannot be bought &mdash; the freedom to take the long way, to wait for a wine that is ready rather than one that is merely finished. Every bottle that leaves here in its own time leaves because someone made that time possible.</p>
       </div>
     </div>
@@ -2316,7 +2316,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <div>
         <p class="section-eyebrow">Our Philosophy</p>
         <h2 class="section-title">Small by Design,<br>Not by Accident</h2>
-        <p class="section-prose">Since 1982, Warm Springs Cellars has chosen restraint over scale. Cecilia farms five vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
+        <p class="section-prose">Since 1982, Warm Springs Cellar has chosen restraint over scale. Cecilia farms five vineyard blocks across Sonoma County, hand-picking fruit at dawn and crafting each wine with the patience it demands. One thousand cases is not a limitation. It is a commitment.</p>
         <div class="philosophy-details" style="margin-top: 2.5rem;">
           <div class="detail-item">
             <h3 class="serif">Single-Vineyard Focus</h3>
@@ -2369,7 +2369,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <article class="wine-card">
         <div class="wine-stage">
           <img class="wine-bottle" style="--h: 980;" src="images/cabernet-bottle.png"
-               alt="Warm Springs Cellars 2021 Cabernet Sauvignon, Wolf Run Vineyard" loading="lazy">
+               alt="Warm Springs Cellar 2021 Cabernet Sauvignon, Wolf Run Vineyard" loading="lazy">
         </div>
         <div class="wine-vintage">2021</div>
         <h3 class="wine-name">Cabernet Sauvignon</h3>
@@ -2385,7 +2385,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <article class="wine-card">
         <div class="wine-stage">
           <img class="wine-bottle" style="--h: 980;" src="images/malbec-bottle.png"
-               alt="Warm Springs Cellars 2023 Malbec, Running Rabbit Ranch" loading="lazy">
+               alt="Warm Springs Cellar 2023 Malbec, Running Rabbit Ranch" loading="lazy">
         </div>
         <div class="wine-vintage">2023</div>
         <h3 class="wine-name">Malbec</h3>
@@ -2401,7 +2401,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <article class="wine-card">
         <div class="wine-stage">
           <img class="wine-bottle" style="--h: 958;" src="images/pinot-bottle.png"
-               alt="Warm Springs Cellars 2023 Pinot Noir, Four Palms Vineyard" loading="lazy">
+               alt="Warm Springs Cellar 2023 Pinot Noir, Four Palms Vineyard" loading="lazy">
         </div>
         <div class="wine-vintage">2023</div>
         <h3 class="wine-name">Pinot Noir</h3>
@@ -2417,7 +2417,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <article class="wine-card">
         <div class="wine-stage">
           <img class="wine-bottle" style="--h: 980;" src="images/sangiovese-bottle.png"
-               alt="Warm Springs Cellars 2023 Sangiovese, Alpicella Vineyard" loading="lazy">
+               alt="Warm Springs Cellar 2023 Sangiovese, Alpicella Vineyard" loading="lazy">
         </div>
         <div class="wine-vintage">2023</div>
         <h3 class="wine-name">Sangiovese</h3>
@@ -2433,7 +2433,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <article class="wine-card">
         <div class="wine-stage">
           <img class="wine-bottle" style="--h: 980;" src="images/zinfandel-bottle.png"
-               alt="Warm Springs Cellars 2024 Zinfandel, Los Chamizal Vineyard, Block 7" loading="lazy">
+               alt="Warm Springs Cellar 2024 Zinfandel, Los Chamizal Vineyard, Block 7" loading="lazy">
         </div>
         <div class="wine-vintage">2024</div>
         <h3 class="wine-name">Zinfandel</h3>
@@ -2525,7 +2525,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
          its caption and the .shipment-photo styles are all still here: drop the
          new file in as images/shipment-box.webp and uncomment this.
     <img class="shipment-photo" src="images/shipment-box.webp" width="1024" height="576"
-         alt="A Warm Springs Cellars shipment: bottles laid in a moulded pulp insert inside a corrugated case"
+         alt="A Warm Springs Cellar shipment: bottles laid in a moulded pulp insert inside a corrugated case"
          loading="lazy">
     <p class="shipment-caption">A Founder&rsquo;s Reserve shipment, packed and ready to close.</p>
     -->
@@ -2840,12 +2840,12 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 <footer class="footer">
   <div class="footer-inner">
     <div>
-      <p class="footer-brand">Warm Springs <span>Cellars</span></p>
+      <p class="footer-brand">Warm Springs <span>Cellar</span></p>
       <p class="footer-legal">
         Glen Ellen, Sonoma Valley, California<br>
         EST. 1982 &middot; Cecilia Valdivia, Owner &amp; Winemaker<br>
         All wines produced and bottled on estate.<br><br>
-        &copy; 2026 Warm Springs Cellars. All rights reserved.<br>
+        &copy; 2026 Warm Springs Cellar. All rights reserved.<br>
         You must be 21+ to purchase. Please drink responsibly.
       </p>
     </div>
@@ -2859,7 +2859,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     </div>
   </div>
   <div class="footer-bottom">
-    <span>Warm Springs Cellars &middot; Glen Ellen, Sonoma Valley</span>
+    <span>Warm Springs Cellar &middot; Glen Ellen, Sonoma Valley</span>
     <div class="footer-social">
       <a href="#">Instagram</a>
       <a href="#">Facebook</a>

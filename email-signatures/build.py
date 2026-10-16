@@ -28,7 +28,7 @@ OUT_DIR = pathlib.Path("email-signatures")
 LOGO_URL = "https://warmspringscellar.com/images/logo-email.png"
 LOGO_W, LOGO_H = 120, 144          # half the file's pixels, so it stays sharp
 
-WINE = "#722f3a"
+WINE = "#5c0037"
 TEXT = "#2c1e24"
 MUTED = "#8a7a80"
 RULE = "#e2d8d0"
@@ -55,7 +55,7 @@ def signature(person: dict, logo_src: str) -> str:
        style="border-collapse:collapse;font-family:{SANS};">
   <tr>
     <td valign="top" style="padding:0 18px 0 0;">
-      <img src="{logo_src}" width="{LOGO_W}" height="{LOGO_H}" alt="Warm Springs Cellars"
+      <img src="{logo_src}" width="{LOGO_W}" height="{LOGO_H}" alt="Warm Springs Cellar"
            style="display:block;border:0;outline:none;text-decoration:none;
                   width:{LOGO_W}px;height:{LOGO_H}px;">
     </td>
@@ -78,7 +78,7 @@ def signature(person: dict, logo_src: str) -> str:
         <tr>
           <td style="font-family:{SERIF};font-size:14px;line-height:19px;
                      color:{WINE};letter-spacing:1.4px;padding:0 0 9px;">
-            WARM SPRINGS <span style="font-style:italic;letter-spacing:0.2px;">Cellars</span>
+            WARM SPRINGS <span style="font-style:italic;letter-spacing:0.2px;">Cellar</span>
           </td>
         </tr>
         <tr>

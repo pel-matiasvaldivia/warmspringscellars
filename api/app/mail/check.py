@@ -135,7 +135,7 @@ def trial_message(settings: Settings, to: str, mechanism: str) -> Message:
         f"From:           {settings.mail_from}",
         f"Sent:           {stamp}",
     ]
-    text = ("This is a test from the Warm Springs Cellars cellar desk. Nobody "
+    text = ("This is a test from the Warm Springs Cellar cellar desk. Nobody "
             "on the club's list received it.\n\n"
             + "\n".join(lines) +
             "\n\nIf it reached you, the club can send. Whether it reaches a "
@@ -153,7 +153,7 @@ def trial_message(settings: Settings, to: str, mechanism: str) -> Message:
  border:1px solid #e2d8d0;padding:32px 28px;font:15px/1.65 Georgia,serif;color:#2c1e24">
 <tr><td>
 <p style="font:600 11px/1 system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;
- color:#722f3a;margin:0 0 22px">Warm Springs Cellars</p>
+ color:#5c0037;margin:0 0 22px">Warm Springs Cellar</p>
 <p style="margin:0 0 18px">This is a test from the cellar desk. Nobody on the
 club's list received it.</p>
 <table role="presentation" cellpadding="0" cellspacing="0"
@@ -164,5 +164,5 @@ separate question: open this message's original and check that SPF and DKIM both
 passed.</p>
 </td></tr></table></td></tr></table></body></html>"""
 
-    return Message(to=to, subject="Warm Springs Cellars — mail test",
+    return Message(to=to, subject="Warm Springs Cellar — mail test",
                    text=text, html=html, reply_to=settings.mail_reply_to)

@@ -58,7 +58,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Warm Springs Cellars — club", docs_url=None, redoc_url=None,
+app = FastAPI(title="Warm Springs Cellar — club", docs_url=None, redoc_url=None,
               lifespan=lifespan)
 security = HTTPBasic(auto_error=False)
 

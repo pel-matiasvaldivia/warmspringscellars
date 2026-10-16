@@ -1,7 +1,7 @@
 # Manual de operaciones — Cellar desk
 
 Cómo entrar al sistema y atender las solicitudes, los pagos, las facturas y los
-envíos del Warm Springs Cellars Wine Club.
+envíos del Warm Springs Cellar Wine Club.
 
 La pantalla está en inglés porque es la que ve quien atiende el escritorio; en este manual
 los nombres de los botones van entre comillas tal como aparecen ahí.
@@ -357,7 +357,7 @@ eso el adaptador también habla **XOAUTH2**, que es el camino que sobrevive.
 Se hace una vez, y hace falta un administrador del tenant:
 
 1. **Entra ID → App registrations → New registration.** Nombre: `Warm Springs
-   Cellars — club mail`. Sin redirect URI: esta aplicación no inicia sesión
+   Cellar — club mail`. Sin redirect URI: esta aplicación no inicia sesión
    como nadie.
 2. **Certificates & secrets → New client secret.** Copiar el *Value* —no el
    Secret ID— en el momento: después no se vuelve a mostrar. Anotar también la

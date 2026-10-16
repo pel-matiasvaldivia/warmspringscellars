@@ -389,7 +389,7 @@ class QuickBooksLedger:
             "CustomerRef": {"value": customer_ref},
             "CurrencyRef": {"value": invoice.currency.upper()},
             "Line": lines,
-            "PrivateNote": f"Warm Springs Cellars order {invoice.reference}",
+            "PrivateNote": f"Warm Springs Cellar order {invoice.reference}",
             "CustomerMemo": {"value": "Thank you — your allocation is on its way."},
         }
         try:

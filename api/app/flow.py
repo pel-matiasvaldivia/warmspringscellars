@@ -230,7 +230,7 @@ class Flow:
         reference = f"offer-{offer['id']}-{tier.key}"
         session = self.payments.create_checkout(
             reference=reference,
-            description=f"Warm Springs Cellars — {tier.name}",
+            description=f"Warm Springs Cellar — {tier.name}",
             amount_cents=tier.total_cents,
             currency=catalogue().currency,
             interval_months=12 // max(catalogue().shipments_per_year, 1),

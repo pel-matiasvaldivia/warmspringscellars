@@ -2,7 +2,7 @@
 """Export the winery's full lockup as a flat image, from the label artwork.
 
 The lockup is the gable, the barrel-and-lantern medallion, EST 1982, the
-arched doors, the ground line and the WARM SPRINGS / Cellars wordmark. All of
+arched doors, the ground line and the WARM SPRINGS / Cellar wordmark. All of
 it is drawn in the label files — the wordmark is outlined, not live type — so
 nothing here depends on having the brand's fonts installed.
 
@@ -33,21 +33,29 @@ import numpy as np
 import pymupdf
 from PIL import Image
 
+import brandmark
+
 SRC = "labels/21CS_WSC_final_label.ai"
-OUT_LIGHT = "images/logo-warm-springs-cellars.jpg"
-OUT_DARK = "images/logo-warm-springs-cellars-dark.jpg"
+OUT_LIGHT = "images/logo-warm-springs-cellar.jpg"
+OUT_DARK = "images/logo-warm-springs-cellar-dark.jpg"
 # The same drawing on transparency, for anything that is not a flat cream or
 # a flat near-black: one in the wine for light backgrounds, one in the label's
 # own near-white for dark ones.
-OUT_PNG_WINE = "images/logo-warm-springs-cellars.png"
-OUT_PNG_LIGHT_INK = "images/logo-warm-springs-cellars-light.png"
+OUT_PNG_WINE = "images/logo-warm-springs-cellar.png"
+OUT_PNG_LIGHT_INK = "images/logo-warm-springs-cellar-light.png"
+
+# The same drawing again, small, for the mail signatures: one on transparency
+# and one on solid cream, because Outlook will not always honour the first.
+OUT_EMAIL = "images/logo-email.png"
+OUT_EMAIL_CREAM = "images/logo-email-cream.png"
+EMAIL_WIDTH = 240          # a 120px slot on a screen that doubles everything
 
 # The lockup's box on the front panel, in PDF points: the roof's apex down
 # through the tail of the script.
 BOX = pymupdf.Rect(18, 8, 252, 296)
 DPI = 600
 
-WINE = (114, 47, 58)
+WINE = brandmark.INK
 CREAM = (250, 248, 245)
 LABEL_INK = (247, 241, 232)
 LABEL_GROUND = (36, 31, 32)
@@ -79,6 +87,10 @@ def artwork() -> np.ndarray:
     # The 99.9th percentile, not the maximum: one stray antialiased pixel
     # should not decide what counts as full ink.
     ink = np.clip(distance / np.percentile(distance, 99.9), 0, 1)
+
+    # The name lost its s when the domain did; here that is one stroke's worth
+    # of coverage taken back out. See tools/brandmark.py.
+    ink *= 1 - brandmark.s_mask(ink > 0.5)
 
     rows = np.where(ink.max(axis=1) > TRIM_FLOOR)[0]
     cols = np.where(ink.max(axis=0) > TRIM_FLOOR)[0]
@@ -120,6 +132,16 @@ def main() -> None:
         img = render_transparent(ink, fg)
         img.save(path, optimize=True)
         print(f"{img.width}x{img.height}  -> {path}  (transparent)")
+
+    # The signatures ask for the same drawing at the size they display it,
+    # rather than a 600dpi file the mail client has to shrink itself.
+    for path, img in ((OUT_EMAIL, render_transparent(ink, WINE)),
+                      (OUT_EMAIL_CREAM, render(ink, WINE, CREAM))):
+        small = img.resize((EMAIL_WIDTH,
+                            max(round(img.height * EMAIL_WIDTH / img.width), 1)),
+                           Image.LANCZOS)
+        small.save(path, optimize=True)
+        print(f"{small.width}x{small.height}  -> {path}")
 
 
 if __name__ == "__main__":

@@ -355,7 +355,7 @@ adapter also speaks **XOAUTH2**, which is the path that survives.
 It is done once, and it needs a tenant administrator:
 
 1. **Entra ID → App registrations → New registration.** Name it `Warm Springs
-   Cellars — club mail`. No redirect URI: this application never signs in as
+   Cellar — club mail`. No redirect URI: this application never signs in as
    anybody.
 2. **Certificates & secrets → New client secret.** Copy the *Value* — not the
    Secret ID — there and then; it is never shown again. Note its expiry date

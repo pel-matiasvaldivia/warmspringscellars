@@ -33,7 +33,7 @@ ROBERT_BOX = pymupdf.Rect(329.0, 247.0, 398.5, 275.5)
 # Cecilia's is the one embedded image on the page that carries a soft mask.
 CECILIA_IMAGE_RECT = pymupdf.Rect(437.3, 243.3, 473.3, 272.6)
 
-INK = (114, 47, 58)          # the brand's wine
+INK = (92, 0, 55)          # the brand's wine
 ROBERT_WIDTH = 900           # vector: chosen, not limited
 CECILIA_SCALE = 3            # 150px of real detail, no more
 PAD = 0.04                   # air around the strokes, as a fraction of the long side

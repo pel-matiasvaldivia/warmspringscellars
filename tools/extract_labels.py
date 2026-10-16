@@ -7,15 +7,23 @@ layers — the separation plates for the print run, plus a "Guides" layer whose
 rules would otherwise render as stray lines across the artwork. Only "Color
 comp" is wanted.
 
+What comes out is not quite what was printed. The files are the archive of
+the print run and are left alone; the panel is brought up to the brand as it
+stands now on the way past — the doors in the right ink, and the name without
+its final s. See tools/brandmark.py for both, and why.
+
 Run from the repo root:  python3 tools/extract_labels.py
-Requires PyMuPDF and Pillow. Feeds tools/label_bottles.py.
+Requires PyMuPDF, Pillow and numpy. Feeds tools/label_bottles.py.
 """
 
 import glob
 import os
 
+import numpy as np
 import pymupdf
 from PIL import Image
+
+import brandmark
 
 SRC_DIR = "labels"
 OUT_DIR = "images/labels"
@@ -51,6 +59,8 @@ def extract(path, name):
 
     # Front panel is the left half of the artboard.
     front = page.crop((BLEED, BLEED, page.width // 2 - BLEED, page.height - BLEED))
+    art = brandmark.rebrand(np.asarray(front).astype(float))
+    front = Image.fromarray(np.clip(art, 0, 255).astype(np.uint8))
     out = f"{OUT_DIR}/front-{name}.png"
     front.save(out, optimize=True)
     print(f"{name:11s} {front.width}x{front.height}px  "

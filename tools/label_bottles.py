@@ -42,10 +42,16 @@ BASES = {
         "clean_rows": [(400, 530), (1100, 1140)],
         "bow": 10,
     },
+    # The Burgundy render arrived wearing a label well under the trim size of
+    # the file it is supposed to be printing — 77 pixels to the inch where the
+    # bottle itself measures 92, so the artwork sat a sixth too small and the
+    # wine's name came out unreadable beside the other four. The band is set
+    # from the bottle instead: 4.50in of label at the render's own scale,
+    # ending where the old one did, which is where the paper really stops.
     "burgundy": {
         "file": "images/WarmSpringsCellars_Pinot.png",
-        "band": (757, 1105),
-        "clean_rows": [(660, 750), (1112, 1140)],
+        "band": (691, 1105),
+        "clean_rows": [(596, 684), (1112, 1140)],
         "bow": 12,
     },
 }
@@ -60,10 +66,74 @@ WINES = {
     "pinot":      {"base": "burgundy", "label_in": (3.75, 4.50)},
 }
 
+# The capsule the renders arrived with is a mid violet, and against the new
+# label it reads as a different brand. These are the numbers that take it to
+# the wine the lineup actually wears: one hue for every bottle, the violet's
+# weak chroma pushed up to foil strength, and the whole thing darkened, since
+# a tinted foil is dark where a violet plastic sleeve was not.
+CAPSULE_HUE = 332.0 / 360.0
+CAPSULE_CHROMA = 3.0
+CAPSULE_CEILING = 0.78
+CAPSULE_VALUE = 0.55
+
 FEATHER = 26            # rows the repainted band fades over at each end
 PAPER_BLACK = 44.0      # what matte black label stock reflects under this key
 KEY_ANGLE = np.radians(-30.0)   # studio key, upper left of the bottle
 RIM_ANGLE = np.radians(70.0)    # weak fill down the far edge
+
+
+def capsule_rows(img):
+    """First and last row of the foil at the neck.
+
+    Found rather than measured: the supplied capsule is the one violet thing
+    in the frame — red and blue both well clear of green — and it is the
+    topmost run of rows where that holds across most of the neck.
+    """
+    r, g, b = img[..., 0], img[..., 1], img[..., 2]
+    violet = ((r - g > 18) & (b - g > 18)).sum(axis=1)
+    rows = np.where(violet > 20)[0]
+    if rows.size == 0:
+        return None
+    start = rows[0]
+    end = start
+    for y in rows:
+        if y - end > 30:        # a gap this long is the next thing down
+            break
+        end = y
+    return start, end
+
+
+def retint(img, rows, hue, chroma, ceiling, value):
+    """Swing the foil's hue onto the brand's, in place.
+
+    Hue is replaced outright and saturation is pushed up to a fixed ceiling,
+    because the target is one flat ink; brightness is only scaled, so the
+    highlight running down the capsule and the shadow under its skirt survive
+    as the shape of the metal.
+    """
+    y0, y1 = rows
+    patch = img[y0:y1 + 1] / 255.0
+    mx = patch.max(axis=2)
+    mn = patch.min(axis=2)
+    delta = mx - mn
+
+    # How much of the pixel is foil, feathered so the cut has no edge.
+    r, g, b = patch[..., 0], patch[..., 1], patch[..., 2]
+    weight = np.clip((np.minimum(r - g, b - g) * 255 - 4) / 14.0, 0, 1)
+
+    sat = np.where(mx > 0, delta / np.maximum(mx, 1e-6), 0)
+    val = mx
+    sat = np.minimum(sat * chroma, ceiling)
+    val = val * value
+
+    i = np.floor(hue * 6.0) % 6
+    f = hue * 6.0 - np.floor(hue * 6.0)
+    p, q, t = val * (1 - sat), val * (1 - sat * f), val * (1 - sat * (1 - f))
+    table = [(val, t, p), (q, val, p), (p, val, t),
+             (p, q, val), (t, p, val), (val, p, q)]
+    tinted = np.stack(table[int(i)], axis=-1) * 255.0
+
+    img[y0:y1 + 1] = patch * 255.0 * (1 - weight[..., None]) + tinted * weight[..., None]
 
 
 def silhouette(lum, backdrop):
@@ -170,6 +240,11 @@ def build(wine, spec):
     base = BASES[spec["base"]]
     img = np.asarray(Image.open(base["file"]).convert("RGB")).astype(float)
     h, w, _ = img.shape
+
+    rows = capsule_rows(img)
+    if rows:
+        retint(img, rows, CAPSULE_HUE, CAPSULE_CHROMA, CAPSULE_CEILING, CAPSULE_VALUE)
+
     lum = img.mean(axis=2)
 
     backdrop = 150
