@@ -54,6 +54,19 @@ class Settings:
     smtp_user: str = field(default_factory=lambda: _env("SMTP_USER"))
     smtp_password: str = field(default_factory=lambda: _env("SMTP_PASSWORD"))
     smtp_starttls: bool = field(default_factory=lambda: _bool("SMTP_STARTTLS", True))
+    # OAuth2 for SMTP, the client-credentials flow. Set these and the mailer
+    # authenticates with a token instead of a password, which is the path that
+    # survives Microsoft retiring basic authentication.
+    smtp_oauth_tenant_id: str = field(default_factory=lambda: _env("SMTP_OAUTH_TENANT_ID"))
+    smtp_oauth_client_id: str = field(default_factory=lambda: _env("SMTP_OAUTH_CLIENT_ID"))
+    smtp_oauth_client_secret: str = field(
+        default_factory=lambda: _env("SMTP_OAUTH_CLIENT_SECRET"))
+    smtp_oauth_scope: str = field(
+        default_factory=lambda: _env("SMTP_OAUTH_SCOPE",
+                                     "https://outlook.office365.com/.default"))
+    smtp_oauth_authority: str = field(
+        default_factory=lambda: _env("SMTP_OAUTH_AUTHORITY",
+                                     "https://login.microsoftonline.com"))
     mail_from: str = field(default_factory=lambda: _env("MAIL_FROM", "club@warmspringscellar.com"))
     mail_reply_to: str = field(default_factory=lambda: _env("MAIL_REPLY_TO", "club@warmspringscellar.com"))
 
@@ -115,6 +128,13 @@ class Settings:
     def mail_live(self) -> bool:
         return bool(self.smtp_host)
 
+    @property
+    def smtp_oauth(self) -> bool:
+        """Whether to authenticate with a token rather than a password."""
+        return bool(self.smtp_oauth_tenant_id
+                    and self.smtp_oauth_client_id
+                    and self.smtp_oauth_client_secret)
+
     def warnings(self) -> list[str]:
         """What is still a stub. Printed at boot and shown in the admin header."""
         out = []
@@ -129,6 +149,10 @@ class Settings:
         if not self.mail_live:
             out.append(f"SMTP_HOST is unset: mail is written to {self.outbox_dir} "
                        "instead of being sent.")
+        elif self.smtp_oauth and not self.smtp_user:
+            out.append("SMTP_USER is unset while OAuth2 is configured: a token says "
+                       "which app is sending, not which mailbox, so the mailbox has "
+                       "to be named too.")
         if not self.admin_password:
             out.append("ADMIN_PASSWORD is unset: /admin is closed until it is set.")
         if not self.quickbooks_configured:

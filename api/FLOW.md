@@ -112,7 +112,12 @@ before they do anything outside this machine:
 - **Email.** `mail/smtp.py` needs `SMTP_HOST` and friends. Without them the
   service writes each message to `var/outbox/` as a `.eml` file you can open in
   any mail client — useful in development, and the only reason the approval
-  link is visible in the admin page.
+  link is visible in the admin page. It authenticates two ways: a password, or
+  an OAuth2 token by the client-credentials flow (`mail/oauth.py`). The second
+  exists because Microsoft has been retiring basic authentication for SMTP
+  submission, and on the day it goes in a tenant a username and a password
+  stop working with nothing to fall back on. Which one is used follows from
+  the configuration, so switching is a change to `.env` and a restart.
 
 - **Accounting.** `accounting/quickbooks.py` speaks Intuit's Accounting API. It
   needs `QBO_CLIENT_ID` and `QBO_CLIENT_SECRET`, and then a human to authorise

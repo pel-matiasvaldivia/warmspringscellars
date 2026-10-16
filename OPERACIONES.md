@@ -138,7 +138,7 @@ error. Si de verdad hace falta otro, lo que corresponde es una solicitud nueva.
 
 Con Stripe activo, el alta solo se confirma cuando llega el webhook. Si el socio
 dice que pagó y en **Orders** no aparece `paid`, el problema está en el webhook,
-no en el socio (ver §8).
+no en el socio (ver §9).
 
 ### 3.4 Lo que se genera solo
 
@@ -305,11 +305,148 @@ fecha, ítem, cantidad, importe, moneda, referencia de la orden y si está pago.
 
 ---
 
-## 8. Cuando algo no cierra
+## 8. El correo que sale
+
+Todo lo que el club manda —la invitación firmada, el aviso de despacho, la
+factura— sale por un solo servidor SMTP. Mientras `SMTP_HOST` esté vacío no
+sale nada: cada mensaje se guarda como archivo `.eml` en `/srv/var/outbox` y el
+escritorio muestra el link de invitación en la ficha. Eso no es una falla, es
+el modo en que viaja el proyecto hasta que alguien decide por dónde manda.
+
+### 8.1 Dos maneras de autenticarse
+
+| | Con contraseña | Con OAuth2 |
+| --- | --- | --- |
+| Qué se carga | `SMTP_USER` + `SMTP_PASSWORD` | `SMTP_USER` + las tres `SMTP_OAUTH_*` |
+| Quién se presenta | la casilla | una aplicación, autorizada sobre la casilla |
+| En Microsoft 365 | funciona hasta que el tenant apague la autenticación básica | sigue funcionando después |
+
+El servicio elige solo: si están las tres variables de OAuth usa un token, si
+no usa la contraseña, y si no hay ninguna de las dos no se autentica (es lo que
+corresponde en el caso de §8.4). Cambiar de una a la otra es editar `.env` y
+reiniciar; no hay nada que tocar en el código.
+
+### 8.2 Microsoft 365 con contraseña
+
+```
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_USER=club@warmspringscellar.com
+SMTP_PASSWORD=<la contraseña de esa casilla>
+MAIL_FROM=club@warmspringscellar.com
+MAIL_REPLY_TO=club@warmspringscellar.com
+```
+
+La casilla necesita licencia de Exchange Online —una casilla compartida sin
+licencia no puede autenticarse— y el tenant necesita tener habilitado **SMTP
+AUTH** para ella. Si la cuenta tiene MFA, la contraseña de la persona no sirve:
+hay que usar la casilla de servicio.
+
+> **El síntoma a reconocer.** `535 5.7.139 Authentication unsuccessful, the
+> request did not meet the criteria to be authenticated successfully. Contact
+> your administrator.` Casi siempre significa que la autenticación básica está
+> apagada para esa casilla, no que la contraseña esté mal. Ahí se pasa a §8.3.
+
+### 8.3 Microsoft 365 con OAuth2
+
+Microsoft viene retirando la autenticación básica para SMTP. El día que la
+apaga en un tenant, usuario y contraseña dejan de servir sin aviso previo. Por
+eso el adaptador también habla **XOAUTH2**, que es el camino que sobrevive.
+
+Se hace una vez, y hace falta un administrador del tenant:
+
+1. **Entra ID → App registrations → New registration.** Nombre: `Warm Springs
+   Cellars — club mail`. Sin redirect URI: esta aplicación no inicia sesión
+   como nadie.
+2. **Certificates & secrets → New client secret.** Copiar el *Value* —no el
+   Secret ID— en el momento: después no se vuelve a mostrar. Anotar también la
+   fecha de vencimiento, porque el día que vence el correo deja de salir.
+3. **API permissions → Add a permission → APIs my organization uses →
+   Office 365 Exchange Online → Application permissions → `SMTP.SendAsApp`**, y
+   después **Grant admin consent**. Sin el consentimiento el token sale igual y
+   el servidor lo rechaza, que es la forma más confusa de fallar.
+4. **Darle la casilla**, en Exchange Online PowerShell:
+
+   ```powershell
+   Connect-ExchangeOnline
+   New-ServicePrincipal -AppId <client id> -ServiceId <object id de la app>
+   Add-MailboxPermission -Identity club@warmspringscellar.com `
+       -User <object id de la app> -AccessRights FullAccess
+   ```
+
+   El *object id* es el de la Enterprise application, no el de la registración.
+5. **En `.env`:**
+
+   ```
+   SMTP_HOST=smtp.office365.com
+   SMTP_PORT=587
+   SMTP_USER=club@warmspringscellar.com
+   SMTP_PASSWORD=
+   SMTP_OAUTH_TENANT_ID=<Directory (tenant) ID>
+   SMTP_OAUTH_CLIENT_ID=<Application (client) ID>
+   SMTP_OAUTH_CLIENT_SECRET=<el Value del paso 2>
+   ```
+
+   `SMTP_USER` **se deja puesto**. El token dice qué aplicación manda, nunca
+   desde qué casilla; la casilla hay que nombrarla igual.
+
+El servicio pide un token, lo guarda y lo reusa hasta dos minutos antes de que
+venza. No pide uno por mensaje.
+
+### 8.4 La tercera opción: el conector de retransmisión
+
+Si el servidor tiene IP fija, Exchange Online puede aceptar el correo por IP y
+sin autenticación ninguna: **Exchange admin center → Mail flow → Connectors →
+from "Your organisation's email server"**, autorizando esa IP.
+
+```
+SMTP_HOST=<tenant>.mail.protection.outlook.com
+SMTP_PORT=25
+SMTP_USER=
+SMTP_PASSWORD=
+```
+
+Sirve para mandar a los propios dominios del tenant sin más trámite. Para
+mandar afuera —que es lo que hace este club— el dominio del remitente tiene que
+estar verificado en el tenant y el SPF tiene que cubrir esa IP. Es la opción
+sin secretos que vencer, y la que depende de que la IP del VPS no cambie.
+
+### 8.5 Que el correo llegue, no solo que salga
+
+Tres registros en el DNS de `warmspringscellar.com`, y los tres son del
+dominio, no del servidor:
+
+- **SPF**, un único registro TXT: `v=spf1 include:spf.protection.outlook.com
+  -all`. Si se usa el conector de §8.4, agregar `ip4:<IP del VPS>` antes del
+  `-all`. Dos registros SPF en un dominio equivalen a ninguno.
+- **DKIM**: Microsoft 365 Defender → Policies → Email authentication → DKIM.
+  Publicar los dos CNAME `selector1._domainkey` y `selector2._domainkey` que
+  indica la pantalla, y recién después habilitar la firma.
+- **DMARC**, TXT en `_dmarc`: empezar en `v=DMARC1; p=none;
+  rua=mailto:dmarc@warmspringscellar.com`, leer los informes un par de semanas
+  y recién ahí endurecer a `quarantine`.
+
+Una invitación que cae en correo no deseado es una solicitud aprobada que nadie
+contesta, y en el escritorio se ve igual que una que fue ignorada.
+
+### 8.6 Probar antes de prometer
+
+1. Cargar `.env`, `docker compose up -d` y mirar que arriba del escritorio no
+   quede el aviso de `SMTP_HOST`.
+2. Aprobar una solicitud de prueba hecha a una dirección de afuera del tenant
+   (Gmail sirve, y además muestra si el SPF y el DKIM pasaron: en Gmail, "Show
+   original").
+3. Si no llega: `docker compose logs api | grep -i smtp`. El adaptador
+   registra el rechazo tal como lo dijo el servidor, con el código incluido.
+
+---
+
+## 9. Cuando algo no cierra
 
 | Síntoma | Dónde mirar |
 | --- | --- |
 | El socio no recibió la invitación | ¿Hay aviso de `SMTP_HOST` arriba? Si sí, el mail está en `/srv/var/outbox`. Copiale el link desde la ficha. |
+| El servidor contesta `535 5.7.139` | Microsoft 365 apagó la autenticación básica para esa casilla. No es la contraseña: hay que pasar a OAuth2 (§8.3). |
 | "this invitation link is not valid" | `SECRET_KEY` cambió (reinicio sin la variable fijada en `.env`). Toda invitación anterior murió: hay que aprobar de nuevo. |
 | "this invitation has expired" | Pasaron más de 14 días. Solicitud nueva. |
 | Pagó y la orden sigue `pending_payment` | El webhook no llegó. Stripe → Developers → Webhooks → Recent deliveries. Debe apuntar a `https://<dominio>/api/payments/webhook` y estar suscripto a `checkout.session.completed`. Reintentar la entrega desde ahí es seguro: un evento repetido no cobra ni factura dos veces. |
@@ -342,7 +479,7 @@ primer lugar donde mirar antes de preguntarle al socio.
 
 ---
 
-## 9. Cómo se publica
+## 10. Cómo se publica
 
 El sitio y la API son dos contenedores y **un solo puerto publicado**, el
 `8086`, pensado para quedar detrás de Nginx Proxy Manager. La API no se publica:
@@ -364,7 +501,7 @@ se versiona.
 
 ---
 
-## 10. Antes de cobrar de verdad
+## 11. Antes de cobrar de verdad
 
 - [ ] `SECRET_KEY` generada, guardada y **fija** en `.env`
 - [ ] `ADMIN_PASSWORD` puesta, y el rango de IP descomentado en `nginx.conf`
@@ -373,6 +510,8 @@ se versiona.
 - [ ] Webhook apuntado a `/api/payments/webhook` y suscripto a
       `checkout.session.completed`
 - [ ] SMTP configurado y probado con una aprobación de prueba a un mail propio
+      (§8). En Microsoft 365, con OAuth2 (§8.3) antes que con contraseña
+- [ ] SPF, DKIM y DMARC publicados en `warmspringscellar.com` (§8.5)
 - [ ] `SHIPPABLE_STATES` revisada contra los permisos reales de la bodega
 - [ ] QuickBooks: app creada, URI de retorno registrada, el ítem creado
       y **una factura enviada a una empresa sandbox** antes de pasar a

@@ -70,6 +70,13 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       MAIL_FROM: ${MAIL_FROM:-club@warmspringscellar.com}
       MAIL_REPLY_TO: ${MAIL_REPLY_TO:-club@warmspringscellar.com}
+      # Set these three and SMTP authenticates with an OAuth2 token instead
+      # of SMTP_PASSWORD. Microsoft 365 is retiring basic auth for SMTP.
+      SMTP_OAUTH_TENANT_ID: ${SMTP_OAUTH_TENANT_ID:-}
+      SMTP_OAUTH_CLIENT_ID: ${SMTP_OAUTH_CLIENT_ID:-}
+      SMTP_OAUTH_CLIENT_SECRET: ${SMTP_OAUTH_CLIENT_SECRET:-}
+      SMTP_OAUTH_SCOPE: ${SMTP_OAUTH_SCOPE:-https://outlook.office365.com/.default}
+      SMTP_OAUTH_AUTHORITY: ${SMTP_OAUTH_AUTHORITY:-https://login.microsoftonline.com}
 
     # The database, the invoice PDFs and the outbox. Back this up.
     volumes:
