@@ -165,23 +165,6 @@ CREATE TABLE IF NOT EXISTS webhook_seen (
     PRIMARY KEY (provider, event_id)
 );
 
--- The coffee unit's waiting list. Separate from `application` on purpose: a
--- coffee request is not a wine allocation, carries none of the same rules
--- (no licensed-state check, no tier, no age gate) and must never be mistaken
--- for one on the desk. What the two share is the mailbox they land in.
-CREATE TABLE IF NOT EXISTS coffee_interest (
-    id          INTEGER PRIMARY KEY,
-    created_at  TEXT NOT NULL,
-    name        TEXT NOT NULL,
-    email       TEXT NOT NULL,
-    coming_from TEXT NOT NULL,          -- 'both' | 'coffee' | 'curious'
-    status      TEXT NOT NULL DEFAULT 'new',   -- new | invited | archived
-    decided_at  TEXT,
-    decided_by  TEXT
-);
-CREATE INDEX IF NOT EXISTS coffee_status ON coffee_interest(status, created_at DESC);
-CREATE INDEX IF NOT EXISTS coffee_email ON coffee_interest(email);
-
 -- Documents waiting to reach the accounting system. Written in the same
 -- transaction as the invoice they describe, so the books can never be asked
 -- to record an order that was rolled back, and an order that committed always

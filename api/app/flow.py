@@ -153,62 +153,6 @@ class Flow:
             log(con, "application", app_id, "received", email=email, state=state)
             return app_id
 
-    # ── the coffee unit's waiting list ───────────────────────────────────
-    COFFEE_ORIGINS = ("both", "coffee", "curious")
-    COFFEE_STATUSES = ("new", "invited", "archived")
-
-    def register_coffee_interest(self, data: dict) -> int:
-        """Take a name for the roastery's list.
-
-        Deliberately thinner than an application. Coffee is not alcohol: no
-        licensed-state check, no age gate, no tier, no offer. Somebody simply
-        wants to be told when it opens, and the desk decides in what order.
-        """
-        name = str(data.get("name", "")).strip()
-        email = str(data.get("email", "")).strip().lower()
-        coming_from = str(data.get("coming_from", "")).strip()
-
-        if not name:
-            raise FlowError("we need a name to put on the list")
-        if "@" not in email or "." not in email.split("@")[-1]:
-            raise FlowError("that email address does not look right")
-        if coming_from not in self.COFFEE_ORIGINS:
-            raise FlowError("tell us where you are coming from")
-
-        with self.db.transaction() as con:
-            open_row = con.execute(
-                "SELECT id FROM coffee_interest WHERE email = ? AND status = 'new'",
-                (email,),
-            ).fetchone()
-            if open_row:
-                # The same person asking twice is the same person, exactly as
-                # it is on the wine side.
-                log(con, "coffee_interest", int(open_row["id"]), "duplicate_request")
-                return int(open_row["id"])
-
-            cur = con.execute(
-                "INSERT INTO coffee_interest (created_at, name, email, coming_from)"
-                " VALUES (?, ?, ?, ?)",
-                (now(), name, email, coming_from),
-            )
-            interest_id = int(cur.lastrowid)
-            log(con, "coffee_interest", interest_id, "received",
-                email=email, coming_from=coming_from)
-            return interest_id
-
-    def set_coffee_status(self, interest_id: int, target: str, actor: str) -> None:
-        if target not in self.COFFEE_STATUSES:
-            raise FlowError(f"a coffee request has no state {target!r}")
-        with self.db.transaction() as con:
-            row = _require(con, "coffee_interest", interest_id)
-            if row["status"] == target:
-                return
-            con.execute(
-                "UPDATE coffee_interest SET status = ?, decided_at = ?, decided_by = ?"
-                " WHERE id = ?", (target, now(), actor, interest_id),
-            )
-            log(con, "coffee_interest", interest_id, target, actor=actor)
-
     def approve_application(self, app_id: int, actor: str,
                             allowed_tiers: list[str] | None = None) -> tuple[int, str]:
         """Approve, and open an offer. Returns (offer_id, url)."""

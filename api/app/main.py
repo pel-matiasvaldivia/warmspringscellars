@@ -183,31 +183,6 @@ def offer_problem(request: Request, message: str) -> HTMLResponse:
     )
 
 
-@app.post("/api/coffee-interest")
-async def create_coffee_interest(request: Request) -> JSONResponse:
-    """The roastery's waiting list. Same rate limit, same shape of answer.
-
-    Shares the bucket with the wine form on purpose: it is one winery behind
-    both pages, and somebody hammering either of them is hammering us.
-    """
-    if rate_limited(client_key(request)):
-        return JSONResponse(
-            {"ok": False, "error": "That is a lot of requests from one place. "
-                                   "Write to club@warmspringscellar.com instead."},
-            status_code=429,
-        )
-    try:
-        body = await request.json()
-    except Exception:                                          # noqa: BLE001
-        return JSONResponse({"ok": False, "error": "send JSON"}, status_code=400)
-
-    try:
-        interest_id = flow.register_coffee_interest(body)
-    except FlowError as exc:
-        return JSONResponse({"ok": False, "error": str(exc)}, status_code=422)
-    return JSONResponse({"ok": True, "interest_id": interest_id}, status_code=201)
-
-
 @app.get("/club/offer/{token}", response_class=HTMLResponse)
 def show_offer(request: Request, token: str) -> HTMLResponse:
     try:
@@ -536,33 +511,6 @@ def admin_invoice_pdf(invoice_id: int, actor: str = Depends(require_admin)) -> F
         raise HTTPException(404)
     path = ensure_pdf(db, settings.invoice_dir, invoice_id)
     return FileResponse(path, media_type="application/pdf", filename=f"{row['number']}.pdf")
-
-
-# ── the coffee unit's list ───────────────────────────────────────────────
-@app.get("/admin/coffee", response_class=HTMLResponse)
-def admin_coffee(request: Request, actor: str = Depends(require_admin)) -> HTMLResponse:
-    # The left join is the whole point of the screen: the page promises cellar
-    # members are asked first, so the desk has to see which of these already
-    # hold an allocation without going and looking them up one at a time.
-    rows = db.all(
-        "SELECT c.*, m.id AS membership_id, m.tier_key, m.status AS membership_status"
-        " FROM coffee_interest c"
-        " LEFT JOIN membership m ON lower(m.email) = c.email AND m.status = 'active'"
-        " ORDER BY (c.status != 'new'), (m.id IS NULL), c.id DESC LIMIT 300"
-    )
-    return admin_page(request, "coffee.html", "coffee", rows=rows,
-                      waiting=len([r for r in rows if r["status"] == "new"]))
-
-
-@app.post("/admin/coffee/{interest_id}/status")
-async def admin_coffee_status(request: Request, interest_id: int,
-                              actor: str = Depends(require_admin)) -> RedirectResponse:
-    form = await request.form()
-    try:
-        flow.set_coffee_status(interest_id, str(form.get("target")), actor)
-    except FlowError as exc:
-        raise HTTPException(400, str(exc)) from exc
-    return RedirectResponse("/admin/coffee?done=List updated.", status_code=303)
 
 
 # ── the books ────────────────────────────────────────────────────────────

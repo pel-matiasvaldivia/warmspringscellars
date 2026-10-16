@@ -100,43 +100,6 @@ ports:
 …or drop `ports` entirely, attach both containers to a shared network, and
 point NPM at `warmspringscellars:8080`.
 
-## The coffee unit
-
-`coffee/` is a second landing page for **warmspringscoffee.com**, a roastery
-the winery is weighing up: premium roasted coffee from Kenya, Ethiopia and
-Colombia, sold to the same list as the wine.
-
-It is served at `/coffee/` and **reachable from the winery's nav**, as a
-"Coffee" item between Members and Request Access, in the desktop list and the
-mobile menu. It is the one nav item that leaves the page rather than scrolling
-it, which is why it wears the underline the others only grow on hover; the
-scroll-spy and menu handlers are both scoped to `a[href^="#"]`, so a real path
-is simply not one of their links. The page links back from its footer.
-
-It is still **not announced**: the page asks crawlers to leave it alone and a
-banner across the top says it is a preview. Those two are now the only things
-holding it back, and anyone on the site can read it. When the roastery is
-ready to be public, remove the `robots` meta and the `.preview-bar`; to go the
-other way and close it off, uncomment the `allow`/`deny` lines on
-`location /coffee/` in `nginx.conf` — the same two lines that guard the cellar
-desk — and take the nav item out.
-
-Its form reaches the club's own desk, at `POST /api/coffee-interest`, and the
-list is on the **Coffee** tab at `/admin/coffee`. The desk marks which of the
-people waiting already hold a wine allocation — matched on email against live
-memberships — because the page promises cellar members are asked first and
-that promise needs something to act on.
-
-The three origins are Kenya, Ethiopia and Colombia. Ethiopia replaced an
-earlier Somalia card: Somali coffee *culture* is old and real, but Somalia is
-not an established export origin — the growing is tiny and mostly
-revival-stage — while the ceremony that card described is Ethiopian to begin
-with. Every claim on the page now names a real growing region.
-
-The palette is green rather than roast-brown. Coffee is a cherry on a shrub
-for years and a brown bean for about a fortnight, and the green is the part
-the three origins have in common.
-
 ## Running the club
 
 The whole commercial flow, from the form to the doorstep, is described in
@@ -159,7 +122,6 @@ in `nginx.conf` too; the commented `allow`/`deny` lines are there for it.
 | The pick list, and tracking numbers | `/admin/shipments` |
 | Raise a release's orders | `/admin/releases` |
 | QuickBooks, and what the books are still owed | `/admin/accounting` |
-| The coffee unit's waiting list | `/admin/coffee` |
 
 ### The offer
 
