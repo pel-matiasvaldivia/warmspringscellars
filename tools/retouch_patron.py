@@ -28,7 +28,8 @@ Then the frame itself:
   * noise. Colour noise is the ugly half and it is also the half that can be
     blurred without losing anything, so chroma is smoothed hard and luma
     barely — enough to take the speckle out of the shadows, not enough to
-    turn skin to plastic.
+    cost the frame its detail. It was costing it: at a quarter of the frame's
+    width the hand on Richard's shoulder had lost its knuckles.
   * a 4:5 crop with the three faces in the upper third, which is the shape
     and the placement the page's patron frames expect.
 
@@ -68,10 +69,13 @@ LIFT_FROM, LIFT_TO = 0.014, 0.055
 
 CHROMA_BLUR = 3.2
 LUMA_BLUR = 0.7
-LUMA_KEEP = 0.72               # how much of the original luma survives it
+LUMA_KEEP = 0.88               # how much of the original luma survives it
 
-CROP = (110, 505, 910, 1505)    # 800 x 1000, which is 4:5
-SHARPEN = dict(radius=1.4, percent=52, threshold=4)
+# The right edge is where it is for Robert's hand on Richard's shoulder: a
+# tighter frame cut the little finger and the wedding ring off at the fingers,
+# and a hand that ends at the frame edge reads as a smudge rather than a hand.
+CROP = (112, 505, 960, 1565)    # 848 x 1060, which is 4:5
+SHARPEN = dict(radius=1.2, percent=70, threshold=3)
 QUALITY = 88
 
 
