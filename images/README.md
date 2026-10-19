@@ -20,6 +20,8 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `logo-email[-cream].png`     | Generated: the lockup at 240px                      | The Outlook signatures in `email-signatures/` |
 | `sauvignon-blanc-bottle.png` | Generated: the white, on transparency               | The Wines — sixth card                    |
 | `rose-bottle.png`            | Generated: the rosé, on transparency                | The Wines — seventh card                  |
+| `shipment-box.webp`          | Generated: the packed case, branded                 | What Arrives — beside the four steps      |
+| `shipper-source.jpg`         | The studio shot it is made from, as supplied        | Nothing — the input, kept for reruns      |
 
 Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
@@ -145,47 +147,64 @@ drawing, on cream, because Apple renders it large and wants it opaque.
 
 ## The shipment photograph
 
-**This photograph is currently off the page.** It was removed in October 2026;
-the slot, the caption and the styles are still in `index.html`, commented, so a
-better photograph goes back in by dropping the file here and uncommenting ten
-lines. Everything below still describes how the file in the repository was
-made.
-
-`shipment-box.webp` is the winery's own photograph of a packed case — corrugated
-outer, moulded pulp cradle, three bottles — with the labels replaced. The
-bottles in the original wore another winery's brand; everything else in the
-frame is untouched: the box, the pulp, the capsules, the floor and the light.
+`shipment-box.webp` is a studio shot of a packed case — lid up, moulded pulp
+tray, three bottles standing in it — made the winery's own. Everything printed
+in the supplied frame belonged to somebody else: the mark and name on the lid,
+the three labels, a line of copy down the open flap, and the carrier label on
+the front. All of it comes off and ours goes on. Nothing else is touched — the
+carton, the pulp, the glass, the capsules, the barrels behind and the light
+stay exactly as photographed.
 
 ```bash
-python3 tools/relabel_box_photo.py            # the real work
-python3 tools/relabel_box_photo.py --debug    # overlay the spans on the source
+python3 tools/brand_shipper.py            # the real work
+python3 tools/brand_shipper.py --debug    # draw every region it will touch
 ```
 
-A bottle lying on its side is a cylinder, so a label on it is not a rectangle.
-Each one is mapped through the cylinder the way `tools/label_bottles.py` does it
-— a column at screen offset *s* sits at angle asin(*s*), so the artwork
+**Clearing the board.** Corrugated board is striped vertically, and the stripe
+is what makes it read as board; diffusing a hole closed averages those stripes
+into a bruise. So on the lid each column is rebuilt from the same column — the
+clean board a little above and a little below, ramped between the two. The
+flap is different: its face is smooth, its copy runs diagonally across it, and
+it is a parallelogram, so no rectangle both covers the type and stays on the
+board. There the ink is found rather than bounded — anything a good deal
+darker than the local board — and each run of it is closed from its own row.
+
+**The lid** takes the lockup off the label the bottles wear, so the case and
+the bottle inside it carry one mark and not two drawings of one. It is
+multiplied onto the board rather than painted over it, because ink on kraft
+darkens the corrugation instead of hiding it, and the corrugation goes on
+showing through our mark exactly as it did through theirs.
+
+**The bottles.** A bottle is a cylinder, so a label on it is not a rectangle.
+Each is mapped through the cylinder the way `tools/label_bottles.py` does it —
+a column at screen offset *s* sits at angle asin(*s*), so the artwork
 compresses towards the silhouette — then through a homography onto the four
 corners the bottle occupies in frame, which carries the camera's perspective.
-The scale comes from the silhouette: a 750ml Bordeaux is three inches across, so
-the bottle's width in pixels is the ruler for everything else, and the label
-keeps the proportions of the artwork instead of being stretched to fit.
+The scale comes from the silhouette: a 750ml bottle is three inches across, so
+its width in pixels is the ruler, and each label keeps the proportions of its
+own trim rather than being stretched to fit. The right-hand bottle is flint
+glass and wears the Sauvignon Blanc's clear film, which prints onto the glass
+instead of covering it.
 
-The lighting is not invented. For each bottle the glass's own brightness is
-measured under where the label will go, taking a low percentile along the
-bottle's length so the existing print is excluded and only the glass is left.
-That profile — the specular streak, the fall-off at the edges — is what the new
-label is lit by, which is why it sits in the same light as the capsule above it.
+Two things this frame taught the tool. The light is read on a strip of glass
+*above* the old label, not under it: these labels are large dark panels, and
+the low percentile that worked on ink-on-glass reads the panel instead and
+turns every new label black. And there is no wipe pass — the labels being
+replaced are short ones sitting high, every one inside the footprint of the
+label going over it, so there is nothing to erase that is not about to be
+covered. A wipe that reaches past its label has to invent glass, which is
+exactly what put a band of nothing under the Pinot the first time.
 
-Each bottle is wiped before it is labelled, over a longer span than the label
-covers, because the other winery printed onto the shoulder where no label of
-ours reaches. The wipe paints that same measured profile and nothing else, so it
-reconstructs clean glass rather than inventing any. Running `--debug` draws both
-spans: orange is wiped, cyan is labelled.
+**The carrier label** gets our details. Each block is filled from the strip of
+blank label between the last column of type and the first QR code — not from
+the rows above and below, which are more type, and reading those printed a
+ghost of "SHIPPED FROM" through the address. No street is invented: a mockup
+carrying a plausible address is a mockup somebody will one day post something
+to.
 
-**The source is only 1024×576**, which is tight for a full-width image on a
-high-density screen. If a larger original exists, drop it in as
-`shipment-box-source.jpg` and rerun — the measurements in `BOTTLES` are in
-source pixels and would need scaling with it.
+`--debug` draws it all: the board panels it clears, the lockup's box, the
+label and light bands on each bottle, and the line of the carton's front wall,
+below which nothing is painted because below it is the box and not the bottle.
 
 ## Bottle shots
 

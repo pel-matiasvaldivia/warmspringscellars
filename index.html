@@ -886,68 +886,6 @@ body {
   border-top: 1px solid var(--c-border-light);
 }
 
-/* ─── The handwritten card ─── */
-.pack-card {
-  position: relative;
-  margin: 0;
-  padding: 2rem 2.1rem 1.75rem;
-  transform: rotate(-1.1deg);
-  background:
-    repeating-linear-gradient(97deg,
-      rgba(120,90,60,0.03) 0 3px, rgba(255,255,255,0) 3px 7px),
-    linear-gradient(168deg, #fdfaf4 0%, #f5eee0 100%);
-  box-shadow:
-    0 1px 2px rgba(44,30,36,0.16),
-    0 16px 34px rgba(44,30,36,0.16);
-  transition: transform 0.6s cubic-bezier(0.22,0.61,0.36,1);
-}
-
-.pack-card:hover { transform: rotate(-0.3deg); }
-
-/* Torn top edge, so it reads as cut from a sheet rather than die-stamped. */
-.pack-card::before {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; top: -2px;
-  height: 4px;
-  background: #fdfaf4;
-  clip-path: polygon(0 60%, 4% 20%, 9% 70%, 15% 25%, 22% 65%, 29% 15%, 36% 60%,
-                     44% 25%, 52% 70%, 60% 20%, 68% 65%, 76% 25%, 84% 60%,
-                     92% 20%, 100% 55%, 100% 100%, 0 100%);
-}
-
-.pack-card-mark {
-  height: 30px;
-  width: auto;
-  margin-bottom: 0.4rem;
-  color: var(--c-wine);
-  opacity: 0.45;
-}
-
-.pack-card p {
-  font-family: 'Caveat', 'Segoe Script', 'Bradley Hand', cursive;
-  color: #3c272d;
-  line-height: 1.32;
-  margin: 0;
-}
-
-.pack-card .card-greeting { font-size: 1.45rem; margin-bottom: 0.35rem; }
-.pack-card .card-note { font-size: 1.32rem; min-height: 6.6em; }
-
-.pack-card .card-sign {
-  font-size: 1.3rem;
-  margin-top: 0.4rem;
-  color: var(--c-wine);
-}
-
-.pack-card .card-rule {
-  width: 38px;
-  height: 1px;
-  background: rgba(92,0,55,0.28);
-  margin: 0.5rem 0 0.4rem;
-}
-
-/* ─── The panel beside it ─── */
 .shipment-steps {
   list-style: none;
   display: flex;
@@ -991,59 +929,8 @@ body {
   line-height: 1.7;
 }
 
-/* Controls that write the visitor's own name onto the card. */
-.pack-personalise { margin-top: 1.75rem; }
 .shipment-cta { margin-top: 2rem; }
 
-.pack-personalise > p {
-  font-size: 0.6rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
-  margin-bottom: 0.8rem;
-}
-
-.pack-name {
-  width: 100%;
-  padding: 0.7rem 0.9rem;
-  font-family: inherit;
-  font-size: 0.88rem;
-  color: var(--c-text);
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  transition: border-color 0.25s;
-}
-
-.pack-name:focus { outline: none; border-color: var(--c-wine-light); }
-.pack-name::placeholder { color: var(--c-text-muted); }
-
-.pack-wines {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.7rem;
-}
-
-.pack-wine {
-  font-family: inherit;
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.5rem 0.8rem;
-  border: 1px solid var(--c-border);
-  background: transparent;
-  color: var(--c-text-muted);
-  cursor: pointer;
-  transition: all 0.25s;
-}
-
-.pack-wine:hover { border-color: var(--c-wine-light); color: var(--c-wine); }
-
-.pack-wine[aria-pressed="true"] {
-  background: var(--c-wine);
-  border-color: var(--c-wine);
-  color: #fff;
-}
 
 /* ─── Sticky join banner ─── */
 .join-banner {
@@ -1676,11 +1563,6 @@ body.banner-up .to-top { bottom: 6.2rem; }
   .wine-card { flex-basis: 140px; }
   .shipment-grid { grid-template-columns: 1fr; gap: 2.5rem; margin-top: 2.5rem; padding-top: 2.5rem; }
   .shipment-caption { text-align: left; font-size: 0.68rem; }
-  .pack-card { padding: 1.5rem 1.5rem 1.3rem; }
-  .pack-card .card-greeting { font-size: 1.25rem; }
-  .pack-card .card-note { font-size: 1.14rem; min-height: 7.6em; }
-  .pack-card .card-sign { font-size: 1.12rem; }
-  .pack-card .card-note { min-height: 7.6em; }
   .join-banner-inner { padding: 0.75rem 2.6rem 0.75rem 1.25rem; gap: 1rem; }
   .join-banner-text { font-size: 0.75rem; }
   .join-banner-text strong { font-size: 0.92rem; }
@@ -1718,15 +1600,6 @@ body.banner-up .to-top { bottom: 6.2rem; }
   .hero-scroll { animation: none; }
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
 
 a:focus-visible,
 button:focus-visible,
@@ -2595,42 +2468,14 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     <h2 class="section-title">Packed by the Hands That Made It</h2>
     <p class="section-prose">Every allocation leaves the cellar laid in a moulded pulp cradle, one bottle to a bay, inside a corrugated case rated for the journey. Nothing touches anything else between here and your table.</p>
 
-    <!-- The packed-case photograph is out until a better one lands. Its slot,
-         its caption and the .shipment-photo styles are all still here: drop the
-         new file in as images/shipment-box.webp and uncomment this.
-    <img class="shipment-photo" src="images/shipment-box.webp" width="1024" height="576"
-         alt="A Warm Springs Cellar shipment: bottles laid in a moulded pulp insert inside a corrugated case"
-         loading="lazy">
-    <p class="shipment-caption">A Founder&rsquo;s Reserve shipment, packed and ready to close.</p>
-    -->
-
     <div class="shipment-grid">
 
-      <div>
-        <figure class="pack-card">
-          <svg class="door-mark pack-card-mark" aria-hidden="true"><use href="#door-mark"/></svg>
-          <p class="card-greeting" id="cardGreeting">Dear friend,</p>
-          <p class="card-note" id="cardNote"></p>
-          <div class="card-rule"></div>
-          <p class="card-sign">Cecilia</p>
-        </figure>
-
-        <div class="pack-personalise">
-          <p>Read the card for another wine &mdash; or put your name on it</p>
-          <label class="sr-only" for="packName">Your first name</label>
-          <input type="text" id="packName" class="pack-name" maxlength="22"
-                 placeholder="Your first name" autocomplete="given-name">
-          <div class="pack-wines" id="packWines" role="group" aria-label="Choose a wine to read its card">
-            <button type="button" class="pack-wine" data-wine="cabernet" aria-pressed="true">Cabernet</button>
-            <button type="button" class="pack-wine" data-wine="malbec" aria-pressed="false">Malbec</button>
-            <button type="button" class="pack-wine" data-wine="pinot" aria-pressed="false">Pinot Noir</button>
-            <button type="button" class="pack-wine" data-wine="sangiovese" aria-pressed="false">Sangiovese</button>
-            <button type="button" class="pack-wine" data-wine="zinfandel" aria-pressed="false">Zinfandel</button>
-            <button type="button" class="pack-wine" data-wine="sauvignon-blanc" aria-pressed="false">Sauvignon Blanc</button>
-            <button type="button" class="pack-wine" data-wine="rose" aria-pressed="false">Ros&eacute;</button>
-          </div>
-        </div>
-      </div>
+      <figure class="shipment-photo-frame">
+        <img class="shipment-photo" src="images/shipment-box.webp" width="1337" height="800"
+             alt="A Warm Springs Cellar shipment: three bottles in a moulded pulp tray inside a corrugated case, the lid printed with the winery&rsquo;s mark"
+             loading="lazy">
+        <figcaption class="shipment-caption">A Founder&rsquo;s Reserve shipment, packed and ready to close.</figcaption>
+      </figure>
 
       <div>
         <ol class="shipment-steps">
@@ -3113,7 +2958,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   var revealTargets = $$([
     '.founder-card', '.section-eyebrow', '.section-title', '.section-prose',
     '.detail-item', '.philosophy-visual', '.wine-card', '.tier-card',
-    '.exp-item', '.testimonial', '.faq-item', '.shipment-steps li', '.pack-card', '.shipment-photo',
+    '.exp-item', '.testimonial', '.faq-item', '.shipment-steps li', '.shipment-photo',
     '.patron',
     '.quote-inner', '.join-form'
   ].join(','));
@@ -3215,75 +3060,6 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       }
     });
   });
-
-  /* ─── The shipment card ──────────────────────────────────
-     Writes the visitor's own name onto the card, and swaps
-     the note for whichever wine they pick. */
-  var CARDS = {
-    cabernet: "The 2021 came off the Wolf Run ridge, where the mountain gives " +
-              "Cabernet its weight. We blended it by taste — a little Merlot, " +
-              "Franc and Syrah — until it tasted like the place. Open it an " +
-              "hour early. Only 1,440 bottles.",
-    malbec: "Cecilia's grape, on a west-facing slope in Fountain Grove. Whole " +
-            "berries, gentle cold press, nothing hurried. Dark and generous, " +
-            "all blackberry. We made 588 bottles, so this one is scarce.",
-    pinot: "Four Palms, in the Russian River. The fog does most of the work " +
-           "here — it comes in off the Pacific most summer mornings and keeps " +
-           "everything slow. Delicate, aromatic. Serve it slightly chilled.",
-    sangiovese: "Alpicella sits near the top of Hood Mountain on sparse volcanic " +
-                "soil, facing the ocean. Ripe strawberry that keeps expanding " +
-                "across the palate. Pair it with anything. Wine is social glue.",
-    zinfandel: "Block 7 at Los Chamizal — Peter Haywood's vineyard, and Robert's " +
-               "favourite of the eight blocks Peter marked out. Bold, complex, " +
-               "and the flavour goes on forever. It will knock your socks off.",
-    'sauvignon-blanc': "Peterson, where the valley narrows and the fog stays " +
-                       "past nine. Picked in the dark, pressed whole-cluster, " +
-                       "nothing of the press in it. Cold, but not straight " +
-                       "from the back of the fridge.",
-    rose: "Syrah off Deerfield, picked early and for this wine rather than " +
-          "bled off a red. Four hours on the skins, then pressed. It wants " +
-          "food on the table, not a sunset."
-  };
-
-  var cardGreeting = $('#cardGreeting');
-  var cardNote = $('#cardNote');
-  var packName = $('#packName');
-  var packWines = $('#packWines');
-  var currentWine = 'cabernet';
-
-  function renderCard() {
-    var name = (packName && packName.value || '').trim();
-    cardGreeting.textContent = name ? 'Dear ' + name + ',' : 'Dear friend,';
-    cardNote.textContent = CARDS[currentWine];
-  }
-
-  if (cardNote) {
-    renderCard();
-
-    packName.addEventListener('input', renderCard);
-
-    packWines.addEventListener('click', function (e) {
-      var btn = e.target.closest ? e.target.closest('.pack-wine') : null;
-      if (!btn) return;
-      currentWine = btn.getAttribute('data-wine');
-      $$('.pack-wine', packWines).forEach(function (b) {
-        b.setAttribute('aria-pressed', String(b === btn));
-      });
-      renderCard();
-    });
-
-    // A name typed into the request form belongs on the card too.
-    var formFirst = $('#f-first');
-    if (formFirst) {
-      formFirst.addEventListener('input', function () {
-        if (!packName.value.trim()) {
-          cardGreeting.textContent = formFirst.value.trim()
-            ? 'Dear ' + formFirst.value.trim() + ','
-            : 'Dear friend,';
-        }
-      });
-    }
-  }
 
   /* ─── Sticky join banner ─────────────────────────────────
      Shows once the hero is behind the visitor, and gets out
