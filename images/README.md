@@ -8,7 +8,8 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `cellar-exterior.jpeg`   | The winery building with the arched wooden doors         | Hero — faded behind the headline          |
 | `robert_rex.jpg`         | Robert Rex in the vineyard, straw hat, holding a bottle  | Our Winemaker — the consultant band       |
 | `cecilia-valdivia.jpeg`  | Cecilia Valdivia leaning on a barrel, glass in hand      | Our Winemaker — the card                  |
-| `richard-deane.jpg`      | Richard Deane — the one of him with Cecilia and Robert   | Our Winemaker — the Richard Deane band    |
+| `richard-deane.jpg`      | Generated: Richard with Cecilia and Robert, retouched    | Our Winemaker — the Richard Deane band    |
+| `richard-deane-source.jpg` | The phone shot it is made from, untouched              | Nothing — the input, kept for reruns      |
 | `door-mark.svg`          | Generated: the winery's mark, from the label artwork     | Inlined once in the page, used five times |
 | `favicon-small.svg`      | Generated: the mark's solid cut                         | The tab icon                              |
 | `favicon.svg`            | Generated: the full mark in wine, standalone            | Source for the touch icon; general use    |
@@ -25,16 +26,32 @@ Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
 third. The hero image is cropped wide and full-bleed.
 
-**`richard-deane.jpg` is not here yet.** The band that introduces him is
-written and live; it simply drops its photo frame and centres the prose until
-the file exists, so nothing 404s and nothing looks broken in the meantime. Drop
-the photograph in under that name and it appears, cropped 4:5 with the faces in
-the upper third — the evening shot of the three of them crops well if it is
-taken in on Richard, or on Robert and Richard together.
+**`richard-deane.jpg` is the one picture that is built rather than placed.**
 
-One thing to check before it ships: in that photograph both Robert and Richard
-are wearing jackets with another winery's name embroidered on them, legible at
-full size. A crop above the chest avoids it.
+```bash
+python3 tools/retouch_patron.py           # -> images/richard-deane.jpg
+python3 tools/retouch_patron.py --boxes   # the same, with its rectangles drawn
+```
+
+The only photograph of the three of them together is a phone shot taken in the
+dark at the end of an evening: underexposed, noisy, orange, and with another
+winery's name embroidered on two of the jackets. That embroidery is why the
+band stood without a photo for so long — the way around it was a crop above
+the chest, which loses the arm around the shoulder, and the arm around the
+shoulder is the reason the photograph is worth having.
+
+So the marks come off instead. Both sit on flat near-black fleece, so the
+fill is not invention: the fabric around each one diffuses inwards until the
+hole closes, which on a surface with no detail is what the thread was
+covering, and the grain measured just outside goes back on top so the patch
+is as noisy as its neighbours. Then white balance off Robert's shirt at two
+thirds' strength, an exposure curve that lifts the people and leaves the sky
+at its own level, chroma denoise hard and luma barely, and a 4:5 crop with
+the faces high. `--boxes` writes a copy with the rectangles and the crop
+drawn on it, which is how to re-aim any of them.
+
+The untouched original stays as `richard-deane-source.jpg` so the retouch can
+be run again, and neither it nor the tool ships in the container.
 
 The group photo of the team has no slot yet — the band that displayed it was
 removed because the file never landed here and it 404'd on every page load.

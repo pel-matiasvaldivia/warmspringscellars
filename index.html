@@ -501,9 +501,6 @@ body {
 
 /* No photograph in the build: the prose stands on its own rather than
    leaving an empty frame where a face should be. */
-.patron--nophoto { grid-template-columns: 1fr; max-width: 760px; margin-inline: auto; }
-.patron--nophoto .patron-photo { display: none; }
-
 .patron-name { font-size: 1.75rem; margin: 0.35rem 0 0.25rem; }
 
 .patron-text p + p { margin-top: 1.1rem; }
@@ -2355,18 +2352,12 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       </div>
     </div>
 
-    <div class="patron patron--nophoto">
-      <!-- When images/richard-deane.jpg lands, drop the patron--nophoto class
-           above and uncomment this frame. The element is left out rather than
-           pointed at a file that is not there: an <img> with no file still
-           asks for it, and a 404 on every page load is what cost the team
-           photograph its band.
+    <div class="patron">
       <div class="patron-photo">
         <img src="images/richard-deane.jpg"
              alt="Richard Deane with Robert Rex and Cecilia Valdivia at the estate"
              loading="lazy">
       </div>
-      -->
       <div class="patron-text">
         <p class="section-eyebrow">The Third Chair</p>
         <h3 class="serif patron-name">Richard Deane</h3>
