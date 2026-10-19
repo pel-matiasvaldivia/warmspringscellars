@@ -8,8 +8,7 @@ directly and degrades gracefully (placeholder art) if a file is missing.
 | `cellar-exterior.jpeg`   | The winery building with the arched wooden doors         | Hero — faded behind the headline          |
 | `robert_rex.jpg`         | Robert Rex in the vineyard, straw hat, holding a bottle  | Our Winemaker — the consultant band       |
 | `cecilia-valdivia.jpeg`  | Cecilia Valdivia leaning on a barrel, glass in hand      | Our Winemaker — the card                  |
-| `richard-deane.jpg`      | Generated: Richard with Cecilia and Robert, retouched    | Our Winemaker — the Richard Deane band    |
-| `richard-deane-source.jpg` | The phone shot it is made from, untouched              | Nothing — the input, kept for reruns      |
+| `richard-deane.jpg`      | Richard Deane with Cecilia and Robert, at the estate     | Our Winemaker — the Richard Deane band    |
 | `door-mark.svg`          | Generated: the winery's mark, from the label artwork     | Inlined once in the page, used five times |
 | `favicon-small.svg`      | Generated: the mark's solid cut                         | The tab icon                              |
 | `favicon.svg`            | Generated: the full mark in wine, standalone            | Source for the touch icon; general use    |
@@ -26,43 +25,23 @@ Recommended: JPEG, sRGB, ~2000px on the long edge, under 400 KB each. The
 founder photos are cropped to a 4:5 portrait, so keep faces near the upper
 third. The hero image is cropped wide and full-bleed.
 
-**`richard-deane.jpg` is the one picture that is built rather than placed.**
+**`richard-deane.jpg` arrives finished and is placed like the rest**, which
+is worth a note only because for a while it did not.
 
-```bash
-python3 tools/retouch_patron.py           # -> images/richard-deane.jpg
-python3 tools/retouch_patron.py --boxes   # the same, with its rectangles drawn
-```
+The first frame of the three of them was a phone shot taken in the dark at
+the end of an evening: underexposed, noisy, orange, with another winery's
+name embroidered on two of the jackets, and with Richard's hand swept into a
+smear by the exposure. It was retouched here — the embroidery diffused out,
+the exposure lifted, the blurred hand let down into shadow because no
+sharpening recovers fingers that were never recorded. The winery then
+supplied a cleaned-up frame of the same moment, already exposed, already
+square to 4:5, with no embroidery visible and the hand sharp, so the retouch
+and its tool came out: the right amount of machinery for a photograph that
+no longer needs any is none.
 
-The only photograph of the three of them together is a phone shot taken in the
-dark at the end of an evening: underexposed, noisy, orange, and with another
-winery's name embroidered on two of the jackets. That embroidery is why the
-band stood without a photo for so long — the way around it was a crop above
-the chest, which loses the arm around the shoulder, and the arm around the
-shoulder is the reason the photograph is worth having.
-
-So the marks come off instead. Both sit on flat near-black fleece, so the
-fill is not invention: the fabric around each one diffuses inwards until the
-hole closes, which on a surface with no detail is what the thread was
-covering, and the grain measured just outside goes back on top so the patch
-is as noisy as its neighbours. Then white balance off Robert's shirt at two
-thirds' strength, an exposure curve that lifts the people and leaves the sky
-at its own level, chroma denoise hard and luma barely, and a 4:5 crop with
-the faces high.
-
-One thing is not fixed, because it cannot be: Richard's hand, the one holding
-the glass, swept during the exposure. The fingers were never recorded, so
-sharpening has nothing to work on and deconvolution — tried, with linear
-motion kernels at several lengths and angles — comes back rimmed and ringing,
-because the blur is a hand turning rather than a straight slide. What the
-tool does instead is let it down into shadow. It was the brightest thing in
-the lower half of a dark frame, which is why the eye found it second; at the
-tone around it, it reads as a hand in shadow and the faces get the attention
-back. The mask is the hand, not a shape drawn over it — in that corner skin
-is the only thing both warm and bright. `--boxes` writes a copy with the rectangles and the crop
-drawn on it, which is how to re-aim any of them.
-
-The untouched original stays as `richard-deane-source.jpg` so the retouch can
-be run again, and neither it nor the tool ships in the container.
+The file is used exactly as supplied, not re-encoded. It is already the 4:5
+the patron frames want, so nothing crops it, and a second pass through a
+JPEG encoder would only cost a little of what it came with.
 
 The group photo of the team has no slot yet — the band that displayed it was
 removed because the file never landed here and it 404'd on every page load.
