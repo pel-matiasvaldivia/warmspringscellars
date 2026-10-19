@@ -47,7 +47,18 @@ covering, and the grain measured just outside goes back on top so the patch
 is as noisy as its neighbours. Then white balance off Robert's shirt at two
 thirds' strength, an exposure curve that lifts the people and leaves the sky
 at its own level, chroma denoise hard and luma barely, and a 4:5 crop with
-the faces high. `--boxes` writes a copy with the rectangles and the crop
+the faces high.
+
+One thing is not fixed, because it cannot be: Richard's hand, the one holding
+the glass, swept during the exposure. The fingers were never recorded, so
+sharpening has nothing to work on and deconvolution — tried, with linear
+motion kernels at several lengths and angles — comes back rimmed and ringing,
+because the blur is a hand turning rather than a straight slide. What the
+tool does instead is let it down into shadow. It was the brightest thing in
+the lower half of a dark frame, which is why the eye found it second; at the
+tone around it, it reads as a hand in shadow and the faces get the attention
+back. The mask is the hand, not a shape drawn over it — in that corner skin
+is the only thing both warm and bright. `--boxes` writes a copy with the rectangles and the crop
 drawn on it, which is how to re-aim any of them.
 
 The untouched original stays as `richard-deane-source.jpg` so the retouch can

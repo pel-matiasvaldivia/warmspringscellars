@@ -30,6 +30,11 @@ Then the frame itself:
     barely — enough to take the speckle out of the shadows, not enough to
     cost the frame its detail. It was costing it: at a quarter of the frame's
     width the hand on Richard's shoulder had lost its knuckles.
+  * one hand let down into shadow. Richard's, holding the glass, swept
+    during the exposure and is a smear; it cannot be sharpened back and
+    deconvolution makes it worse. Darkened towards what surrounds it, it
+    stops being the brightest thing in the lower half of the frame and
+    reads as a hand in shadow.
   * a 4:5 crop with the three faces in the upper third, which is the shape
     and the placement the page's patron frames expect.
 
@@ -70,6 +75,18 @@ LIFT_FROM, LIFT_TO = 0.014, 0.055
 CHROMA_BLUR = 3.2
 LUMA_BLUR = 0.7
 LUMA_KEEP = 0.88               # how much of the original luma survives it
+
+# Richard's hand, the one holding the glass, swept during the exposure: it is
+# a smear in the file and no amount of sharpening puts fingers back, because
+# the fingers were never recorded. Deconvolution was tried and is worse —
+# the blur is a hand turning, not a straight slide, so a motion kernel
+# returns a rimmed and ringing blob. What is left is to stop it shouting.
+# It is the brightest thing in the lower half of a dark frame, which is why
+# the eye goes to it second; let down towards the tone around it, it reads as
+# a hand in shadow instead of a mistake, and the faces get the attention back.
+# The box is generous because the mask does the shaping, not the box.
+HAND = (545, 1090, 835, 1310)
+SHADE = 0.45                   # how far down; past about 0.6 it reads as a hole
 
 # The right edge is where it is for Robert's hand on Richard's shoulder: a
 # tighter frame cut the little finger and the wedding ring off at the fingers,
@@ -167,6 +184,24 @@ def denoised(img: np.ndarray) -> np.ndarray:
     return np.asarray(Image.merge("YCbCr", (y, cb, cr)).convert("RGB")).astype(float)
 
 
+def shaded(img: np.ndarray) -> np.ndarray:
+    """Let the blurred hand down into shadow, in place of fixing it.
+
+    The mask is the hand rather than a shape drawn over it: in that corner of
+    the frame skin is the only thing both warm and bright, so selecting on
+    those two and feathering the result follows the fingers and fades out
+    where they do. A rectangle would have shown its corners.
+    """
+    x0, y0, x1, y1 = HAND
+    patch = img[y0:y1, x0:x1]
+    warm = np.clip((patch[..., 0] - patch[..., 2]) / 28.0, 0, 1)
+    bright = np.clip((patch.mean(axis=2) - 42) / 46.0, 0, 1)
+    soft = np.asarray(Image.fromarray((np.clip(warm * bright, 0, 1) * 255).astype(np.uint8), "L")
+                      .filter(ImageFilter.GaussianBlur(9))).astype(float) / 255.0
+    img[y0:y1, x0:x1] = patch * (1 - SHADE * soft[..., None])
+    return img
+
+
 def main() -> None:
     src = Image.open(SRC).convert("RGB")
     img = np.asarray(src).astype(float).copy()
@@ -185,6 +220,7 @@ def main() -> None:
     img = denoised(exposed(balanced(img)))
     for box in LOGOS:
         diffuse(img, box)
+    img = shaded(img)
 
     out = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)).crop(CROP)
     out = out.filter(ImageFilter.UnsharpMask(**SHARPEN))
