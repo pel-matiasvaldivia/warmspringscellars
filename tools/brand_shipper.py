@@ -3,15 +3,15 @@
 
 The supplied frame is a studio shot of a packed case — lid up, three bottles
 standing in a moulded pulp tray — and every printed thing in it belongs to
-another winery: the mark and name on the lid, the labels on the bottles, a
-line of copy down the open flap, and the carrier label on the front. All of
-it comes off and ours goes on. Nothing else in the frame is touched: the
+another winery, or ours misspelled: the mark and name on the lid, the three
+labels, and the carrier label on the front. All of it comes off and ours
+goes on. Nothing else in the frame is touched: the
 carton, the pulp, the glass, the capsules, the barrels behind and the light
 stay exactly as photographed.
 
 Four jobs, in the order they are done:
 
-  1. The kraft is cleared where it carries print. Corrugated board is striped
+  1. The lid is cleared where it carries print. Corrugated board is striped
      vertically and a diffusion fill would smear those stripes into a bruise,
      so each column is rebuilt from the clean board directly above and below
      it — which is the same board, at the same brightness, with the same
@@ -62,42 +62,36 @@ def wrap_of(label_w_in: float) -> float:
     the bottle's circumference. Not a taste decision."""
     return math.radians(min(label_w_in / (math.pi * BOTTLE_DIAMETER_IN) * 180.0, 78.0))
 
-# What the stock does to the light that falls on it. The ground of these
-# labels is matte near-black and sits below the glass it is stuck to; the
-# white line work is what lifts off it. Solved from those two ends — ground
-# at three quarters of the glass, full ink at two and a half times — rather
-# than dialled, because the artwork's own ground is not black but 0.14.
-PAPER_FLOOR = 0.43
-INK_GAIN = 2.26
-# A film label is one ink straight on the glass, so what it does is multiply.
-INK_ON_GLASS = 1.35
-# How much of the glass's own specular streak a label carries over.
-SPECULAR = 0.45
-# And how much dimmer the bottom of a label is than its top, in this light.
-FALLOFF = 0.30
-# The light is read at the shoulder, which is the brightest part of a bottle
-# in this frame. A label hangs on the body, which is not.
-SHOULDER_BIAS = 0.80
+# How bright the ink comes out in this frame's light. White line work on dark
+# glass reads a little under paper white; the brand's magenta goes down at its
+# own value and stays there.
+INK_LIFT = 0.88
+# The artwork is three times the resolution it ends up at, so a hairline
+# arrives as a half-covered pixel and the glass drinks it. Same correction
+# tools/label_bottles.py makes, for the same reason.
+INK_GAMMA = 0.78
+# How much of the glass's own specular streak the print carries over. Ink
+# fired onto glass lies under the same gloss, so it takes most of it; it is
+# not quite all, because the streak moves with the surface normal and the ink
+# has thickness.
+SPECULAR = 0.80
+# Which bottles are flint, and where bare glass sits in each kind's histogram.
+FLINT = {"sauvignon-blanc", "rose"}
+GLASS_AT_FLINT = 78.0
+GLASS_AT_DARK = 22.0
 
 # ── the carton ───────────────────────────────────────────────────────────────
 # Boxes of board to clear, each (x0, y0, x1, y1): the other winery's lockup on
 # the lid, and the line of copy down the open left flap.
 KRAFT_CLEAR = [
-    (470, 12, 870, 198),           # lid: mark, name and strapline
+    (570, 8, 790, 202),            # lid: the mark and the name under it
 ]
-# The flap's line of copy runs diagonally and the flap itself is a
-# parallelogram, so no rectangle both covers the type and stays on the board.
-# There the ink is found instead of bounded, and each run of it is closed from
-# the clean board either side on its own row — which works because that face
-# is smooth where the lid is striped.
-FLAP_REGION = (150, 196, 320, 520)
-FLAP_INK = 0.80                    # darker than this much of the local board
 CLEAN_BAND = 26                    # rows of good board read above and below
 
 # Where our lockup goes on the lid. The lid is very nearly square to the
 # camera — its edges run vertical and its fold runs level — so a rectangle
 # carries it and a trapezoid would only invent a perspective that is not there.
-LID_BOX = (675, 16, 182)           # centre x, top y, height; width follows the art
+LID_BOX = (677, 14, 184)           # centre x, top y, height; width follows the art
 # What print does to kraft: it darkens the board rather than covering it, so
 # the corrugation still reads through the ink. Measured off the frame's own
 # print against the board beside it.
@@ -154,28 +148,18 @@ BOTTLES = [
     # one is behind the carton's front wall, so `base` is a point on the axis
     # at that wall and everything is measured up from there; what falls below
     # it is clipped rather than painted.
-    #
-    # The left bottle is a Burgundy and wears the Pinot's shorter label; the
-    # right one is flint glass and wears the Sauvignon Blanc's film.
-    #
-    # The labels sit a touch higher than they would on a bottle standing on a
-    # table, because the carton's front wall crosses these ones at the chest.
-    # Hung where the glass alone would put them, the only part above the wall
-    # is the gable — the winery's name and the wine's are both under the
-    # cardboard, and a shipper photograph whose job is to show whose wine it
-    # is would show neither.
-    Bottle("pinot", base=(470, 648), shoulder=(466, 395),
-           half_base=60.0, half_shoulder=58.0,
-           label_from_in=0.67, label_w_in=3.75, label_h_in=4.50,
-           light_from_in=5.4, light_to_in=6.2),
-    Bottle("cabernet", base=(679, 645), shoulder=(673, 410),
-           half_base=66.0, half_shoulder=64.0,
-           label_from_in=-1.12, label_w_in=3.73, label_h_in=6.23,
-           light_from_in=5.3, light_to_in=6.1),
-    Bottle("sauvignon-blanc", base=(888, 646), shoulder=(880, 400),
-           half_base=62.0, half_shoulder=60.0,
-           label_from_in=-0.94, label_w_in=3.75, label_h_in=6.25,
-           light_from_in=5.5, light_to_in=6.3),
+    Bottle("cabernet", base=(468, 648), shoulder=(476, 400),
+           half_base=58.0, half_shoulder=53.0,
+           label_from_in=-0.20, label_w_in=3.73, label_h_in=6.23,
+           light_from_in=6.2, light_to_in=7.0),
+    Bottle("sauvignon-blanc", base=(676, 648), shoulder=(676, 400),
+           half_base=64.0, half_shoulder=64.0,
+           label_from_in=-0.60, label_w_in=3.75, label_h_in=6.25,
+           light_from_in=5.8, light_to_in=6.6),
+    Bottle("zinfandel", base=(871, 648), shoulder=(862, 400),
+           half_base=59.0, half_shoulder=53.5,
+           label_from_in=-0.20, label_w_in=3.74, label_h_in=6.23,
+           light_from_in=6.3, light_to_in=7.1),
 ]
 
 GRID = 520          # resolution of the unwrapped patch, along the label's height
@@ -268,17 +252,12 @@ def light_profile(photo: np.ndarray, quad, gw: int, clear: bool = False,
     # it does not, and carrying the specular streak over at full strength is
     # what turns a label into a chrome band.
     mean = across.mean(axis=0, keepdims=True)
-    return (mean + (across - mean) * (1.0 if clear else SPECULAR)) * SHOULDER_BIAS
+    return mean + (across - mean) * (1.0 if clear else SPECULAR)
 
 
-def paint(photo: np.ndarray, quad, wine: str | None, wrap: float = 0.0,
-          light: np.ndarray | None = None, supersample: int = 2):
-    """Repaint one band of a bottle.
-
-    With a wine, the band gets that label wrapped round the cylinder. Without
-    one, it gets nothing but the light that was already there — which is how the
-    other winery's print is wiped without inventing any glass.
-    """
+def paint(photo: np.ndarray, quad, wine: str, wrap: float,
+          light: np.ndarray, glass_at: float, supersample: int = 2):
+    """Print one wine's artwork around one bottle."""
     xs = [p[0] for p in quad]; ys = [p[1] for p in quad]
     along = math.dist(quad[0], quad[3])
     across = math.dist(quad[0], quad[1])
@@ -306,71 +285,64 @@ def paint(photo: np.ndarray, quad, wine: str | None, wrap: float = 0.0,
         idx = np.linspace(0, light.shape[0] - 1, gw)
         across = np.stack([np.interp(idx, np.arange(light.shape[0]), light[:, c])
                            for c in range(3)], axis=1)
-        # The light was read at the shoulder and the label hangs below it, so
-        # it carries the same falloff down the bottle the rest of the frame has.
-        down = np.linspace(1.0, 1.0 - FALLOFF, gh)[:, None, None]
-        illum = across[None, :, :] * down
-    new = illum.copy()
+        illum = np.repeat(across[None, :, :], gh, axis=0)
+        # Read at the shoulder for its shape, levelled to the glass under the
+        # label for its brightness. The shoulder is the brightest part of a
+        # bottle in this frame, and a profile carried down from it unscaled
+        # made the Sauvignon Blanc's band a khaki card on a straw bottle.
+        # Which percentile is bare glass depends on the bottle. On the flint
+        # one the glass is the bright thing and the old print is dark, so it
+        # is high up; on the dark two the glass is the dark thing and the old
+        # print is bright, so it is low down. Reading the same percentile for
+        # both is what turned the reds metallic magenta: at 60 on a dark
+        # bottle you are measuring the other winery's doors.
+        here = np.percentile(patch.reshape(-1, 3), glass_at, axis=0)
+        illum *= here / np.maximum(np.median(illum.reshape(-1, 3), axis=0), 1e-6)
     mask = np.ones((gh, gw))
 
-    if wine is not None:
+    if True:
+        # Resized before sampling: the artwork is 1119x1869 going into a patch a
+        # tenth that size, and point-sampling it there is how fine type turns to
+        # mush. Wider than the patch because the wrap compresses the edges.
         # Resized before sampling: the artwork is 1119x1869 going into a patch a
         # tenth that size, and point-sampling it there is how fine type turns to
         # mush. Wider than the patch because the wrap compresses the edges.
         src = Image.open(LABELS.format(wine))
-        film = src.mode == "RGBA"
-        if film:
-            src = src.getchannel("A").convert("L")
+        if src.mode == "RGBA":
+            # A film: one ink, and its alpha says where.
+            cover = np.asarray(src.getchannel("A").resize((gw * 2, gh), Image.LANCZOS))
+            cover = cover.astype(float)[..., None] / 255.0
+            pigment = np.broadcast_to(np.array(brandmark.INK, float),
+                                      (*cover.shape[:2], 3)).copy()
         else:
-            src = src.convert("RGB")
-        label = np.asarray(src.resize((gw * 2, gh), Image.LANCZOS)).astype(float)
-        if label.ndim == 2:
-            label = label[..., None]
-        lh, lw = label.shape[:2]
+            sheet = np.asarray(src.convert("RGB")).astype(float)
+            c, pig = brandmark.as_print(sheet)
+            cover = np.asarray(Image.fromarray((c * 255).astype(np.uint8), "L")
+                               .resize((gw * 2, gh), Image.LANCZOS)).astype(float)[..., None] / 255.0
+            pigment = np.asarray(Image.fromarray(np.clip(pig, 0, 255).astype(np.uint8))
+                                 .resize((gw * 2, gh), Image.LANCZOS)).astype(float)
+        lh, lw = cover.shape[:2]
 
         # A column at screen offset s sits at angle asin(s), so the artwork
-        # compresses towards the silhouette exactly as paper on glass does.
+        # compresses towards the silhouette exactly as print on glass does.
         offset = np.clip(2 * ss - 1, -1, 1)
         theta = np.arcsin(np.clip(offset * math.sin(wrap), -1, 1))
         u = (theta / wrap + 1) / 2
-        art = sample(label, u * (lw - 1), vv * (lh - 1)) / 255.0
+        laid = sample(cover, u * (lw - 1), vv * (lh - 1))[..., :1] ** INK_GAMMA
+        ink = sample(pigment, u * (lw - 1), vv * (lh - 1))
 
-        if film:
-            # A clear-film label prints onto the glass: the artwork's ground
-            # carries no ink, so between the strokes the bottle is still the
-            # bottle. Only the coverage lands, in the brand's one colour.
-            cover = art[..., :1]
-            ink = np.array(brandmark.INK, float) / 255.0
-            new = illum * (1 - cover) + illum * ink * INK_ON_GLASS * cover
-        else:
-            new = illum * (PAPER_FLOOR + INK_GAIN * art)
+        # Printed, not pasted: the drawing's ground carries no ink at all, so
+        # between the strokes the bottle goes on being the bottle. These
+        # bottles are decorated directly — it is what the wines are known for
+        # and what the frame shows — so there is no panel, no cut edge and no
+        # shadow of one.
+        new = illum * (1 - laid) + ink * INK_LIFT * laid
 
-        # The cut edge of the stock catches the light the glass does not. A
-        # film has no cut edge — it is printed, not applied — so it gets none.
-        edge = 0 if film else max(int(gw * 0.025), 1)
-        lip = np.zeros((gh, gw))
-        if edge:
-            lip[:, :edge] = 1.0
-            lip[:, -edge:] = 1.0
-            hem = max(int(gh * 0.006), 1)
-            lip[:hem, :] = 1.0
-            lip[-hem:, :] = 1.0
-            new = new + lip[..., None] * illum * 0.30
-
-        # Feather only where the paper meets the glass along the sides; the top
-        # and bottom edges of a label are cut, not faded.
-        soft = max(int(gw * 0.012), 2)
+        # Feathered only where the print meets the silhouette; the top and
+        # bottom of the artwork simply stop, as ink does.
+        soft = max(int(gw * 0.035), 3)
         mask[:, :soft] *= np.linspace(0, 1, soft)
         mask[:, -soft:] *= np.linspace(1, 0, soft)
-    else:
-        # A wipe has to disappear into what surrounds it, so it feathers all round.
-        fx_ = max(int(gw * 0.035), 2)
-        fy_ = max(int(gh * 0.03), 2)
-        mask[:, :fx_] *= np.linspace(0, 1, fx_)
-        mask[:, -fx_:] *= np.linspace(1, 0, fx_)
-        mask[:fy_] *= np.linspace(0, 1, fy_)[:, None]
-        mask[-fy_:] *= np.linspace(1, 0, fy_)[:, None]
-
     # ── back into the frame ──
     to_unit = np.linalg.inv(to_frame)
     x0, x1 = int(math.floor(min(xs))) - 2, int(math.ceil(max(xs))) + 2
@@ -433,46 +405,6 @@ def clear_kraft(img: np.ndarray, box, band: int = CLEAN_BAND) -> None:
     soft[:, :fx] *= np.linspace(0, 1, fx)
     soft[:, -fx:] *= np.linspace(1, 0, fx)
     img[y0:y1, x0:x1] = img[y0:y1, x0:x1] * (1 - soft[..., None]) + patch * soft[..., None]
-
-
-def clear_ink(img: np.ndarray, region, threshold: float = FLAP_INK) -> int:
-    """Close every run of print in a region from the board on either side.
-
-    Finds the ink rather than being told where it is: anything a good bit
-    darker than the local board is print, and each horizontal run of it is
-    filled from the first clean pixel to its left and its right. Rows are the
-    right direction here — this face of the carton is smooth, and the type
-    runs diagonally across it, so a run is short and its ends are near.
-    """
-    x0, y0, x1, y1 = region
-    patch = img[y0:y1, x0:x1]
-    lum = patch.mean(axis=2)
-    board = np.asarray(Image.fromarray(lum.astype(np.uint8), "L")
-                       .filter(ImageFilter.GaussianBlur(14))).astype(float)
-    ink = lum < board * threshold
-    # Grown a little: the edge of a letter is half ink and would ring the fill.
-    ink = np.asarray(Image.fromarray((ink * 255).astype(np.uint8), "L")
-                     .filter(ImageFilter.MaxFilter(5))) > 127
-
-    out = patch.copy()
-    for row in range(ink.shape[0]):
-        marked = ink[row]
-        if not marked.any():
-            continue
-        edges = np.flatnonzero(np.diff(np.r_[0, marked.view(np.int8), 0]))
-        for a, b in zip(edges[::2], edges[1::2]):
-            left = patch[row, a - 1] if a > 0 else patch[row, b]
-            right = patch[row, b] if b < ink.shape[1] else patch[row, a - 1]
-            ramp = np.linspace(0, 1, b - a)[:, None]
-            out[row, a:b] = left * (1 - ramp) + right * ramp
-
-    # Softened back in, so the repaired runs do not sit crisper than the board.
-    blur = np.asarray(Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
-                      .filter(ImageFilter.GaussianBlur(0.6))).astype(float)
-    weight = np.asarray(Image.fromarray((ink * 255).astype(np.uint8), "L")
-                        .filter(ImageFilter.GaussianBlur(1.6))).astype(float)[..., None] / 255.0
-    img[y0:y1, x0:x1] = patch * (1 - weight) + blur * weight
-    return int(ink.sum())
 
 
 def lockup() -> np.ndarray:
@@ -556,7 +488,6 @@ def debug_overlay(photo: np.ndarray) -> Image.Image:
     d = ImageDraw.Draw(img)
     for box in KRAFT_CLEAR:
         d.rectangle(box, outline=(255, 90, 90), width=2)
-    d.rectangle(FLAP_REGION, outline=(255, 160, 60), width=2)
     for box in CARRIER_CLEAR:
         d.rectangle(box, outline=(90, 200, 255), width=1)
     cx, top, height = LID_BOX
@@ -586,15 +517,13 @@ def main() -> None:
     board = photo.copy()
     for box in KRAFT_CLEAR:
         clear_kraft(board, box)
-    wiped = clear_ink(board, FLAP_REGION)
-    print(f"  flap: {wiped} pixels of print closed")
     print_lid(board)
     write_carrier(board)
 
     keep = below_carton(photo.shape)[..., None]
 
-    def blend(target, source, quad, wine, wrap, blur, light=None):
-        new, alpha = paint(source, quad, wine, wrap, light)
+    def blend(target, source, quad, wine, wrap, blur, light, glass_at):
+        new, alpha = paint(source, quad, wine, wrap, light, glass_at)
         a = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8))
                        .filter(ImageFilter.GaussianBlur(blur))).astype(float)[..., None] / 255.0
         # Nothing is painted onto the carton standing in front of the bottles.
@@ -611,11 +540,11 @@ def main() -> None:
         quad = span_corners(bottle, bottle.label_from_in,
                             bottle.label_from_in + bottle.label_h_in)
         glass = span_corners(bottle, bottle.light_from_in, bottle.light_to_in)
-        film = Image.open(LABELS.format(bottle.wine)).mode == "RGBA"
+        flint = bottle.wine in FLINT
         across = light_profile(board, glass,
-                               max(int(math.dist(quad[0], quad[1]) * 2), 8), clear=film)
-        result = blend(result, board, quad, bottle.wine,
-                       wrap_of(bottle.label_w_in), 0.5, across)
+                               max(int(math.dist(quad[0], quad[1]) * 2), 8), clear=flint)
+        result = blend(result, board, quad, bottle.wine, wrap_of(bottle.label_w_in),
+                       0.5, across, GLASS_AT_FLINT if flint else GLASS_AT_DARK)
         print(f"  {bottle.wine:16s} relabelled")
 
     out = Image.fromarray(np.clip(result, 0, 255).astype(np.uint8))
