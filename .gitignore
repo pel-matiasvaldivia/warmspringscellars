@@ -2,8 +2,6 @@
 # (labels/*.ai and images/WarmSpringsCellar*_*.png) are versioned instead.
 images/renders/
 
-# What `python3 tools/brand_shipper.py --debug` draws to check its geometry.
-images/shipment-box-debug.png
 
 # Secrets for the club service. .env.example is the template that is committed.
 .env
