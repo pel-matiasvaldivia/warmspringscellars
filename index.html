@@ -1210,44 +1210,6 @@ body.banner-up .to-top { bottom: 6.2rem; }
   margin-bottom: 0.5rem;
 }
 
-/* ─── TESTIMONIALS ─── */
-.testimonials { background: var(--c-bg-warm); }
-
-.testimonial-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-top: 3rem;
-}
-
-.testimonial {
-  padding: 2rem;
-  border-left: 3px solid var(--c-wine);
-  background: var(--c-card-bg);
-  box-shadow: var(--shadow-card);
-}
-
-.testimonial blockquote {
-  font-size: 0.95rem;
-  color: var(--c-text-secondary);
-  line-height: 1.8;
-  font-style: italic;
-  margin-bottom: 1.25rem;
-}
-
-.testimonial cite {
-  font-style: normal;
-  font-size: 0.78rem;
-  color: var(--c-text-muted);
-}
-
-.testimonial cite strong {
-  color: var(--c-text);
-  font-weight: 500;
-  display: block;
-  margin-bottom: 0.15rem;
-}
-
 /* ─── FAQ ─── */
 .faq { background: var(--c-bg); }
 
@@ -1981,16 +1943,14 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 
 /* ─── Card micro-interactions ─── */
 .tier-card,
-.exp-item,
-.testimonial {
+.exp-item {
   transition:
     transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
     box-shadow 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
     border-color 0.45s;
 }
 
-.tier-card:hover,
-.testimonial:hover {
+.tier-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-card-hover);
 }
@@ -2037,7 +1997,6 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   .hero-photo { transform: none !important; }
   .progress-bar { display: none; }
   .tier-card:hover,
-  .testimonial:hover,
   .exp-item:hover { transform: none; }
 }
 </style>
@@ -2557,37 +2516,6 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   </div>
 </section>
 
-<!-- TESTIMONIALS -->
-<section class="section testimonials" id="testimonials">
-  <div class="section-inner">
-    <p class="section-eyebrow">From Our Members</p>
-    <h2 class="section-title">In Their Words</h2>
-    <div class="testimonial-grid">
-      <div class="testimonial">
-        <blockquote>"I've been on the list since 2015. Every shipment feels like a gift from someone who knows my palate. The harvest dinner alone is worth membership."</blockquote>
-        <cite>
-          <strong>Margaret L.</strong>
-          Founder's Reserve Member, San Francisco
-        </cite>
-      </div>
-      <div class="testimonial">
-        <blockquote>"After years of big-name Napa clubs, Warm Springs reminded me why I fell in love with wine. The scale is human. Cecilia's intuition, and a chemist's counsel behind it &mdash; you taste both in every glass."</blockquote>
-        <cite>
-          <strong>David &amp; Karen R.</strong>
-          Full Case Members, Portland
-        </cite>
-      </div>
-      <div class="testimonial">
-        <blockquote>"The barrel tasting was unforgettable. Cecilia walked us through every barrel, and fed us the best meal we had in Sonoma. The 2021 Cabernet is simply world-class."</blockquote>
-        <cite>
-          <strong>James T.</strong>
-          Founder's Reserve Member, Los Angeles
-        </cite>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- FAQ -->
 <section class="section faq" id="faq">
   <div class="section-inner">
@@ -2958,7 +2886,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   var revealTargets = $$([
     '.founder-card', '.section-eyebrow', '.section-title', '.section-prose',
     '.detail-item', '.philosophy-visual', '.wine-card', '.tier-card',
-    '.exp-item', '.testimonial', '.faq-item', '.shipment-steps li', '.shipment-photo',
+    '.exp-item', '.faq-item', '.shipment-steps li', '.shipment-photo',
     '.patron',
     '.quote-inner', '.join-form'
   ].join(','));
