@@ -76,10 +76,16 @@ yourself if it is worth a personal answer.
 
 ## What this does not do
 
-It does not put the enquiry into the desk. The person still has to fill in
-the form for an application to exist, and until they do there is no record in
-`/admin` and nothing in the audit log. The cure for that is an "add an
-application by hand" screen on the desk, which does not exist yet.
+It does not put the enquiry into the desk by itself. The flow answers the
+sender and tells Cecilia; nothing is written to the database, so until someone
+acts there is no record in `/admin` and nothing in the audit log.
+
+Closing that is a person's job and takes a minute: **Applications → "Add one
+by hand"** on the desk, with *How it reached us* set to **Wrote to the club**.
+The enquiry then sits in the same queue as a request from the site and is
+approved the same way. Worth doing even though the automatic reply has already
+sent them to the form — some people never fill it in, and a row at the desk is
+what stops the lead from living only in an inbox. See §3.1b of OPERATIONS.md.
 
 ## Why the message is written the way it is
 

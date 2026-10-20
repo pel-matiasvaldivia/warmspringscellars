@@ -71,7 +71,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 
 | Pestaña | Para qué |
 | --- | --- |
-| **Applications** | Las solicitudes que llegan del formulario del sitio |
+| **Applications** | Las solicitudes del formulario del sitio, y las cargadas a mano |
 | **Members** | Quién está activo, en pausa o dado de baja |
 | **Orders** | Las órdenes y sus facturas en PDF |
 | **Shipments** | Los envíos, de "listo para empacar" a "entregado" |
@@ -106,6 +106,32 @@ Si la misma persona completa el formulario dos veces mientras su solicitud
 sigue `pending`, **no se duplica la fila**: se trata como la misma solicitud y
 queda anotado el reintento. En la lista se ve una sola, que es lo correcto —
 alguien ansioso no es dos socios.
+
+### 3.1b Alguien que escribió en vez de completar el formulario
+
+Hay gente que escribe a `club@warmspringscellar.com`, llama por teléfono o
+pregunta en la bodega. **"Add one by hand"**, arriba a la derecha de
+**Applications**, los mete en la misma cola: nombre, apellido, mail y estado, y
+el resto opcional. Desde ese momento son una solicitud como cualquier otra —
+pendiente, aprobada, invitación y link de pago. No hay un camino aparte, y
+cargar la fila no le manda nada a esa persona: el mail sale al aprobar, igual
+que para todos.
+
+Tres cosas de esa pantalla conviene saber:
+
+* **Solo se listan los estados habilitados.** Si alguien escribe desde un
+  estado al que la bodega no puede despachar, no hay solicitud que cargar, y es
+  mejor decírselo en la respuesta que descubrirlo al aprobar.
+* **"How it reached us"** es lo que le da sentido a la pantalla. Si se
+  completa, la columna de referidos termina contestando qué puerta trae socios:
+  el correo, el teléfono, la sala de degustación o el sitio.
+* **Nadie entra dos veces.** Si después esa persona completa el formulario por
+  su cuenta mientras la fila sigue pendiente, el sistema devuelve la fila que
+  ya existe. La pantalla también lo avisa si ese mail ya tiene una abierta.
+
+En el registro de la ficha queda `entered_by_hand` con el usuario que estaba
+conectado, al lado del `received` de siempre, así una fila cargada en el
+escritorio nunca se confunde con una que produjo el sitio.
 
 ### 3.2 Aprobar o declinar
 

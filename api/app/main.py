@@ -343,6 +343,72 @@ def admin_applications(request: Request, actor: str = Depends(require_admin)) ->
     return admin_page(request, "applications.html", "applications", rows=rows)
 
 
+# How a hand-entered enquiry reached the winery. The first three are what the
+# screen exists for; the rest repeat the website's own list, so the referral
+# column can still be counted across both doors.
+BY_HAND_REFERRALS = (
+    "Wrote to the club",
+    "Telephoned",
+    "Asked at the winery",
+    "Friend or Family",
+    "Restaurant or Wine Bar",
+    "Wine Event or Festival",
+    "Social Media",
+    "Press or Publication",
+    "Deerfield Ranch Winery",
+    "Other",
+)
+
+
+def application_form(request: Request, values: dict, error: str | None = None) -> HTMLResponse:
+    return admin_page(request, "application-new.html", "applications",
+                      states=sorted(SHIPPABLE_STATES), tiers=catalogue().tiers,
+                      referrals=BY_HAND_REFERRALS, values=values, error=error)
+
+
+# Declared above /admin/applications/{app_id}: routes are matched in order, and
+# the other one would take "new" for an id and answer 422.
+@app.get("/admin/applications/new", response_class=HTMLResponse)
+def admin_application_new(request: Request,
+                          actor: str = Depends(require_admin)) -> HTMLResponse:
+    return application_form(request, {})
+
+
+@app.post("/admin/applications/new")
+async def admin_application_create(request: Request, actor: str = Depends(require_admin)):
+    """An enquiry that arrived by mail or telephone, put into the same queue.
+
+    It calls the function the public form calls, so there is one definition of
+    what an application is and one set of rules about it — including the guard
+    that stops the same person being entered twice if they later fill in the
+    form themselves.
+    """
+    data = {key: str(value) for key, value in (await request.form()).items()}
+    email = data.get("email", "").strip().lower()
+    # Asked before the insert, because create_application answers a second
+    # pending request from one address with the first one's id. Without this
+    # the desk would be told it had added someone it had not.
+    open_before = db.one(
+        "SELECT id FROM application WHERE email = ? AND status = 'pending'", (email,))
+    try:
+        app_id = flow.create_application(data)
+    except FlowError as exc:
+        # Rendered back into the form, not raised: somebody is typing, and an
+        # error page throws away what they typed.
+        return application_form(request, data, str(exc))
+
+    if open_before and int(open_before["id"]) == app_id:
+        done = "That address already had a request open — this is the one that was waiting."
+    else:
+        # The audit log already holds "received"; this says a person at the
+        # desk put it there, and which door it came through.
+        with db.transaction() as con:
+            log(con, "application", app_id, "entered_by_hand", actor=actor,
+                referral=data.get("referral") or "")
+        done = "Added by hand. It is in the queue, waiting on a decision."
+    return RedirectResponse(f"/admin/applications/{app_id}?done={done}", status_code=303)
+
+
 @app.get("/admin/applications/{app_id}", response_class=HTMLResponse)
 def admin_application(request: Request, app_id: int,
                       actor: str = Depends(require_admin)) -> HTMLResponse:

@@ -68,7 +68,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 
 | Tab | What it is for |
 | --- | --- |
-| **Applications** | Requests arriving from the form on the site |
+| **Applications** | Requests from the form on the site, and the ones added by hand |
 | **Members** | Who is active, paused or cancelled |
 | **Orders** | Orders and their invoice PDFs |
 | **Shipments** | Shipments, from ready-to-pack to delivered |
@@ -103,6 +103,32 @@ If the same person fills the form twice while their request is still `pending`,
 **no second row is created**: it is treated as the same request and the repeat
 is logged. One row in the list, which is right — an eager applicant is not two
 members.
+
+### 3.1b Somebody who wrote instead of filling in the form
+
+People write to `club@warmspringscellar.com`, telephone, or ask at the winery.
+**"Add one by hand"**, at the top right of **Applications**, puts them into the
+same queue: name, email, state, and the rest optional. From that moment they
+are an ordinary application — pending, then approved, then the invitation and
+the checkout link. There is no separate path, and nothing is sent to them by
+adding the row; the mail goes out on approval, as it does for everyone.
+
+Three things about the screen are worth knowing:
+
+* **Only the licensed states are listed.** Someone writing from a state the
+  winery cannot ship to has no application to make, and it is better to say so
+  in a reply than to discover it at approval.
+* **"How it reached us"** is the point of the exercise. Fill it in and the
+  referral column answers which door brings members — the mailbox, the
+  telephone, the tasting room, or the site.
+* **Nobody is entered twice.** If that person later fills in the form
+  themselves while the row is still pending, the system hands back the row
+  that already exists. The screen says so too if the address already has one
+  open.
+
+The audit log on the card carries `entered_by_hand` with the name of whoever
+was signed in, next to the ordinary `received`, so a row added at the desk is
+never mistaken for one the site produced.
 
 ### 3.2 Approve or decline
 

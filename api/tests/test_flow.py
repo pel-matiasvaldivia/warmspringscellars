@@ -13,6 +13,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from urllib.parse import unquote
 
 import pytest
 from fastapi.testclient import TestClient
@@ -318,6 +319,66 @@ def test_an_application_is_decided_once(client):
     res = client.post(f"/admin/applications/{app_id}/decline", data={"reason": ""},
                       auth=ADMIN, follow_redirects=False)
     assert res.status_code == 400
+
+
+BY_HAND = {
+    "first_name": "Richard",
+    "last_name": "Deane",
+    "email": "Richard.Deane@Example.com",
+    "state": "Oregon",
+    "city": "Portland",
+    "referral": "Wrote to the club",
+    "note": "Asked by mail about the six-bottle allocation.",
+}
+
+
+def test_an_enquiry_entered_by_hand_joins_the_same_queue(client):
+    page = client.get("/admin/applications/new", auth=ADMIN)
+    assert page.status_code == 200
+    assert "Wrote to the club" in page.text
+
+    res = client.post("/admin/applications/new", data=BY_HAND, auth=ADMIN,
+                      follow_redirects=False)
+    assert res.status_code == 303, res.text
+
+    row = client.main.db.one("SELECT * FROM application ORDER BY id DESC")
+    assert res.headers["location"].startswith(f"/admin/applications/{row['id']}?done=")
+    assert row["status"] == "pending"
+    assert row["email"] == "richard.deane@example.com"      # the form's casing is not kept
+    assert row["referral"] == "Wrote to the club"
+    # And the log says a person put it there, which the website's own requests
+    # do not carry.
+    actions = [e["action"] for e in client.main.db.all(
+        "SELECT * FROM event WHERE subject = 'application' AND subject_id = ?", (row["id"],))]
+    assert "received" in actions and "entered_by_hand" in actions
+
+    # From here it is an ordinary application: approving it sends the invitation.
+    approve(client, int(row["id"]))
+    assert client.main.db.one(
+        "SELECT * FROM application WHERE id = ?", (row["id"],))["status"] == "approved"
+
+
+def test_entering_someone_twice_by_hand_does_not_duplicate_them(client):
+    client.post("/admin/applications/new", data=BY_HAND, auth=ADMIN, follow_redirects=False)
+    res = client.post("/admin/applications/new", data=BY_HAND, auth=ADMIN,
+                      follow_redirects=False)
+    assert res.status_code == 303
+    assert "already had a request open" in unquote(res.headers["location"])
+    assert client.main.db.one("SELECT COUNT(*) AS n FROM application")["n"] == 1
+
+
+def test_a_refused_hand_entry_comes_back_as_the_form(client):
+    res = client.post("/admin/applications/new",
+                      data={**BY_HAND, "email": "not-an-address"}, auth=ADMIN)
+    assert res.status_code == 200
+    assert "does not look right" in res.text
+    assert "not-an-address" in res.text               # what was typed is still there
+    assert client.main.db.one("SELECT COUNT(*) AS n FROM application")["n"] == 0
+
+
+def test_hand_entry_is_shut_without_credentials(client):
+    assert client.get("/admin/applications/new").status_code == 401
+    assert client.post("/admin/applications/new", data=BY_HAND).status_code == 401
 
 
 # ── releases ─────────────────────────────────────────────────────────────

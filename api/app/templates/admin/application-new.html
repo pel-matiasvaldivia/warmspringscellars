@@ -1,0 +1,90 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>Add an application by hand</h1>
+<p class="sub">
+  For the enquiries that never reach the form — someone writes to
+  <code>club@warmspringscellar.com</code>, telephones, or asks at the winery.
+  Entered here they join the same queue as the website's own requests: pending,
+  then approved, then an invitation and a checkout link. There is no separate
+  path for them.
+</p>
+
+{% if error %}<div class="warn" style="border-left-color:var(--bad)"><b>Not saved:</b> {{ error }}</div>{% endif %}
+
+<form method="post" action="/admin/applications/new" class="card" style="max-width:620px">
+  <div class="grid2" style="gap:0 1.25rem">
+    <div>
+      <label for="first_name">First name</label>
+      <input id="first_name" name="first_name" value="{{ values.first_name or '' }}" required autofocus>
+    </div>
+    <div>
+      <label for="last_name">Last name</label>
+      <input id="last_name" name="last_name" value="{{ values.last_name or '' }}" required>
+    </div>
+  </div>
+
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" value="{{ values.email or '' }}" required>
+
+  <div class="grid2" style="gap:0 1.25rem">
+    <div>
+      <label for="state">Ships to</label>
+      {# Only the licensed states are offered. Someone writing from a state the
+         winery cannot ship to has no application to make, and an entry that
+         flow.py would refuse is better refused here, where the desk can say
+         so in a reply instead of discovering it on approval. #}
+      <select id="state" name="state" required>
+        <option value="" disabled {{ 'selected' if not values.state }}>Choose a state…</option>
+        {% for s in states %}
+          <option {{ 'selected' if values.state == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="city">City <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input id="city" name="city" value="{{ values.city or '' }}">
+    </div>
+  </div>
+
+  <div class="grid2" style="gap:0 1.25rem">
+    <div>
+      <label for="phone">Phone <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input id="phone" name="phone" value="{{ values.phone or '' }}">
+    </div>
+    <div>
+      <label for="tier_interest">Asked for <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <select id="tier_interest" name="tier_interest">
+        <option value="">Did not say</option>
+        {% for t in tiers %}
+          <option value="{{ t.key }}" {{ 'selected' if values.tier_interest == t.key }}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <label for="referral">How it reached us</label>
+  {# This is the field that makes the screen worth having: without it every
+     hand-entered lead looks the same as a form submission, and nobody can say
+     which channel brings members. The first three are the ones this screen
+     exists for; the rest match the website's own list so the column stays
+     countable. #}
+  <select id="referral" name="referral">
+    {% for r in referrals %}
+      <option {{ 'selected' if values.referral == r }}>{{ r }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="note">Note <span style="text-transform:none;letter-spacing:0">(optional, kept internal)</span></label>
+  <textarea id="note" name="note" rows="3"
+            placeholder="Wrote on 20 Oct asking about the six-bottle allocation.">{{ values.note or '' }}</textarea>
+
+  <p style="margin-top:1.25rem" class="row">
+    <button class="btn" type="submit">Add to the queue</button>
+    <a class="btn ghost" href="/admin">Cancel</a>
+  </p>
+  <p class="sub" style="margin:.9rem 0 0">
+    Nothing is sent to them by adding this. The invitation goes out when the
+    application is approved, exactly as it does for a request from the website.
+  </p>
+</form>
+{% endblock %}

@@ -1,10 +1,16 @@
 {% extends "admin/layout.html" %}
 {% block body %}
-<h1>Applications</h1>
+<div class="row" style="justify-content:space-between;align-items:baseline">
+  <h1>Applications</h1>
+  <a class="btn ghost small" href="/admin/applications/new">Add one by hand</a>
+</div>
 <p class="sub">{{ rows|length }} shown · pending first, newest first</p>
 
 {% if not rows %}
-<div class="empty">Nothing has come in yet.</div>
+<div class="empty">
+  Nothing has come in yet.
+  <br><a href="/admin/applications/new">Add one by hand</a> if somebody wrote or telephoned.
+</div>
 {% else %}
 <table>
   <tr><th>Received</th><th>Name</th><th>Email</th><th>Ships to</th>
