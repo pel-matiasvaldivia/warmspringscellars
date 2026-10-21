@@ -100,9 +100,59 @@ recovered — from the old club system, from an invoice, from a telephone call �
 they join a later wave. What they must not get is a letter inviting them to
 join something that may not be able to ship to them.
 
-Nobody writes to the 23 in unlicensed states with this letter. If they are
-written to at all it is a different letter, saying plainly that we cannot ship
-there yet and asking whether they would like to hear when that changes.
+## The 23 in states we have no licence for
+
+They come out in their own file, `letter-unlicensed-states.csv` — Alabama 8,
+Kentucky 6, Arkansas 4, Delaware 4, Mississippi 1 — and they get
+`invitation-unlicensed.html`, never the ordinary one.
+
+Sending somebody a letter asking them to join something they are not allowed
+to have, and letting the form tell them so after they have typed their name
+into it, is worse than not writing at all. So that letter says it in the first
+line: we cannot ship to your state. Then it offers the two things that are
+actually true.
+
+**An address somewhere we can reach.** An office, a second home, family they
+visit. What governs the permit is where the box is delivered, not where the
+member lives, so this is an ordinary delivery and not a way around anything —
+and it is the one route that turns a reply into a member *today*. Their link
+fills in everything except the state, on purpose: the address is the whole
+question, and the one in the export is the wrong one.
+
+**Or: tell us to write when it opens.** No date is promised, because none can
+be. It depends on a licence the winery does not control.
+
+### What happens when one of them replies
+
+Set **Reply-To: club@warmspringscellar.com** on the send, or the replies go
+to the sending platform's own address and nobody ever reads them. That is the
+trap in this letter: it is the only one of the three that asks for an answer
+rather than a click.
+
+With it set, the reply lands in the club mailbox, the automatic answer goes out
+and Cecilia gets the notice — and then it stops, because **the desk cannot file
+it**. "Add one by hand" offers only the licensed states, deliberately: an entry
+the service would refuse is better refused where somebody can answer it.
+
+So for these 23, the record is this file and the CSV beside it. Add a column,
+write the date and what they said. That is a defensible tool for twenty-three
+people and an event that may be two years away — but be honest about what it
+means: **nothing in the system will remind anyone.** The day Alabama opens,
+somebody has to remember this file exists.
+
+If that is not good enough — and once there are a hundred of them it will not
+be — the fix is a short list of people waiting on a state, which the desk can
+hold and the licence can trigger. It does not exist yet and it has not been
+built on spec.
+
+### The day a state opens
+
+1. Add it to `SHIPPABLE_STATES` in `api/app/config.py` and take it out of the
+   `UNLICENSED` list in `index.html` — both, or the form and the server
+   disagree about who may join.
+2. Re-run the planner over the export: those people stop being held back and
+   fall into an ordinary wave.
+3. Write to the ones who asked to be told. They were promised it.
 
 ## Where the link goes
 

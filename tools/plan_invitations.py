@@ -136,7 +136,11 @@ def read(path: Path) -> list[dict]:
         elif not person["state"]:
             person["held"] = "no state in the export, so we cannot say if we may ship"
         elif person["state"] not in SHIPPABLE_STATES:
+            # Not a problem with the row — a problem with the licence. These
+            # people are written to, with a different letter, so they come out
+            # in their own file rather than the pile nobody reads.
             person["held"] = f"we are not licensed to ship to {person['state']}"
+            person["unlicensed"] = True
         else:
             person["held"] = ""
         seen.add(email)
@@ -233,9 +237,11 @@ def main() -> None:
 
     people = read(source_file)
     ready = [p for p in people if not p["held"]]
-    held = [p for p in people if p["held"]]
+    unlicensed = [p for p in people if p.get("unlicensed")]
+    held = [p for p in people if p["held"] and not p.get("unlicensed")]
 
-    print(f"{len(people)} rows · {len(ready)} to write to · {len(held)} set aside\n")
+    print(f"{len(people)} rows · {len(ready)} to write to · "
+          f"{len(unlicensed)} the other letter · {len(held)} set aside\n")
     for reason, count in Counter(p["held"] for p in held).most_common():
         print(f"  {count:4d}  {reason}")
 
@@ -245,6 +251,17 @@ def main() -> None:
         states = len({p["state"] for p in group})
         print(f"  day {day}: {len(group):4d}  wave-{name}.csv  ({states} states)\n"
               f"          {why}")
+
+    # Their own file, and their own letter: invitation-unlicensed.html, which
+    # says we cannot ship there instead of asking them to join something they
+    # cannot have. The link still works for them — it fills in everything but
+    # the state, because an address in a state we can reach is the one thing
+    # that turns this into an ordinary application today.
+    if unlicensed:
+        write(unlicensed, out / "letter-unlicensed-states.csv", "deerfield-unlicensed")
+        where = Counter(p["state"] for p in unlicensed).most_common()
+        print(f"\n  {len(unlicensed):4d}  letter-unlicensed-states.csv — a different letter: "
+              + ", ".join(f"{state} {count}" for state, count in where))
 
     # The held rows get the reason instead of a link: there is nothing to
     # click until a person has decided what to do about each one.

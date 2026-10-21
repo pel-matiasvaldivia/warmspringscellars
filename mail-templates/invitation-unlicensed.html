@@ -1,0 +1,133 @@
+<!-- For the people on the list who live where the winery holds no permit:
+     Alabama, Arkansas, Delaware, Kentucky and Mississippi in the October 2026
+     export, 23 of them, in letter-unlicensed-states.csv.
+
+     They must not get the ordinary invitation. Sending somebody a letter
+     asking them to join something they are not allowed to have, and letting
+     the form tell them so after they have typed their name into it, is worse
+     than not writing at all. This letter leads with the thing they cannot
+     have, and then with the two things they can.
+
+     {{state}} merges from the CSV's state column. {{link}} is their
+     personalised link; it fills the form in with everything EXCEPT the state,
+     deliberately, because the whole question is which address they use.
+
+     Tables and inline styles only, no image — see auto-reply.html. -->
+<table cellpadding="0" cellspacing="0" border="0" role="presentation"
+       style="border-collapse:collapse;width:100%;max-width:560px;
+              font-family:Arial, Helvetica, sans-serif;color:#2c1e24;">
+  <tr>
+    <td style="padding:0 0 22px;">
+      <div style="font-family:Georgia, 'Times New Roman', Times, serif;font-size:17px;
+                  line-height:22px;color:#5c0037;letter-spacing:1.6px;">
+        WARM SPRINGS <span style="font-style:italic;letter-spacing:0.2px;">Cellar</span>
+      </div>
+      <div style="font-size:11px;line-height:16px;letter-spacing:1.4px;
+                  text-transform:uppercase;color:#9a8890;padding-top:4px;">
+        Glen Ellen &middot; Sonoma Valley &middot; Est. 1982
+      </div>
+    </td>
+  </tr>
+  <tr><td style="border-top:1px solid #e2d8d0;padding:22px 0 0;"></td></tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      {{first_name}},
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      We were about to write to you about our allocation list, and then we
+      checked where you are. <strong style="font-weight:normal;color:#5c0037;">We
+      cannot ship wine to {{state}}.</strong> Not yet, and we would rather say
+      so in the first line than in the last one.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Nothing about that is to do with you. Direct wine shipping in this
+      country is licensed state by state, each with its own permit, its own
+      fee and its own paperwork, and a winery of our size holds the ones it can
+      afford to hold. {{state}} is not among them this year.
+    </td>
+  </tr>
+
+  <!-- ↓ The one thing that works today. The destination governs the permit,
+       so an address in a state we are licensed for is simply a different
+       delivery, not a way around anything. ↓ -->
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 12px;">
+      <strong style="font-weight:normal;color:#2c1e24;">If you have an address
+      somewhere we can reach</strong> &mdash; an office, a second home, family
+      you visit at Christmas &mdash; that is all it takes. What decides the
+      permit is where the box is delivered, not where you live, and you can
+      change the address with us whenever it suits you.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:6px 0 22px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-collapse:collapse;">
+        <tr>
+          <td style="background:#5c0037;padding:13px 26px;">
+            <a href="{{link}}"
+               style="color:#ffffff;text-decoration:none;font-family:Arial, Helvetica, sans-serif;
+                      font-size:12px;letter-spacing:2px;text-transform:uppercase;display:inline-block;">
+              See what is open
+            </a>
+          </td>
+        </tr>
+      </table>
+      <div style="font-size:12px;line-height:18px;color:#5c4650;padding-top:10px;">
+        Six bottles three times a year at $275 a shipment, or twelve at $550,
+        carriage included either way. Your details are already in the form; the
+        only thing it needs from you is the address.
+      </div>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      <strong style="font-weight:normal;color:#2c1e24;">If you would rather
+      wait</strong>, reply to this message with one word and we will write to
+      you the day {{state}} opens. We will not pretend to know when that is
+      &mdash; it depends on a licence we do not control &mdash; and until then
+      you will hear nothing else from us.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 22px;">
+      And if you are ever in Sonoma Valley, the cellar is in Glen Ellen and we
+      would be glad to pour you something. What you carry out of the door is
+      yours to carry anywhere; it is only the shipping that the permits
+      govern.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e2d8d0;padding:18px 0 0;
+               font-size:12px;line-height:19px;color:#5c4650;">
+      <strong style="font-weight:normal;color:#2c1e24;">Cecilia Valdivia</strong><br>
+      Owner &amp; Winemaker, Warm Springs Cellar<br>
+      <a href="https://warmspringscellar.com" style="color:#5c0037;text-decoration:none;">warmspringscellar.com</a>
+      &nbsp;&middot;&nbsp;
+      <a href="mailto:club@warmspringscellar.com" style="color:#5c4650;text-decoration:none;">club@warmspringscellar.com</a>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:16px 0 0;font-size:11px;line-height:17px;color:#9a8890;">
+      You are receiving this at {{email}} because you are a member of the
+      Deerfield Ranch Winery wine club.
+      <a href="{{unsubscribe_url}}" style="color:#9a8890;">Unsubscribe</a>
+      and we will not write again.<br><br>
+      Warm Springs Cellar &middot; {{postal_address}}<br>
+      You must be 21 or older to purchase wine in the United States.
+      An adult signature is required on delivery.
+    </td>
+  </tr>
+</table>
