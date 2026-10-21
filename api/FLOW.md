@@ -165,6 +165,13 @@ export, which is why it exists even though the API adapter works.
   volume limits are not implemented. Before taking real money this wants a
   compliance provider (ShipCompliant, Avalara for Beverage Alcohol) wired in
   front of order creation.
+- **Address verification.** The delivery address is taken before checkout and
+  checked for the things that decide whether a carrier will move it at all: a
+  licensed state, a street rather than a PO box (wine needs a signature from
+  somebody over 21), and a ZIP of the right shape. Nothing checks that the
+  address *exists* — no USPS or carrier lookup — so a typed street can still be
+  wrong. The member reads it back on the welcome page and on the invoice, which
+  is the cheapest correction there is, and the desk can change it on **Members**.
 - **Tax.** Orders carry a tax field and it is computed as zero. Sales tax on
   DTC wine depends on the destination and is not something to guess at.
 - **Inventory.** Nothing decrements stock. With five wines and a few thousand

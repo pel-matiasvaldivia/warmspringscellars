@@ -12,6 +12,7 @@ an order nobody can reconstruct.
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
@@ -27,6 +28,56 @@ from .payments import PaidEvent, PaymentProvider, as_metadata
 
 class FlowError(RuntimeError):
     """A refused transition, or input the flow will not accept."""
+
+
+# A carrier will not leave wine on a doorstep: somebody over 21 has to be there
+# to sign for it, which a box at the post office cannot do, so the address has
+# to be one a person is at. Caught here rather than by the carrier three days
+# later, when the wine is already in a truck.
+PO_BOX = re.compile(r"\b(?:p\.?\s*o\.?|post\s+office)[\s.]*box\b", re.I)
+POSTCODE = re.compile(r"^\d{5}(?:-\d{4})?$")
+
+
+@dataclass(frozen=True)
+class Address:
+    """Where a shipment goes. Everything but line2 is required.
+
+    The club holds this itself instead of reading it back from the payment
+    provider: it is needed before anyone pays — to say whether the wine can be
+    sent there at all — and a club that keeps its own delivery list does not
+    lose it the day it changes processor.
+    """
+    line1: str
+    line2: str
+    city: str
+    state: str
+    postcode: str
+
+    @classmethod
+    def parse(cls, data: dict) -> "Address":
+        def field(name: str) -> str:
+            return " ".join(str(data.get(name) or "").split())
+
+        line1, line2 = field("ship_line1"), field("ship_line2")
+        city, state = field("ship_city"), field("ship_state")
+        postcode = field("ship_postcode").upper()
+
+        if not line1 or not city or not state or not postcode:
+            raise FlowError("We need the street, the city, the state and the ZIP code.")
+        if PO_BOX.search(line1) or PO_BOX.search(line2):
+            raise FlowError(
+                "Wine has to be signed for by someone over 21, so a carrier "
+                "cannot deliver it to a PO box. Please give us a street address "
+                "— home or work, whichever suits you."
+            )
+        if state not in SHIPPABLE_STATES:
+            raise FlowError(f"We are not licensed to ship wine to {state} yet.")
+        if not POSTCODE.match(postcode):
+            raise FlowError("That ZIP code does not look right — five digits, or ZIP+4.")
+        return cls(line1, line2, city, state, postcode)
+
+    def as_row(self) -> tuple[str, str | None, str, str, str]:
+        return (self.line1, self.line2 or None, self.city, self.state, self.postcode)
 
 
 ALLOWED: dict[str, dict[str, set[str]]] = {
@@ -221,11 +272,23 @@ class Flow:
         tiers = [t for t in (catalogue().get(k) for k in keys) if t is not None]
         return offer, app, tiers
 
-    def start_checkout(self, token: str, tier_key: str) -> str:
+    def start_checkout(self, token: str, tier_key: str, address: Address) -> str:
         offer, app, tiers = self.open_offer(token)
         tier = next((t for t in tiers if t.key == tier_key), None)
         if tier is None:
             raise FlowError("that allocation was not offered to you")
+
+        # Written before the provider is called, so an address given by
+        # somebody who then abandons checkout is still here when they come
+        # back, and the desk can see where the wine was going either way.
+        with self.db.transaction() as con:
+            con.execute(
+                "UPDATE offer SET ship_line1 = ?, ship_line2 = ?, ship_city = ?,"
+                " ship_state = ?, ship_postcode = ? WHERE id = ?",
+                (*address.as_row(), int(offer["id"])),
+            )
+            log(con, "offer", int(offer["id"]), "address_given",
+                state=address.state, postcode=address.postcode)
 
         reference = f"offer-{offer['id']}-{tier.key}"
         session = self.payments.create_checkout(
@@ -281,13 +344,19 @@ class Flow:
                 (now(), offer_id),
             )
 
+            # The address the member gave on the way to checkout. An offer
+            # from before addresses were asked for has none, and falls back to
+            # the state on the application — enough to tell the desk where it
+            # is going, not enough to pack it, which the shipment screen says.
             cur = con.execute(
                 "INSERT INTO membership (application_id, created_at, status, tier_key, email,"
-                " first_name, last_name, ship_state, provider, provider_customer_id,"
-                " provider_subscription_id)"
-                " VALUES (?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?)",
+                " first_name, last_name, ship_line1, ship_line2, ship_city, ship_state,"
+                " ship_postcode, provider, provider_customer_id, provider_subscription_id)"
+                " VALUES (?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (app["id"], now(), tier.key, app["email"], app["first_name"], app["last_name"],
-                 app["state"], self.payments.name, event.customer_id or None,
+                 offer["ship_line1"], offer["ship_line2"], offer["ship_city"],
+                 offer["ship_state"] or app["state"], offer["ship_postcode"],
+                 self.payments.name, event.customer_id or None,
                  event.subscription_id or None),
             )
             membership_id = int(cur.lastrowid)
@@ -420,6 +489,25 @@ class Flow:
                 args = (target, now(), membership_id)
             con.execute(f"UPDATE membership SET status = ?{extra} WHERE id = ?", args)
             log(con, "membership", membership_id, target, actor=actor)
+
+    def change_address(self, membership_id: int, address: Address, actor: str) -> None:
+        """Members move. The address on the membership is the one that is packed.
+
+        Orders already despatched keep the address they went to, because that
+        is where the wine is; only what has not left the cellar follows the
+        member to the new house.
+        """
+        with self.db.transaction() as con:
+            row = _require(con, "membership", membership_id)
+            con.execute(
+                "UPDATE membership SET ship_line1 = ?, ship_line2 = ?, ship_city = ?,"
+                " ship_state = ?, ship_postcode = ? WHERE id = ?",
+                (*address.as_row(), membership_id),
+            )
+            log(con, "membership", membership_id, "address_changed", actor=actor,
+                was=" ".join(x for x in (row["ship_line1"], row["ship_city"],
+                                         row["ship_state"], row["ship_postcode"]) if x),
+                now=f"{address.line1} {address.city} {address.state} {address.postcode}")
 
     # ── releases ─────────────────────────────────────────────────────────
     def create_release(self, name: str, ships_on: str) -> int:

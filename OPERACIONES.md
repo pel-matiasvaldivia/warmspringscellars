@@ -159,7 +159,28 @@ vivas para la misma persona.
 ### 3.3 El socio elige y paga
 
 El link lo lleva a una página con su nombre y los niveles ofrecidos. Elige uno,
-va al checkout y paga.
+**dice a dónde quiere que vaya el vino**, y recién ahí va al checkout y paga.
+
+La dirección de entrega se pide en ese punto, entre la elección y el pago, y la
+guarda el club en vez de leerla de la pasarela de pago. Tres motivos, ordenados
+por lo que cuestan si se ignoran:
+
+* **De la dirección depende si podemos despachar.** Lo define el estado, y no
+  tiene sentido cobrar una caja que no se puede entregar.
+* **El transportista no deja vino en la puerta.** Tiene que firmarlo alguien
+  mayor de 21, así que **una casilla de correo se rechaza**, con el motivo
+  explicado. Casa o trabajo, lo que le quede mejor.
+* **Una dirección, no dos.** A propósito no se le pide a Stripe que junte una:
+  dos direcciones que no coinciden dejan a todos sin saber desde cuál se arma
+  la caja.
+
+Del ZIP se controla la forma (cinco dígitos, o ZIP+4), no que exista — no vamos
+a pagar verificación de direcciones para unos cientos de socios, y el socio la
+lee de vuelta en la página después de pagar y en la factura.
+
+Si alguien carga la dirección y abandona el checkout, **queda guardada**: el
+mismo link se la devuelve completa, y en el escritorio se ve a dónde iba el
+vino aunque el pago nunca se haya hecho.
 
 El link **vence a los 14 días** (`OFFER_DAYS`) y **se gasta al usarse**: si
 intenta abrirlo de nuevo lee "already been accepted". Eso es correcto, no un
@@ -236,6 +257,22 @@ de la primera corrida, apretarlo otra vez es exactamente lo que hay que hacer.
 
 Si una membresía quedó con un nivel que ya no existe en el catálogo, se la
 saltea y queda anotado en el registro. No se la factura "a lo que salga".
+
+### Cuando un socio se muda
+
+La dirección de la membresía es desde la que se arma la caja, así que se edita
+en **Members**: "Change it", debajo de la dirección, abre los campos y guarda
+con las mismas reglas que el socio vio en el checkout — estado habilitado,
+calle de verdad, ZIP con la forma correcta. El cambio queda en el registro con
+la dirección vieja y la nueva.
+
+**Vale para lo que todavía no salió de la bodega.** Una orden ya despachada
+conserva la dirección a la que fue, porque ahí está el vino. Si se cambia antes
+de levantar el release, el próximo envío lo sigue.
+
+Una membresía creada antes de que el club pidiera dirección tiene solo el
+estado; las pantallas de Members y Shipments dicen **"no address on file"** en
+rojo en vez de imprimir media etiqueta.
 
 ### Pausas y bajas
 

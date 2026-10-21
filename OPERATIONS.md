@@ -157,7 +157,27 @@ person.
 ### 3.3 The member picks and pays
 
 The link opens a page with their name and the tiers offered. They choose one,
-go to checkout and pay.
+**say where the wine should go**, and then go to checkout and pay.
+
+The delivery address is asked for here, between the choice and the payment, and
+the club keeps it itself rather than reading it back from the payment provider.
+Three reasons, in order of how much they cost when ignored:
+
+* **Whether we may ship at all depends on it.** The state decides, and there is
+  no sense taking money for a case that cannot be delivered.
+* **A carrier will not leave wine on a doorstep.** Somebody over 21 has to sign,
+  so a **PO box is refused**, with a message saying why. Home or work, either.
+* **One address, not two.** Stripe is deliberately not asked to collect one:
+  two addresses that disagree leave nobody able to say which the box is packed
+  from.
+
+The ZIP is checked for shape (five digits, or ZIP+4), not for existing — we are
+not buying address verification for a few hundred members, and the member reads
+it back on the page after payment and in the invoice.
+
+If somebody gives an address and then abandons checkout, **it is kept**: the
+same link brings it back filled in, and the desk can see on the application
+where the wine was going even if the payment never happened.
 
 The link **expires after 14 days** (`OFFER_DAYS`) and **is spent once used**: a
 second attempt reads "already been accepted". That is correct, not a fault. If
@@ -234,6 +254,22 @@ again is exactly the right thing to do.
 
 A membership left on a tier that no longer exists in the catalogue is skipped
 and logged. It is not billed at whatever happens to be nearest.
+
+### When a member moves
+
+The address on the membership is the one the box is packed from, so it is
+editable on **Members**: "Change it", under the address, opens the fields and
+saves with the same rules the member met at checkout — a licensed state, a real
+street, a ZIP that is the right shape. The change is written to the audit log
+with the old address and the new one.
+
+**It applies to what has not left the cellar.** An order already despatched
+keeps the address it went to, because that is where the wine is. Change it
+before the release is raised and the next shipment follows them.
+
+A membership taken before the club asked for an address has only a state; the
+Members and Shipments screens say **"no address on file"** in red rather than
+printing half a label.
 
 ### Pausing and cancelling
 

@@ -31,7 +31,7 @@ from .accounting.quickbooks import new_state
 from .catalogue import catalogue
 from .config import SHIPPABLE_STATES, settings
 from .db import Database, log
-from .flow import ALLOWED, Flow, FlowError
+from .flow import ALLOWED, Address, Flow, FlowError
 from .invoices import ensure_pdf, money
 from .mail import build_mailer, check as mail_check
 from .notify import send_decline, send_invitation, send_receipt, send_shipment_notice
@@ -200,12 +200,62 @@ def show_offer(request: Request, token: str) -> HTMLResponse:
     )
 
 
-@app.post("/club/offer/{token}/checkout")
-def start_checkout(token: str, tier_key: str = Form(...)) -> RedirectResponse:
+def address_page(request: Request, token: str, tier, values: dict,
+                 error: str | None = None) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request, "address.html",
+        {"token": token, "tier": tier, "values": values, "error": error,
+         "states": sorted(SHIPPABLE_STATES), "catalogue": catalogue(),
+         "payments_live": payments.live},
+    )
+
+
+@app.get("/club/offer/{token}/address", response_class=HTMLResponse)
+def show_address(request: Request, token: str, tier: str = "") -> HTMLResponse:
+    """Where the wine should go, asked before anyone pays for it.
+
+    Before, because whether we may ship at all depends on the answer: there is
+    no sense taking money for a case that cannot be delivered.
+    """
     try:
-        url = flow.start_checkout(token, tier_key)
+        offer, application, tiers = flow.open_offer(token)
     except FlowError as exc:
-        return RedirectResponse(f"/club/offer/{token}?error={exc}", status_code=303)
+        return offer_problem(request, str(exc))
+    chosen = next((t for t in tiers if t.key == tier), None)
+    if chosen is None:
+        return RedirectResponse(f"/club/offer/{token}", status_code=303)
+
+    # What they gave on an earlier run at checkout, or failing that the city
+    # and state from their application — which is usually where they live.
+    values = {key: offer[key] for key in
+              ("ship_line1", "ship_line2", "ship_city", "ship_state", "ship_postcode")}
+    values["ship_city"] = values["ship_city"] or application["city"]
+    values["ship_state"] = values["ship_state"] or application["state"]
+    return address_page(request, token, chosen, values)
+
+
+@app.post("/club/offer/{token}/checkout")
+async def start_checkout(request: Request, token: str) -> Response:
+    form = await request.form()
+    tier_key = str(form.get("tier_key") or "")
+    try:
+        offer, _application, tiers = flow.open_offer(token)
+    except FlowError as exc:
+        return offer_problem(request, str(exc))
+    chosen = next((t for t in tiers if t.key == tier_key), None)
+    if chosen is None:
+        return RedirectResponse(
+            f"/club/offer/{token}?error=that allocation was not offered to you",
+            status_code=303)
+
+    data = {key: str(value) for key, value in form.items()}
+    try:
+        address = Address.parse(data)
+        url = flow.start_checkout(token, tier_key, address)
+    except FlowError as exc:
+        # Back to the form with what they typed. A redirect carrying the error
+        # would empty five fields to complain about one of them.
+        return address_page(request, token, chosen, data, str(exc))
     return RedirectResponse(url, status_code=303)
 
 
@@ -477,7 +527,20 @@ async def admin_decline(request: Request, app_id: int,
 def admin_memberships(request: Request, actor: str = Depends(require_admin)) -> HTMLResponse:
     rows = db.all("SELECT * FROM membership ORDER BY id DESC LIMIT 300")
     return admin_page(request, "memberships.html", "memberships", rows=rows,
+                      states=sorted(SHIPPABLE_STATES),
                       transitions={k: sorted(v) for k, v in ALLOWED["membership"].items()})
+
+
+@app.post("/admin/memberships/{membership_id}/address")
+async def admin_membership_address(request: Request, membership_id: int,
+                                   actor: str = Depends(require_admin)) -> RedirectResponse:
+    form = await request.form()
+    try:
+        flow.change_address(membership_id,
+                            Address.parse({k: str(v) for k, v in form.items()}), actor)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/memberships?done=Not saved: {exc}", status_code=303)
+    return RedirectResponse("/admin/memberships?done=Address changed.", status_code=303)
 
 
 @app.post("/admin/memberships/{membership_id}/status")
@@ -507,7 +570,8 @@ def admin_orders(request: Request, actor: str = Depends(require_admin)) -> HTMLR
 @app.get("/admin/shipments", response_class=HTMLResponse)
 def admin_shipments(request: Request, actor: str = Depends(require_admin)) -> HTMLResponse:
     rows = db.all(
-        'SELECT s.*, o.reference, o.tier_key, m.first_name, m.last_name, m.ship_state'
+        'SELECT s.*, o.reference, o.tier_key, m.first_name, m.last_name,'
+        ' m.ship_line1, m.ship_line2, m.ship_city, m.ship_state, m.ship_postcode'
         ' FROM shipment s JOIN "order" o ON o.id = s.order_id'
         ' JOIN membership m ON m.id = o.membership_id'
         " ORDER BY (s.status = 'delivered'), s.id DESC LIMIT 300"

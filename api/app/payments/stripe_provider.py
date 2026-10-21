@@ -92,9 +92,11 @@ class StripeProvider:
                     },
                 }
             ],
-            # Shipping is collected by Stripe rather than by us: it is the one
-            # place the member is already filling in an address.
-            "shipping_address_collection": {"allowed_countries": ["US"]},
+            # Stripe is deliberately NOT asked to collect a shipping address.
+            # The club takes it before checkout, because whether the wine may
+            # be sent at all depends on the state and that has to be settled
+            # before money moves. Asking twice would leave two addresses that
+            # can disagree, and no answer to which one the box is packed from.
             "metadata": metadata,
             "subscription_data": {"metadata": metadata},
         }

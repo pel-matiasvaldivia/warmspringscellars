@@ -13,7 +13,17 @@
     <td><code>{{ r.reference }}</code></td>
     <td>{{ r.first_name }} {{ r.last_name }}</td>
     <td>{{ tier_names.get(r.tier_key, r.tier_key) }} · {{ bottles.get(r.tier_key, '?') }} btl</td>
-    <td>{{ r.ship_state }}</td>
+    {# The address is here because this is the screen the box is packed from.
+       A membership taken before the club asked for one has only a state, and
+       saying so plainly beats printing half a label. #}
+    <td>
+      {% if r.ship_line1 %}
+        {{ r.ship_line1 }}{% if r.ship_line2 %}<br>{{ r.ship_line2 }}{% endif %}<br>
+        {{ r.ship_city }}, {{ r.ship_state }} {{ r.ship_postcode }}
+      {% else %}
+        {{ r.ship_state }}<br><span class="log" style="color:var(--bad)">no address on file</span>
+      {% endif %}
+    </td>
     <td><span class="pill {{ r.status }}">{{ r.status.replace('_',' ') }}</span>
         {% if r.held_reason %}<br><span class="log">{{ r.held_reason }}</span>{% endif %}</td>
     <td class="log">{{ r.carrier or '—' }}{% if r.tracking %}<br><code>{{ r.tracking }}</code>{% endif %}</td>

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Where should it go? — Warm Springs Cellar{% endblock %}
+
+{% block style %}
+.panel {
+  max-width: 560px; margin: 2.5rem auto 0;
+  background: var(--surface); border: 1px solid var(--border); padding: 2rem 1.75rem;
+}
+.chosen {
+  display: flex; justify-content: space-between; align-items: baseline; gap: .25rem 1rem;
+  border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;
+  /* Wraps, because on a phone the line of bottles and price is wider than the
+     panel and an unwrapped row pushes "Change" off the side of the card. */
+  flex-wrap: wrap;
+}
+.chosen > div { flex: 1 1 13rem; min-width: 0; }
+.chosen .what { font-family: 'Playfair Display','Didot',Georgia,serif; font-size: 1.1rem; }
+.chosen .how-much { font-size: .8rem; color: var(--text-2); white-space: nowrap; }
+.chosen a { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; }
+
+.field { margin-bottom: 1.1rem; }
+.field label {
+  display: block; font-size: .6rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: .4rem;
+}
+.field label .opt { text-transform: none; letter-spacing: .02em; font-size: .72rem; }
+.field input, .field select {
+  width: 100%; font: inherit; font-size: .92rem; padding: .7rem .8rem;
+  background: var(--bg); color: var(--text); border: 1px solid var(--border);
+}
+.field input:focus, .field select:focus { outline: 2px solid var(--wine-light); outline-offset: -1px; }
+/* Two to a row where the pair belongs together — city beside state, state
+   beside ZIP — and one to a row on a phone, where a 9ch field is a trap. */
+.pair { display: grid; grid-template-columns: 2fr 1fr; gap: 0 1rem; }
+@media (max-width: 480px) { .pair { grid-template-columns: 1fr; } }
+.panel .btn { width: 100%; text-align: center; margin-top: .5rem; }
+.small { font-size: .78rem; color: var(--muted); margin-top: 1rem; }
+{% endblock %}
+
+{% block body %}
+<div class="center">
+  <p class="eyebrow">Almost there</p>
+  <h1>Where should the wine go?</h1>
+  <p class="lede">
+    Every shipment goes to this address. You can change it with us whenever
+    you move — write to us and the next one follows you.
+  </p>
+</div>
+
+{% if error %}<div class="notice bad" style="max-width:560px;margin-inline:auto">{{ error }}</div>{% endif %}
+
+<form class="panel" method="post" action="/club/offer/{{ token }}/checkout">
+  <input type="hidden" name="tier_key" value="{{ tier.key }}">
+
+  <div class="chosen">
+    <div>
+      <div class="what">{{ tier.name }}</div>
+      <div class="how-much">{{ tier.bottles }} bottles · {{ tier.price }} per shipment,
+        shipping included</div>
+    </div>
+    <a href="/club/offer/{{ token }}">Change</a>
+  </div>
+
+  <div class="field">
+    <label for="ship_line1">Street address</label>
+    <input id="ship_line1" name="ship_line1" autocomplete="shipping address-line1"
+           value="{{ values.ship_line1 or '' }}" required autofocus>
+  </div>
+  <div class="field">
+    <label for="ship_line2">Apartment, suite, company <span class="opt">(optional)</span></label>
+    <input id="ship_line2" name="ship_line2" autocomplete="shipping address-line2"
+           value="{{ values.ship_line2 or '' }}">
+  </div>
+
+  <div class="pair">
+    <div class="field">
+      <label for="ship_city">City</label>
+      <input id="ship_city" name="ship_city" autocomplete="shipping address-level2"
+             value="{{ values.ship_city or '' }}" required>
+    </div>
+    <div class="field">
+      <label for="ship_postcode">ZIP</label>
+      <input id="ship_postcode" name="ship_postcode" autocomplete="shipping postal-code"
+             inputmode="numeric" value="{{ values.ship_postcode or '' }}" required>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="ship_state">State</label>
+    {# Only the states the winery holds a permit for. A state that is missing
+       is not an oversight the member should have to guess at, which is what
+       the line under the button is for. #}
+    <select id="ship_state" name="ship_state" autocomplete="shipping address-level1" required>
+      <option value="" disabled {{ 'selected' if not values.ship_state }}>Choose…</option>
+      {% for s in states %}
+        <option {{ 'selected' if values.ship_state == s }}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <button class="btn" type="submit">Continue to payment</button>
+
+  <p class="small">
+    Someone over 21 has to sign for wine, so this needs to be an address where a
+    person will be — home or work, whichever suits you. A carrier cannot deliver
+    to a PO box. If your state is not on the list, write to
+    <a href="mailto:club@warmspringscellar.com">club@warmspringscellar.com</a> and
+    we will tell you the moment that changes.
+  </p>
+  {% if not payments_live %}
+  <p class="small"><em>This installation is running without payment credentials,
+    so checkout is simulated and no money will move.</em></p>
+  {% endif %}
+</form>
+{% endblock %}

@@ -40,6 +40,10 @@ CREATE TABLE IF NOT EXISTS application (
 CREATE INDEX IF NOT EXISTS application_status ON application(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS application_email ON application(email);
 
+-- The address columns hold where the member asked for the wine to go, taken
+-- on the way to checkout. They live here rather than on the membership
+-- because the membership does not exist until the payment clears, and the
+-- address is given before that; accept_payment copies them across.
 CREATE TABLE IF NOT EXISTS offer (
     id             INTEGER PRIMARY KEY,
     application_id INTEGER NOT NULL REFERENCES application(id),
@@ -48,7 +52,12 @@ CREATE TABLE IF NOT EXISTS offer (
     status         TEXT NOT NULL DEFAULT 'sent',
     opened_at      TEXT,
     accepted_at    TEXT,
-    allowed_tiers  TEXT NOT NULL          -- JSON array of tier keys
+    allowed_tiers  TEXT NOT NULL,         -- JSON array of tier keys
+    ship_line1     TEXT,
+    ship_line2     TEXT,
+    ship_city      TEXT,
+    ship_state     TEXT,
+    ship_postcode  TEXT
 );
 CREATE INDEX IF NOT EXISTS offer_application ON offer(application_id);
 
@@ -199,6 +208,28 @@ CREATE TABLE IF NOT EXISTS oauth_token (
 """
 
 
+# Columns added to a table after the first deployment. CREATE TABLE IF NOT
+# EXISTS leaves a table that already exists untouched, so a database made
+# before this release would never grow them, and SQLite has no ADD COLUMN IF
+# NOT EXISTS — each one is asked for and added if it is missing. Adding a
+# nullable column is the only migration that is safe to run on every start;
+# anything that rewrites data belongs in a script that is run once, on purpose.
+ADDED_COLUMNS: dict[str, dict[str, str]] = {
+    "offer": {
+        "ship_line1": "TEXT", "ship_line2": "TEXT", "ship_city": "TEXT",
+        "ship_state": "TEXT", "ship_postcode": "TEXT",
+    },
+}
+
+
+def migrate(con: sqlite3.Connection) -> None:
+    for table, columns in ADDED_COLUMNS.items():
+        present = {row["name"] for row in con.execute(f'PRAGMA table_info("{table}")')}
+        for name, declaration in columns.items():
+            if name not in present:
+                con.execute(f'ALTER TABLE "{table}" ADD COLUMN {name} {declaration}')
+
+
 def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -209,6 +240,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as con:
             con.executescript(SCHEMA)
+            migrate(con)
 
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:

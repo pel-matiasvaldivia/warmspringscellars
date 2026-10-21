@@ -69,8 +69,7 @@
   display: block; font-family: inherit; font-size: .66rem; color: var(--muted);
   letter-spacing: .02em;
 }
-.tier form { margin-top: 1.1rem; }
-.tier .btn { width: 100%; text-align: center; }
+.tier .btn { width: 100%; text-align: center; margin-top: 1.1rem; }
 .spacer { flex: 1; }
 .summary-strip {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 1.75rem;
@@ -140,10 +139,10 @@
     {% if tier.invite_only %}
       <span class="btn disabled">Invite Only</span>
     {% else %}
-      <form method="post" action="/club/offer/{{ token }}/checkout">
-        <input type="hidden" name="tier_key" value="{{ tier.key }}">
-        <button class="btn" type="submit">Join Now</button>
-      </form>
+      {# To the delivery address first, not to the payment provider: whether
+         we are allowed to ship at all depends on where it is going, and that
+         is a poor thing to discover after someone has paid. #}
+      <a class="btn" href="/club/offer/{{ token }}/address?tier={{ tier.key }}">Join Now</a>
     {% endif %}
   </article>
   {% endfor %}

@@ -17,7 +17,9 @@
   <h1>Welcome to the cellar</h1>
   <p class="lede">
     {% if membership %}
-      Your {{ tier.name }} allocation is reserved, {{ membership.first_name }}.
+      {# The tier names carry their own article — "The Full Case" — so the
+         sentence lets the name stand on its own rather than saying "your The". #}
+      Your allocation is reserved, {{ membership.first_name }}: {{ tier.name }}.
       The invoice is on its way to {{ membership.email }}.
     {% else %}
       Your payment is being confirmed. This page will have your allocation on it
@@ -41,4 +43,19 @@
     <span>Temperature-controlled transit, held back in a heat wave rather than risked. An adult signature on arrival.</span>
   </div></div>
 </div>
+
+{# Read back to them while it still costs nothing to fix. A wrong digit in a
+   ZIP found here is an email; found at the carrier it is a returned case. #}
+{% if membership and membership.ship_line1 %}
+<div class="notice" style="max-width:520px;margin-inline:auto">
+  <strong>Going to:</strong><br>
+  {{ membership.ship_line1 }}{% if membership.ship_line2 %}, {{ membership.ship_line2 }}{% endif %}<br>
+  {{ membership.ship_city }}, {{ membership.ship_state }} {{ membership.ship_postcode }}<br>
+  <span style="font-size:.86rem;display:block;margin-top:.6rem">
+    Not right, or moving? Write to
+    <a href="mailto:club@warmspringscellar.com">club@warmspringscellar.com</a>
+    and we will change it before the next release.
+  </span>
+</div>
+{% endif %}
 {% endblock %}

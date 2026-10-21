@@ -79,10 +79,20 @@ def approve(client, app_id: int | None = None,
     return client.main.flow.offer_token(int(offer["id"]))
 
 
-def pay(client, token: str, tier_key: str) -> None:
+ADDRESS = {
+    "ship_line1": "1204 Warm Springs Road",
+    "ship_line2": "Apt 2",
+    "ship_city": "Glen Ellen",
+    "ship_state": "California",
+    "ship_postcode": "95442",
+}
+
+
+def pay(client, token: str, tier_key: str, **address) -> None:
     """Walk the member through checkout, including the provider's callback."""
     res = client.post(f"/club/offer/{token}/checkout",
-                      data={"tier_key": tier_key}, follow_redirects=False)
+                      data={"tier_key": tier_key, **ADDRESS, **address},
+                      follow_redirects=False)
     assert res.status_code == 303, res.text
     sandbox = res.headers["location"]
     assert "/club/sandbox/checkout" in sandbox
@@ -191,6 +201,108 @@ def test_the_form_is_rate_limited(client):
     assert res.status_code == 429
 
 
+# ── where the wine goes ──────────────────────────────────────────────────
+def test_the_address_is_asked_for_before_payment_and_kept(client):
+    apply_(client)
+    token = approve(client)
+
+    # "Join Now" leads to the address, not to the provider.
+    page = client.get(f"/club/offer/{token}/address?tier=founders-reserve")
+    assert page.status_code == 200
+    assert "Where should the wine go?" in page.text
+    assert "Glen Ellen" in page.text          # the city from their application, offered back
+
+    pay(client, token, "founders-reserve")
+    member = client.main.db.one("SELECT * FROM membership ORDER BY id DESC")
+    assert member["ship_line1"] == "1204 Warm Springs Road"
+    assert member["ship_line2"] == "Apt 2"
+    assert member["ship_city"] == "Glen Ellen"
+    assert member["ship_postcode"] == "95442"
+    # And it is on the screen the box is packed from.
+    assert "1204 Warm Springs Road" in client.get("/admin/shipments", auth=ADMIN).text
+
+
+def test_an_address_we_cannot_deliver_to_is_refused_before_money_moves(client):
+    apply_(client)
+    token = approve(client)
+    for bad, says in [
+        ({"ship_line1": "PO Box 417"}, "PO box"),
+        ({"ship_line1": "Post Office Box 417"}, "PO box"),
+        ({"ship_postcode": "9544"}, "ZIP code"),
+        ({"ship_line1": ""}, "We need the street"),
+        ({"ship_state": "Utah"}, "not licensed"),
+    ]:
+        res = client.post(f"/club/offer/{token}/checkout",
+                          data={"tier_key": "founders-reserve", **ADDRESS, **bad})
+        assert res.status_code == 200, bad
+        assert says in res.text, bad
+        # The form comes back with what was typed, not emptied.
+        assert ADDRESS["ship_city"] in res.text
+    assert client.main.db.one("SELECT COUNT(*) AS n FROM membership")["n"] == 0
+
+
+def test_an_abandoned_checkout_remembers_the_address(client):
+    apply_(client)
+    token = approve(client)
+    client.post(f"/club/offer/{token}/checkout",
+                data={"tier_key": "founders-reserve", **ADDRESS}, follow_redirects=False)
+    page = client.get(f"/club/offer/{token}/address?tier=full-case")
+    assert "1204 Warm Springs Road" in page.text
+
+
+def test_a_member_who_moves_is_followed_by_the_wine(client):
+    apply_(client)
+    pay(client, approve(client), "founders-reserve")
+    member_id = int(client.main.db.one("SELECT id FROM membership ORDER BY id DESC")["id"])
+
+    moved = {**ADDRESS, "ship_line1": "88 Pine Street", "ship_line2": "",
+             "ship_city": "Portland", "ship_state": "Oregon", "ship_postcode": "97204"}
+    res = client.post(f"/admin/memberships/{member_id}/address", data=moved,
+                      auth=ADMIN, follow_redirects=False)
+    assert res.status_code == 303
+    row = client.main.db.one("SELECT * FROM membership WHERE id = ?", (member_id,))
+    assert (row["ship_line1"], row["ship_city"], row["ship_state"]) == (
+        "88 Pine Street", "Portland", "Oregon")
+    assert row["ship_line2"] is None
+    assert "address_changed" in [e["action"] for e in client.main.db.all(
+        "SELECT * FROM event WHERE subject = 'membership' AND subject_id = ?", (member_id,))]
+
+    # And a bad one is refused there too, without touching what is on file.
+    client.post(f"/admin/memberships/{member_id}/address",
+                data={**moved, "ship_line1": "PO Box 9"}, auth=ADMIN, follow_redirects=False)
+    assert client.main.db.one(
+        "SELECT * FROM membership WHERE id = ?", (member_id,))["ship_line1"] == "88 Pine Street"
+
+
+def test_an_older_database_grows_the_address_columns(client):
+    """The migration runs on a database made before the columns existed."""
+    import re
+    import sqlite3
+
+    from app.db import SCHEMA, Database
+
+    # The schema as it was before this release: the same one, with the address
+    # columns taken back out of `offer` and the comma they left behind tidied.
+    start = SCHEMA.index("CREATE TABLE IF NOT EXISTS offer")
+    end = SCHEMA.index(");", start) + 2
+    block = re.sub(r"\n\s*ship_\w+\s+TEXT,?", "", SCHEMA[start:end])
+    block = block.replace("allowed_tiers  TEXT NOT NULL,", "allowed_tiers  TEXT NOT NULL")
+    was = SCHEMA[:start] + block + SCHEMA[end:]
+    assert "ship_line1" not in was[start:start + len(block)]
+
+    path = client.tmp / "old.sqlite3"
+    con = sqlite3.connect(path)
+    con.executescript(was)
+    con.commit()
+    con.close()
+
+    Database(path)                       # opening it is what migrates it
+    con = sqlite3.connect(path)
+    columns = {row[1] for row in con.execute("PRAGMA table_info(offer)")}
+    con.close()
+    assert {"ship_line1", "ship_line2", "ship_city", "ship_state", "ship_postcode"} <= columns
+
+
 # ── offers ───────────────────────────────────────────────────────────────
 def test_a_tampered_link_is_refused(client):
     app_id = apply_(client)
@@ -268,7 +380,8 @@ def test_a_replayed_webhook_does_not_create_a_second_membership(client):
     token = approve(client)
 
     res = client.post(f"/club/offer/{token}/checkout",
-                      data={"tier_key": "founders-reserve"}, follow_redirects=False)
+                      data={"tier_key": "founders-reserve", **ADDRESS},
+                      follow_redirects=False)
     sandbox = res.headers["location"]
     confirm = sandbox.replace("/checkout?", "/confirm?")
 

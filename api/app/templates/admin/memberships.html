@@ -6,7 +6,7 @@
 <div class="empty">No memberships yet. They appear here once a payment clears.</div>
 {% else %}
 <table>
-  <tr><th>Since</th><th>Name</th><th>Email</th><th>Allocation</th><th>State</th>
+  <tr><th>Since</th><th>Name</th><th>Email</th><th>Allocation</th><th>Ships to</th>
       <th>Status</th><th>Provider</th><th></th></tr>
   {% for r in rows %}
   <tr>
@@ -14,7 +14,39 @@
     <td>{{ r.first_name }} {{ r.last_name }}</td>
     <td>{{ r.email }}</td>
     <td>{{ tier_names.get(r.tier_key, r.tier_key) }}</td>
-    <td>{{ r.ship_state }}</td>
+    {# Members move, and the address on the membership is the one the box is
+       packed from, so it is editable here rather than only at checkout. What
+       has already been despatched keeps the address it went to. #}
+    <td style="min-width:14rem">
+      {% if r.ship_line1 %}
+        {{ r.ship_line1 }}{% if r.ship_line2 %}<br>{{ r.ship_line2 }}{% endif %}<br>
+        {{ r.ship_city }}, {{ r.ship_state }} {{ r.ship_postcode }}
+      {% else %}
+        {{ r.ship_state }} —
+        <span style="color:var(--bad)">no address on file</span>
+      {% endif %}
+      <details style="margin-top:.4rem">
+        <summary style="font-size:.7rem;color:var(--muted);cursor:pointer">Change it</summary>
+        <form method="post" action="/admin/memberships/{{ r.id }}/address"
+              style="margin-top:.5rem">
+          <input name="ship_line1" placeholder="Street address"
+                 value="{{ r.ship_line1 or '' }}" required>
+          <input name="ship_line2" placeholder="Apartment, suite (optional)"
+                 value="{{ r.ship_line2 or '' }}" style="margin-top:.3rem">
+          <div class="row" style="margin-top:.3rem;flex-wrap:nowrap">
+            <input name="ship_city" placeholder="City" value="{{ r.ship_city or '' }}" required>
+            <input name="ship_postcode" placeholder="ZIP" value="{{ r.ship_postcode or '' }}"
+                   required style="width:6rem">
+          </div>
+          <select name="ship_state" required style="margin-top:.3rem">
+            {% for s in states %}
+              <option {{ 'selected' if r.ship_state == s }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn ghost small" type="submit" style="margin-top:.5rem">Save</button>
+        </form>
+      </details>
+    </td>
     <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
     <td class="log">{{ r.provider or '—' }}</td>
     <td>
