@@ -9,6 +9,13 @@ images/renders/
 # The club's own data: database, invoices, outbox.
 api/var/
 
+# Member exports and the mailing waves cut from them: names, home addresses,
+# dates of birth, telephone numbers. tools/plan_invitations.py refuses to
+# write inside the repository; this is in case a copy arrives another way.
+*_member_export*.csv
+wave-*.csv
+held-back.csv
+
 __pycache__/
 *.py[cod]
 .pytest_cache/

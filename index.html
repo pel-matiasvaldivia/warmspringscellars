@@ -3086,6 +3086,45 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     }
   }
 
+  // A link from a campaign can carry what we already know, so somebody we
+  // wrote to is not asked to type their own name back to us. Nothing here is
+  // trusted: it only fills the fields in, and the person can change every one
+  // of them before anything is sent. `src` records which letter brought them,
+  // which is the only way to tell afterwards whether a mailing was worth it.
+  var campaign = '';
+  (function prefill() {
+    var params = new URLSearchParams(window.location.search);
+    if (!params.toString()) return;
+    campaign = (params.get('src') || '').slice(0, 60);
+
+    [['f', '#f-first'], ['l', '#f-last'], ['e', '#f-email'],
+     ['c', '#f-city'], ['st', '#f-state']].forEach(function (pair) {
+      var value = (params.get(pair[0]) || '').trim();
+      var input = $(pair[1]);
+      if (!value || !input) return;
+      if (input.tagName === 'SELECT') {
+        // A state we do not have in the list is left for them to pick.
+        var known = $$('option', input).some(function (o) { return o.value === value; });
+        if (!known) return;
+      }
+      input.value = value;
+      syncFilled(input);
+    });
+
+    if (campaign) {
+      var referral = $('#f-referral');
+      if (referral) {
+        // The list came from Deerfield, so that is the honest answer to show.
+        // They can change it, and if they do, their answer is the one sent.
+        var option = $$('option', referral).filter(function (o) {
+          return o.textContent.indexOf('Deerfield') >= 0;
+        })[0];
+        if (option) { referral.value = option.value || option.textContent; syncFilled(referral); }
+        referral.addEventListener('change', function () { campaign = ''; });
+      }
+    }
+  })();
+
   // States the winery has no licence for. Shown but refused, with the reason
   // up front rather than after the whole form has been filled in.
   var UNLICENSED = ['Alabama', 'Arkansas', 'Delaware', 'Kentucky', 'Mississippi', 'Utah'];
@@ -3142,7 +3181,12 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       city: $('#f-city').value.trim(),
       state: $('#f-state').value,
       tier_interest: $('#f-tier').value,
-      referral: $('#f-referral').value,
+      // The campaign tag replaces the dropdown only while the dropdown still
+      // holds what the campaign put there; touching it hands the answer back
+      // to the person, which is where it belongs.
+      referral: campaign
+        ? $('#f-referral').value + ' · ' + campaign
+        : $('#f-referral').value,
       note: $('#f-note').value.trim()
     };
 

@@ -1,0 +1,155 @@
+<!-- The letter that goes to a list of people who already belong to somebody
+     else's wine club. Merge fields are in {{ }} for whichever sender renders
+     it; {{link}} is the personalised one from tools/plan_invitations.py, which
+     carries the person's details into the form and records which wave they
+     came from.
+
+     Tables and inline styles only, and no image, for the same reasons as
+     auto-reply.html: Outlook on Windows renders mail through Word, and blocks
+     remote images until the reader allows them.
+
+     ONE SENTENCE NEEDS THE WINERY'S SIGN-OFF before this is sent — the one
+     marked below that says why this person is hearing from us. What is there
+     now is what the website itself supports. If the real connection is more
+     direct than that, say the direct thing: it is the strongest line in the
+     letter and the only one the reader is actually weighing. -->
+<table cellpadding="0" cellspacing="0" border="0" role="presentation"
+       style="border-collapse:collapse;width:100%;max-width:560px;
+              font-family:Arial, Helvetica, sans-serif;color:#2c1e24;">
+  <tr>
+    <td style="padding:0 0 22px;">
+      <div style="font-family:Georgia, 'Times New Roman', Times, serif;font-size:17px;
+                  line-height:22px;color:#5c0037;letter-spacing:1.6px;">
+        WARM SPRINGS <span style="font-style:italic;letter-spacing:0.2px;">Cellar</span>
+      </div>
+      <div style="font-size:11px;line-height:16px;letter-spacing:1.4px;
+                  text-transform:uppercase;color:#9a8890;padding-top:4px;">
+        Glen Ellen &middot; Sonoma Valley &middot; Est. 1982
+      </div>
+    </td>
+  </tr>
+  <tr><td style="border-top:1px solid #e2d8d0;padding:22px 0 0;"></td></tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      {{first_name}},
+    </td>
+  </tr>
+
+  <!-- ↓↓ THE SENTENCE THAT NEEDS SIGNING OFF ↓↓ -->
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      You are hearing from us because you are on the Deerfield club list, and
+      the two names are not strangers to each other: Robert Rex advises this
+      winery, and one of the wines in our allocation is grown on Deerfield
+      Vineyard fruit. We thought you should know we exist before anyone else
+      did.
+    </td>
+  </tr>
+  <!-- ↑↑ THE SENTENCE THAT NEEDS SIGNING OFF ↑↑ -->
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Warm Springs Cellar is small on purpose. About a thousand cases a year
+      out of Glen Ellen, made by Cecilia Valdivia, with Robert Rex in counsel
+      &mdash; five decades of chemistry and craft asking the awkward questions.
+      There is no shop. Nearly everything we make goes directly to the people
+      on our allocation list, and the list is why we are writing.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:6px 0 10px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-collapse:collapse;width:100%;border:1px solid #e2d8d0;">
+        <tr>
+          <td style="padding:16px 18px;border-bottom:1px solid #e2d8d0;">
+            <div style="font-family:Georgia,'Times New Roman',Times,serif;font-size:15px;color:#2c1e24;">
+              The Founder&rsquo;s Reserve &mdash; $275
+            </div>
+            <div style="font-size:13px;line-height:20px;color:#5c4650;padding-top:4px;">
+              Six bottles a shipment, library wines among them. Shipping included.
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 18px;">
+            <div style="font-family:Georgia,'Times New Roman',Times,serif;font-size:15px;color:#2c1e24;">
+              The Full Case &mdash; $550
+            </div>
+            <div style="font-size:13px;line-height:20px;color:#5c4650;padding-top:4px;">
+              Twelve bottles, every current release. Shipping included.
+            </div>
+          </td>
+        </tr>
+      </table>
+      <div style="font-size:12px;line-height:19px;color:#9a8890;padding-top:8px;">
+        Three shipments a year &mdash; spring, autumn and Christmas. Carriage is
+        ours on every one. Stay for three and then leave whenever you like.
+      </div>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:16px 0 16px;">
+      Every request is read by hand, and you will hear back about what is open
+      and what it costs. We do not keep a waiting list you never hear from.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:6px 0 22px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-collapse:collapse;">
+        <tr>
+          <td style="background:#5c0037;padding:13px 26px;">
+            <a href="{{link}}"
+               style="color:#ffffff;text-decoration:none;font-family:Arial, Helvetica, sans-serif;
+                      font-size:12px;letter-spacing:2px;text-transform:uppercase;display:inline-block;">
+              Request an allocation
+            </a>
+          </td>
+        </tr>
+      </table>
+      <div style="font-size:12px;line-height:18px;color:#5c4650;padding-top:10px;">
+        Your details are already in the form &mdash; it should take a minute. We
+        can only ship where direct wine shipping is permitted, and the form will
+        say straight away if your state is not one of them.
+      </div>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 22px;">
+      And if the answer is no, that is a perfectly good answer. This is the only
+      letter of its kind you will get from us unless you ask to be on the list.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e2d8d0;padding:18px 0 0;
+               font-size:12px;line-height:19px;color:#5c4650;">
+      <strong style="font-weight:normal;color:#2c1e24;">Cecilia Valdivia</strong><br>
+      Owner &amp; Winemaker, Warm Springs Cellar<br>
+      <a href="https://warmspringscellar.com" style="color:#5c0037;text-decoration:none;">warmspringscellar.com</a>
+      &nbsp;&middot;&nbsp;
+      <a href="mailto:club@warmspringscellar.com" style="color:#5c4650;text-decoration:none;">club@warmspringscellar.com</a>
+    </td>
+  </tr>
+
+  <!-- Required, not decoration. CAN-SPAM wants a real postal address and a
+       working opt-out; Gmail and Yahoo want one-click unsubscribe on bulk mail
+       and will junk a sender who does not have it. The sending platform fills
+       both of these in — check that it did before the first send. -->
+  <tr>
+    <td style="padding:16px 0 0;font-size:11px;line-height:17px;color:#9a8890;">
+      You are receiving this at {{email}} because you are a member of the
+      Deerfield Ranch Winery wine club.
+      <a href="{{unsubscribe_url}}" style="color:#9a8890;">Unsubscribe</a>
+      and we will not write again.<br><br>
+      Warm Springs Cellar &middot; {{postal_address}}<br>
+      You must be 21 or older to purchase wine in the United States.
+      An adult signature is required on delivery.
+    </td>
+  </tr>
+</table>
