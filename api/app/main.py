@@ -6,6 +6,7 @@ state, it belongs in flow.py where it can be tested without a request.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import secrets
 import time
@@ -55,7 +56,32 @@ async def lifespan(_: FastAPI):
           f" db={settings.db_path}")
     for warning in settings.warnings():
         print(f"[club] NOT CONFIGURED: {warning}")
-    yield
+    keeper = asyncio.create_task(keep_books_connected())
+    try:
+        yield
+    finally:
+        keeper.cancel()
+
+
+KEEPALIVE_EVERY_SECONDS = 24 * 3600
+
+
+async def keep_books_connected() -> None:
+    """Once a day, refresh QuickBooks if its hundred-day lapse is near.
+
+    Releases are months apart. Without this, the connection would lapse
+    between two of them and the next release would queue with nowhere to go.
+    """
+    keep_alive = getattr(ledger, "keep_alive", None)
+    if keep_alive is None:
+        return
+    while True:
+        try:
+            if await asyncio.to_thread(keep_alive):
+                print("[club] QuickBooks connection refreshed by the keep-alive")
+        except Exception as exc:                               # noqa: BLE001
+            print(f"[club] QuickBooks keep-alive failed: {exc}")
+        await asyncio.sleep(KEEPALIVE_EVERY_SECONDS)
 
 
 app = FastAPI(title="Warm Springs Cellar — club", docs_url=None, redoc_url=None,

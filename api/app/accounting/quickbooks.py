@@ -31,6 +31,7 @@ in QuickBooks, by the names in the settings, or the push fails saying so.
 
 from __future__ import annotations
 
+import hashlib
 import secrets
 import time
 from dataclasses import dataclass, field
@@ -54,6 +55,15 @@ MINOR_VERSION = "75"
 
 SCOPE = "com.intuit.quickbooks.accounting"
 
+# Intuit's idempotency key is the `requestid` QUERY PARAMETER, at most fifty
+# characters and unique within the company. A `Request-Id` header is ignored,
+# which would leave a retried payment free to post twice.
+REQUEST_ID_MAX = 50
+
+# How close to the hundred-day lapse the keep-alive refreshes. Releases are
+# months apart, so without it the connection dies between two of them.
+KEEPALIVE_DAYS = 30
+
 # Refresh a little early. A token that expires between the check and the call
 # is a 401 that looks like a configuration problem and is not one.
 EXPIRY_SKEW_SECONDS = 120
@@ -62,6 +72,16 @@ EXPIRY_SKEW_SECONDS = 120
 def _cents(value: int) -> float:
     """Intuit takes decimal amounts. Only ever two places, from integer cents."""
     return round(value / 100, 2)
+
+
+def request_id(kind: str, key: str) -> str:
+    """A stable `requestid` for one document: same document, same id.
+
+    Hashed because the natural key (an email, an invoice number) can run past
+    Intuit's fifty characters, and an over-long id is refused outright.
+    """
+    digest = hashlib.sha256(key.encode()).hexdigest()
+    return f"{kind}-{digest}"[:REQUEST_ID_MAX]
 
 
 def _escape(value: str) -> str:
@@ -154,8 +174,11 @@ class QuickBooksLedger:
     def api_base(self) -> str:
         return PRODUCTION_API if self.environment == "production" else SANDBOX_API
 
-    def _company_url(self, path: str, realm_id: str) -> str:
-        return f"{self.api_base}/v3/company/{realm_id}/{path}?minorversion={MINOR_VERSION}"
+    def _company_url(self, path: str, realm_id: str, request_id: str | None = None) -> str:
+        url = f"{self.api_base}/v3/company/{realm_id}/{path}?minorversion={MINOR_VERSION}"
+        if request_id:
+            url += f"&requestid={request_id}"
+        return url
 
     # ── the consent dance ────────────────────────────────────────────────
     def authorize_url(self, state: str) -> str:
@@ -245,6 +268,24 @@ class QuickBooksLedger:
                        "days, so the date above is a deadline, not a detail."),
         }
 
+    def keep_alive(self, within_days: int = KEEPALIVE_DAYS) -> bool:
+        """Refresh if the hundred-day lapse is near. True when it refreshed.
+
+        A refresh is itself use, so the lapse moves a hundred days on. Meant to
+        run daily; between releases nothing else would touch the connection.
+        """
+        tokens = self.store.read()
+        if not tokens.connected or not tokens.refresh_expires_at:
+            return False
+        try:
+            deadline = datetime.fromisoformat(tokens.refresh_expires_at)
+        except ValueError:
+            deadline = datetime.now(timezone.utc)
+        if deadline - datetime.now(timezone.utc) > timedelta(days=within_days):
+            return False
+        self.refresh(tokens)
+        return True
+
     # ── calling the company ──────────────────────────────────────────────
     def _tokens(self) -> Tokens:
         tokens = self.store.read()
@@ -261,14 +302,12 @@ class QuickBooksLedger:
             "Authorization": f"Bearer {tokens.access_token}",
             "Accept": "application/json",
         }
-        if request_id:
-            # Intuit's own idempotency key: the same id replays the first
-            # result instead of writing a second document.
-            headers["Request-Id"] = request_id
 
         try:
+            # The same requestid replays Intuit's first answer instead of
+            # writing a second document, which is what makes a retry safe.
             res = httpx.request(
-                method, self._company_url(path, tokens.realm_id),
+                method, self._company_url(path, tokens.realm_id, request_id),
                 json=json_body, headers=headers, timeout=self.timeout,
             )
         except httpx.HTTPError as exc:
@@ -284,7 +323,7 @@ class QuickBooksLedger:
             raise AccountingError(_intuit_error(res))
         return res.json()
 
-    def _query(self, statement: str) -> dict:
+    def _query(self, statement: str, retry_auth: bool = True) -> dict:
         tokens = self._tokens()
         url = (f"{self.api_base}/v3/company/{tokens.realm_id}/query"
                f"?minorversion={MINOR_VERSION}")
@@ -297,9 +336,11 @@ class QuickBooksLedger:
             )
         except httpx.HTTPError as exc:
             raise AccountingError(f"could not reach QuickBooks: {exc}") from exc
-        if res.status_code == 401:
+        if res.status_code == 401 and retry_auth:
+            # Once. A second 401 is a wrong company or a revoked app, and
+            # refreshing again would only loop.
             self.refresh(self.store.read())
-            return self._query(statement)
+            return self._query(statement, retry_auth=False)
         if res.status_code >= 400:
             raise AccountingError(_intuit_error(res))
         return res.json().get("QueryResponse", {})
@@ -331,7 +372,7 @@ class QuickBooksLedger:
                                  "CountrySubDivisionCode": customer.state}.items() if v}
         try:
             created = self._request("POST", "customer", json_body=body,
-                                    request_id=f"cust-{customer.email}")
+                                    request_id=request_id("cust", customer.email.lower()))
         except AccountingError as exc:
             # QuickBooks rejects a duplicate DisplayName even when the email
             # differs. Fall back to the name match rather than failing the
@@ -394,7 +435,7 @@ class QuickBooksLedger:
         }
         try:
             created = self._request("POST", "invoice", json_body=body,
-                                    request_id=f"inv-{invoice.number}")
+                                    request_id=request_id("inv", invoice.number))
         except AccountingError as exc:
             # A company with "warn on duplicate number" set refuses the second
             # attempt. Adopt the document already there instead of writing a
@@ -428,7 +469,7 @@ class QuickBooksLedger:
         if self.deposit_account:
             body["DepositToAccountRef"] = {"value": self.deposit_account}
         created = self._request("POST", "payment", json_body=body,
-                                request_id=f"pay-{payment.invoice_number}")
+                                request_id=request_id("pay", payment.invoice_number))
         return str(created["Payment"]["Id"])
 
 

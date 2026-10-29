@@ -222,6 +222,7 @@ class StubIntuit:
     def __init__(self, **routes):
         self.routes = routes
         self.calls: list[tuple[str, str, dict | None]] = []
+        self.urls: list[str] = []
         self.token_calls = 0
 
     # the two entry points the adapter uses
@@ -241,6 +242,7 @@ class StubIntuit:
     def request(self, method, url, *, json=None, headers=None, timeout=None):
         entity = url.split("/company/")[1].split("?")[0].split("/")[-1]
         self.calls.append((method, entity, json))
+        self.urls.append(url)
         return self._answer(entity, json)
 
     def _answer(self, key, body):
@@ -498,3 +500,70 @@ def test_a_quote_in_a_name_cannot_rewrite_the_query():
     # O'Brien. The escape is what keeps that a name and not a clause.
     assert _escape("O'Brien") == "O\\'Brien"
     assert _escape("a\\b") == "a\\\\b"
+
+
+# ── idempotency, the retry guard, and the keep-alive ─────────────────────
+def _paid():
+    from app.accounting.base import Payment
+    return Payment(invoice_number="WSC-INV-2026-0001", amount_cents=20500, currency="usd",
+                   paid_at="2026-04-02T10:05:00+00:00", customer=_a_customer(),
+                   reference="pi_123")
+
+
+def test_the_idempotency_key_travels_as_intuits_query_parameter(monkeypatch, tmp_path):
+    from urllib.parse import parse_qs, urlparse
+
+    stub = StubIntuit(
+        **{"query:customer": httpx.Response(
+               200, json={"QueryResponse": {"Customer": [{"Id": "42"}]}}),
+           "payment": httpx.Response(200, json={"Payment": {"Id": "2002"}})},
+    )
+    qbo = _connected(monkeypatch, tmp_path, stub)
+    qbo.push_payment(_paid(), "1001")
+    qbo.push_payment(_paid(), "1001")          # the retry after a timeout
+
+    ids = [parse_qs(urlparse(u).query)["requestid"][0] for u in stub.urls]
+    # Intuit replays the first answer for a repeated requestid, so a retried
+    # payment cannot post twice — but only if the id is in the query string.
+    assert len(ids) == 2 and ids[0] == ids[1]
+    assert len(ids[0]) <= 50
+
+
+def test_a_long_email_still_makes_a_valid_request_id():
+    from app.accounting.quickbooks import request_id
+    rid = request_id("cust", "a.very.long.member.address.indeed@some-winery-friends.example.com")
+    assert len(rid) <= 50
+    assert rid == request_id("cust", "a.very.long.member.address.indeed@some-winery-friends.example.com")
+    assert rid != request_id("cust", "someone.else@example.com")
+
+
+def test_a_second_401_on_a_query_gives_up_instead_of_looping(monkeypatch, tmp_path):
+    stub = StubIntuit(token=TOKEN_BODY,
+                      **{"query:customer": httpx.Response(401, json={})})
+    qbo = _connected(monkeypatch, tmp_path, stub)
+    with pytest.raises(AccountingError):
+        qbo._customer_ref(_a_customer())
+    assert stub.token_calls == 1
+
+
+def test_the_keep_alive_refreshes_only_near_the_lapse(monkeypatch, tmp_path):
+    from datetime import datetime, timedelta, timezone
+
+    stub = StubIntuit(token=TOKEN_BODY)
+    qbo = ledger_with(monkeypatch, tmp_path, stub)
+    assert qbo.keep_alive() is False           # never connected: nothing to keep
+
+    far = (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
+    qbo.store.write(Tokens(realm_id="r", access_token="a", refresh_token="refresh-0",
+                           access_expires_at=far, refresh_expires_at=far))
+    assert qbo.keep_alive() is False
+    assert stub.token_calls == 0
+
+    near = (datetime.now(timezone.utc) + timedelta(days=10)).isoformat()
+    qbo.store.write(Tokens(realm_id="r", access_token="a", refresh_token="refresh-0",
+                           access_expires_at=near, refresh_expires_at=near))
+    assert qbo.keep_alive() is True
+    assert stub.token_calls == 1
+    # The refresh moved the lapse a hundred days on.
+    after = datetime.fromisoformat(qbo.store.read().refresh_expires_at)
+    assert after - datetime.now(timezone.utc) > timedelta(days=90)
