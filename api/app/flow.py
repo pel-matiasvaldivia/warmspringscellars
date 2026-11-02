@@ -24,6 +24,8 @@ from .catalogue import Tier, catalogue
 from .config import SHIPPABLE_STATES, US_STATES, Settings
 from .db import Database, log, next_in_sequence, now
 from .payments import CardSaved, PaymentProvider, as_metadata
+from .stock import Line, Member, Plan, Wine
+from .stock import plan_release as compute_plan
 
 
 class FlowError(RuntimeError):
@@ -777,33 +779,255 @@ class Flow:
             return release_id
 
     def generate_release_orders(self, release_id: int, actor: str) -> list[int]:
-        """One order per active membership. Safe to run twice.
+        """Raise the orders this release can actually fill. Safe to run twice.
+
+        A composed release raises orders only for the memberships the plan
+        covers, and commits the bottles in the same transaction: orders and
+        allocation agree because they are one commit, so the club cannot end
+        up having charged for wine the count says is not there.
+
+        A release with no composition keeps the old behaviour — one order per
+        active member, stock unchecked. That is not a safe default and the
+        screen says so in red; it is kept because a club that has not written
+        its inventory down yet still has to be able to ship.
 
         The (membership, release) pair is unique in the schema, so a second run
-        skips anyone already covered rather than billing them again.
+        skips anyone already covered rather than billing them again — and
+        allocates only for the orders it actually raised.
         """
         created: list[int] = []
+        raised: dict[str, int] = {}
         with self.db.transaction() as con:
             _require(con, "release", release_id)
+            plan = self._plan(con, release_id)
+            eligible: set[int] | None = set(plan.covered) if plan.composed else None
+
             members = con.execute(
                 "SELECT * FROM membership WHERE status = 'active' ORDER BY id"
             ).fetchall()
             for member in members:
+                member_id = int(member["id"])
+                if eligible is not None and member_id not in eligible:
+                    continue
                 exists = con.execute(
                     "SELECT 1 FROM \"order\" WHERE membership_id = ? AND release_id = ?",
-                    (member["id"], release_id),
+                    (member_id, release_id),
                 ).fetchone()
                 if exists:
                     continue
                 tier = catalogue().get(member["tier_key"])
                 if tier is None:
-                    log(con, "membership", int(member["id"]), "skipped_unknown_tier",
+                    log(con, "membership", member_id, "skipped_unknown_tier",
                         tier=member["tier_key"])
                     continue
-                created.append(self._create_order(con, int(member["id"]), tier, release_id))
+                created.append(self._create_order(con, member_id, tier, release_id))
+                raised[tier.key] = raised.get(tier.key, 0) + 1
+
+            if eligible is not None and raised:
+                self._commit_bottles(con, release_id, raised, actor)
             con.execute("UPDATE \"release\" SET status = 'open' WHERE id = ?", (release_id,))
-            log(con, "release", release_id, "orders_generated", actor=actor, count=len(created))
+            log(con, "release", release_id, "orders_generated", actor=actor,
+                count=len(created), stock_checked=plan.composed,
+                unfilled=len(plan.unfilled) if plan.composed else 0)
         return created
+
+    def _commit_bottles(self, con: sqlite3.Connection, release_id: int,
+                        raised: dict[str, int], actor: str) -> None:
+        """Take the bottles for the orders just raised out of stock.
+
+        One move per wine rather than one per order: a move is tied to the
+        release and the tier, not to an order, so a row per order would add
+        volume without adding anything anyone could read. Running generation
+        again allocates only for what that run raised, which is why the count
+        comes in as an argument instead of being read back from the orders.
+        """
+        shipments = ", ".join(f"{count} × {tier}" for tier, count in sorted(raised.items()))
+        per_wine: dict[int, int] = {}
+        for tier_key, count in raised.items():
+            for row in con.execute(
+                "SELECT wine_id, bottles FROM release_item"
+                " WHERE release_id = ? AND tier_key = ?", (release_id, tier_key),
+            ):
+                wine_id = int(row["wine_id"])
+                per_wine[wine_id] = per_wine.get(wine_id, 0) + int(row["bottles"]) * count
+        for wine_id, bottles in sorted(per_wine.items()):
+            con.execute(
+                "INSERT INTO stock_move (created_at, wine_id, bottles, kind, release_id,"
+                " note, actor) VALUES (?, ?, ?, 'allocated', ?, ?, ?)",
+                (now(), wine_id, -bottles, release_id, shipments, actor),
+            )
+
+    # ── the cellar: wines, bottles, and what a release is made of ────────
+    def add_wine(self, sku: str, name: str, vintage: str | int | None,
+                 actor: str) -> int:
+        sku = " ".join(str(sku or "").split()).upper()
+        name = " ".join(str(name or "").split())
+        if not sku or not name:
+            raise FlowError("A wine needs a code and a name.")
+        year: int | None = None
+        if str(vintage or "").strip():
+            try:
+                year = int(str(vintage).strip())
+            except ValueError:
+                raise FlowError("The vintage should be a year, or left empty.") from None
+        with self.db.transaction() as con:
+            clash = con.execute("SELECT id FROM wine WHERE sku = ?", (sku,)).fetchone()
+            if clash:
+                raise FlowError(f"{sku} is already in the cellar.")
+            cur = con.execute(
+                "INSERT INTO wine (created_at, sku, name, vintage, status)"
+                " VALUES (?, ?, ?, ?, 'active')", (now(), sku, name, year),
+            )
+            wine_id = int(cur.lastrowid)
+            log(con, "wine", wine_id, "added", actor=actor, sku=sku, name=name)
+            return wine_id
+
+    def set_wine_status(self, wine_id: int, target: str, actor: str) -> None:
+        if target not in {"active", "retired"}:
+            raise FlowError("A wine is either active or retired.")
+        with self.db.transaction() as con:
+            _require(con, "wine", wine_id)
+            con.execute("UPDATE wine SET status = ? WHERE id = ?", (target, wine_id))
+            log(con, "wine", wine_id, target, actor=actor)
+
+    def receive_bottles(self, wine_id: int, bottles: int, note: str, actor: str) -> None:
+        """Bottles the club now has that it did not have before."""
+        bottles = _whole(bottles, "The number of bottles")
+        if bottles == 0:
+            raise FlowError("That would change nothing.")
+        with self.db.transaction() as con:
+            _require(con, "wine", wine_id)
+            con.execute(
+                "INSERT INTO stock_move (created_at, wine_id, bottles, kind, note, actor)"
+                " VALUES (?, ?, ?, 'received', ?, ?)",
+                (now(), wine_id, bottles, " ".join(str(note or "").split()) or None, actor),
+            )
+            log(con, "wine", wine_id, "received", actor=actor, bottles=bottles)
+
+    def count_bottles(self, wine_id: int, counted: int, actor: str) -> int:
+        """Record a physical count. Returns the correction it had to make.
+
+        The count does not overwrite a balance, because there is no balance to
+        overwrite: it writes the difference between what was counted and what
+        the moves added up to. Both numbers go in the log, so a count that was
+        itself wrong can be found later instead of having quietly replaced the
+        truth.
+        """
+        counted = _whole(counted, "A count")
+        if counted < 0:
+            raise FlowError("A count cannot be negative.")
+        with self.db.transaction() as con:
+            _require(con, "wine", wine_id)
+            before = self._on_hand(con).get(wine_id, 0)
+            delta = counted - before
+            if delta:
+                con.execute(
+                    "INSERT INTO stock_move (created_at, wine_id, bottles, kind, note, actor)"
+                    " VALUES (?, ?, ?, 'count', ?, ?)",
+                    (now(), wine_id, delta, f"counted {counted}, books said {before}", actor),
+                )
+            log(con, "wine", wine_id, "counted", actor=actor,
+                counted=counted, was=before, correction=delta)
+            return delta
+
+    def set_release_item(self, release_id: int, tier_key: str, wine_id: int,
+                         bottles: int, actor: str) -> None:
+        """How many bottles of one wine go in one shipment of one tier.
+
+        Zero removes the wine from that tier's shipment, which is how a
+        composition is corrected — there is no separate delete to get wrong.
+        """
+        bottles = _whole(bottles, "The number of bottles")
+        if bottles < 0:
+            raise FlowError("A shipment cannot hold a negative number of bottles.")
+        if catalogue().get(tier_key) is None:
+            raise FlowError(f"{tier_key} is not a tier in the catalogue.")
+        with self.db.transaction() as con:
+            release = _require(con, "release", release_id)
+            _require(con, "wine", wine_id)
+            if release["status"] not in {"planned", "open"}:
+                raise FlowError(f"that release is {release['status']}")
+            if bottles == 0:
+                con.execute(
+                    "DELETE FROM release_item WHERE release_id = ? AND tier_key = ?"
+                    " AND wine_id = ?", (release_id, tier_key, wine_id),
+                )
+            else:
+                con.execute(
+                    "INSERT INTO release_item (release_id, tier_key, wine_id, bottles)"
+                    " VALUES (?, ?, ?, ?) ON CONFLICT (release_id, tier_key, wine_id)"
+                    " DO UPDATE SET bottles = excluded.bottles",
+                    (release_id, tier_key, wine_id, bottles),
+                )
+            log(con, "release", release_id, "composed", actor=actor,
+                tier=tier_key, wine_id=wine_id, bottles=bottles)
+
+    def plan_release(self, release_id: int) -> Plan:
+        """What this release can ship, and who it cannot fill. Reads only."""
+        with self.db.connect() as con:
+            _require(con, "release", release_id)
+            return self._plan(con, release_id)
+
+    def _plan(self, con: sqlite3.Connection, release_id: int) -> Plan:
+        members = [
+            Member(
+                id=int(row["id"]),
+                tier_key=row["tier_key"],
+                name=f"{row['first_name']} {row['last_name']}".strip(),
+                state=row["ship_state"] or "",
+                has_card=bool(row["provider_customer_id"]
+                              and row["provider_payment_method"]),
+            )
+            for row in con.execute(
+                "SELECT * FROM membership WHERE status = 'active' ORDER BY id")
+        ]
+        lines = [
+            Line(tier_key=row["tier_key"], wine_id=int(row["wine_id"]),
+                 bottles=int(row["bottles"]))
+            for row in con.execute(
+                "SELECT * FROM release_item WHERE release_id = ?", (release_id,))
+        ]
+        wines = {
+            int(row["id"]): Wine(int(row["id"]), row["sku"], row["name"])
+            for row in con.execute("SELECT * FROM wine")
+        }
+        return compute_plan(
+            members=members,
+            lines=lines,
+            on_hand=self._on_hand(con),
+            wines=wines,
+            tiers={t.key: (t.name, t.bottles) for t in catalogue().tiers},
+            shippable_states=SHIPPABLE_STATES,
+        )
+
+    def _on_hand(self, con: sqlite3.Connection) -> dict[int, int]:
+        return {
+            int(row["wine_id"]): int(row["bottles"])
+            for row in con.execute(
+                "SELECT wine_id, COALESCE(SUM(bottles), 0) AS bottles"
+                " FROM stock_move GROUP BY wine_id")
+        }
+
+    def cellar(self) -> list[dict]:
+        """Every wine with what it has on hand and what is committed."""
+        rows = self.db.all(
+            "SELECT w.*,"
+            " (SELECT COALESCE(SUM(bottles), 0) FROM stock_move s WHERE s.wine_id = w.id)"
+            "   AS on_hand,"
+            " (SELECT COALESCE(SUM(-bottles), 0) FROM stock_move s WHERE s.wine_id = w.id"
+            "   AND s.kind = 'allocated') AS committed"
+            " FROM wine w ORDER BY w.status, w.name"
+        )
+        return [dict(row) for row in rows]
+
+
+def _whole(value: object, what: str) -> int:
+    """A number of bottles, or a sentence a person at a desk can act on."""
+    text = str(value if value is not None else "").strip()
+    try:
+        return int(text)
+    except ValueError:
+        raise FlowError(f"{what} has to be a whole number.") from None
 
 
 def _require(con: sqlite3.Connection, table: str, row_id: int) -> sqlite3.Row:

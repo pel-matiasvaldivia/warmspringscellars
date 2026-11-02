@@ -67,7 +67,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 
 ---
 
-## 2. Las siete pestañas
+## 2. Las ocho pestañas
 
 | Pestaña | Para qué |
 | --- | --- |
@@ -76,8 +76,9 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 | **Members** | Quién está activo, en pausa o dado de baja |
 | **Orders** | Las órdenes y sus facturas en PDF |
 | **Shipments** | Los envíos, de "listo para empacar" a "entregado" |
-| **Releases** | Los despachos de temporada (abril y octubre) |
-| **Books** | QuickBooks: qué facturas ya están en los libros y qué falta |
+| **Releases** | Los despachos de temporada, y qué puede cumplir cada uno |
+| **Cellar** | Las botellas de las que el club puede disponer, y adónde fueron |
+| **Books** | QuickBooks o Xero: qué facturas ya están en los libros y qué falta |
 | **Mail** | Cómo está configurado el correo saliente, y un botón para probarlo |
 
 Las solicitudes pendientes y los envíos sin entregar suben solos al principio de
@@ -281,27 +282,93 @@ entregado es una conversación imposible de reconstruir seis meses después.
 
 ---
 
-## 6. Los dos despachos del año
+## 6. Los tres despachos del año
 
-Abril y octubre, dos por año. En **Releases**:
+Primavera, otoño y Navidad. En **Releases**:
 
 1. **"Plan it"** con nombre (`Spring 2026`) y fecha de despacho.
-2. **"Raise orders"** levanta **una orden por cada membresía activa**, con el
-   nivel y el precio de cada una. Salen en `pending_payment`: **ese botón no
-   cobra nada.**
-3. **"Charge N"** cobra esas órdenes contra las tarjetas que los socios
+2. **Componerlo** — abrir el despacho y decir qué lleva el envío de cada
+   nivel. De eso trata §6.1, y es lo nuevo.
+3. **"Raise orders"** levanta una orden **por cada socio para el que hay
+   vino**, con su nivel y su precio, y saca esas botellas de la bodega. Salen
+   en `pending_payment`: **ese botón no cobra nada.**
+4. **"Charge N"** cobra esas órdenes contra las tarjetas que los socios
    dejaron al sumarse. Ese es el botón que mueve la plata.
 
-**Dos botones, a propósito.** En el medio está el momento de mirar lo que se
-levantó —quiénes son, cuántas botellas son, si el vino existe—, que es el único
-control entre la bodega y una temporada que no puede cumplir. El botón dice
-cuántas órdenes quedan por cobrar, y desaparece cuando no queda ninguna.
+**Tres botones, a propósito.** Entre componer y levantar se ve quiénes entran
+y qué vino se corta primero. Entre levantar y cobrar se ve exactamente qué se
+levantó. Esos dos huecos son todo el control que hay entre la bodega y una
+temporada que no puede cumplir. El botón de cobro dice cuántas órdenes quedan,
+y desaparece cuando no queda ninguna.
 
-**Los dos se pueden apretar dos veces sin miedo.** El par (socio, despacho) es
-único en la base, así que volver a levantar saltea a quien ya tiene orden.
-Volver a cobrar saltea a quien ya pagó, y a la pasarela se le pasa la
-referencia de la orden como clave, así que un cobro que se cortó por timeout se
-salda una vez y no dos.
+**Todos se pueden apretar dos veces sin miedo.** El par (socio, despacho) es
+único en la base, así que volver a levantar saltea a quien ya tiene orden —y
+saca botellas solo por las órdenes que esa corrida levantó—. Volver a cobrar
+saltea a quien ya pagó, y a la pasarela se le pasa la referencia de la orden
+como clave, así que un cobro que se cortó por timeout se salda una vez y no
+dos.
+
+### 6.1 Componer un despacho, y quién se queda afuera
+
+Hacer clic en el nombre del despacho en **Releases**, o en el botón **Plan**.
+La página tiene tres partes.
+
+**Qué lleva el envío.** Una casilla por vino y por nivel. Vacío o cero quiere
+decir que ese vino no va en ese envío. Si las botellas no dan el número que el
+nivel promete —doce para The Full Case— la página lo dice, y lo sigue diciendo
+hasta que den. El socio lee esa cantidad en su factura.
+
+**El vino.** Una fila por vino: cuántas botellas lleva un envío de cada nivel,
+cuántas necesita el club entero, cuántas hay, y cuántas faltan. *On hand* ya
+descuenta lo que se llevaron los despachos anteriores.
+
+**Quién no se puede cumplir.** Los nombres, y el motivo al lado de cada uno.
+Cuatro motivos, y son conversaciones distintas:
+
+| Motivo | Qué significa |
+| --- | --- |
+| out of *un vino* | Se acabó ese vino. El problema es el vino, no el socio |
+| not licensed to ship to *un estado* | El estado se cerró después de que se sumó: no se va a poder enviar, así que tampoco se le asigna vino |
+| this release does not say what that tier gets | Se compuso un nivel y el otro no |
+| *un nivel* is no longer in the catalogue | Está en un nivel que se retiró |
+
+**Cuando no alcanza, se cumple a quien se sumó primero.** Esa es toda la
+regla, y es a propósito una que se le puede decir en voz alta al socio que se
+queda afuera. Una sorpresa que conviene conocer: funciona por botella, no como
+una sola fila. Alguien que se sumó después igual puede quedar cumplido si los
+vinos de su nivel alcanzaron. Están tomando vino distinto, y retenerle el
+envío no le pondría una botella en la mano al otro.
+
+**A un socio sin tarjeta igual se le asigna vino**, y aparece en una lista
+aparte para poder llamarlo antes. No se lo retiene: tiene una carta y un
+enlace, y su orden espera en `failed` hasta que lo use. Pero una botella
+asignada a una tarjeta que va a rebotar es una botella que se le quitó a
+alguien que sí iba a pagar.
+
+**Un despacho sin componer sigue funcionando como antes** — una orden por
+socio activo, sin controlar nada. La pantalla lo dice en rojo, y el mensaje
+después de apretar también. Se dejó posible porque un club que todavía no
+escribió su inventario igual tiene que poder despachar.
+
+### 6.2 La pestaña Cellar
+
+Se agrega un vino con un código y un nombre. Después, por vino, dos botones
+que se parecen y quieren decir cosas distintas:
+
+- **Received** suma lo que escribiste a lo que ya había. Botellas que entran.
+- **Counted** dice que el estante tiene esa cantidad, y escribe la *diferencia*.
+
+La diferencia importa. Un conteo no pisa nada: deja la corrección como un
+movimiento propio, con los dos números en la nota (`counted 114, books said
+120`). Un conteo que estaba mal se puede encontrar después, en vez de haber
+reemplazado la verdad en silencio. **Every movement**, abajo de todo, es la
+historia completa, y *On hand* no es otra cosa que su suma.
+
+Este es el estante del club, no el registro de producción de la bodega. Acá
+nadie sabe de la sala de degustación ni de las ventas al comercio, así que un
+vino que sale por otra puerta deja este número alto de más hasta que alguien
+vuelva a contar. Contar antes de componer un despacho es la costumbre que hace
+que todo lo demás sea cierto.
 
 ### Cuando una tarjeta es rechazada
 
@@ -717,7 +784,12 @@ se versiona.
       llegar ahí
 - [ ] Respaldo del volumen `club-data` automatizado
 
-Dos cosas que **no** están implementadas y conviene tener presentes: los límites
-de volumen por cliente y por estado que vienen con los permisos DTC, y el
-inventario — el sistema levanta órdenes sin preguntar si hay botellas. Están
-anotadas en `api/FLOW.md`.
+Una cosa que **no** está implementada y conviene tener presente: los límites
+de volumen por cliente y por estado que vienen con los permisos DTC. Está
+anotada en `api/FLOW.md`.
+
+El stock ahora sí se controla —un despacho compuesto levanta órdenes solo por
+los socios para los que hay botellas (§6.1)— pero solo contra lo que alguien
+haya contado en la pestaña **Cellar**. Es el estante del club y no el registro
+de producción de la bodega, así que **hay que contar antes de componer el
+primer despacho real**.

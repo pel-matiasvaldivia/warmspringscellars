@@ -787,7 +787,9 @@ def admin_releases(request: Request, actor: str = Depends(require_admin)) -> HTM
     rows = db.all(
         'SELECT r.*, (SELECT COUNT(*) FROM "order" o WHERE o.release_id = r.id) AS order_count,'
         ' (SELECT COUNT(*) FROM "order" o WHERE o.release_id = r.id'
-        "  AND o.status IN ('pending_payment', 'failed')) AS unpaid_count"
+        "  AND o.status IN ('pending_payment', 'failed')) AS unpaid_count,"
+        " (SELECT COUNT(DISTINCT wine_id) FROM release_item i"
+        "  WHERE i.release_id = r.id) AS composed"
         ' FROM "release" r ORDER BY r.ships_on DESC'
     )
     return admin_page(request, "releases.html", "releases", rows=rows)
@@ -804,9 +806,126 @@ async def admin_create_release(request: Request,
 @app.post("/admin/releases/{release_id}/generate")
 def admin_generate_orders(release_id: int,
                           actor: str = Depends(require_admin)) -> RedirectResponse:
+    try:
+        plan = flow.plan_release(release_id)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/releases?done=Not done: {exc}", status_code=303)
     created = flow.generate_release_orders(release_id, actor)
     done = f"{len(created)} order(s) raised. Nothing is charged until you press Charge."
+    if not plan.composed:
+        done += (" This release has no composition, so nothing checked the stock —"
+                 " see Plan.")
+    elif plan.unfilled:
+        done += (f" {len(plan.unfilled)} member(s) could not be filled and were left out"
+                 " — they are listed under Plan.")
     return RedirectResponse(f"/admin/releases?done={done}", status_code=303)
+
+
+# ── the cellar: bottles, and what a release is made of ───────────────────
+@app.get("/admin/cellar", response_class=HTMLResponse)
+def admin_cellar(request: Request, actor: str = Depends(require_admin)) -> HTMLResponse:
+    moves = db.all(
+        "SELECT s.*, w.sku, w.name FROM stock_move s JOIN wine w ON w.id = s.wine_id"
+        " ORDER BY s.id DESC LIMIT 60"
+    )
+    return admin_page(request, "cellar.html", "cellar", wines=flow.cellar(), moves=moves)
+
+
+@app.post("/admin/cellar/wines")
+async def admin_add_wine(request: Request,
+                         actor: str = Depends(require_admin)) -> RedirectResponse:
+    form = await request.form()
+    try:
+        flow.add_wine(str(form.get("sku", "")), str(form.get("name", "")),
+                      str(form.get("vintage", "")), actor)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/cellar?done=Not saved: {exc}", status_code=303)
+    return RedirectResponse("/admin/cellar?done=In the cellar.", status_code=303)
+
+
+@app.post("/admin/cellar/wines/{wine_id}/bottles")
+async def admin_stock(request: Request, wine_id: int,
+                      actor: str = Depends(require_admin)) -> RedirectResponse:
+    """Bottles arriving, or a physical count. Deliberately two buttons.
+
+    "I received twelve more" and "I counted twelve" are different sentences
+    about the same wine, and a single box would make the wrong one easy.
+    """
+    form = await request.form()
+    try:
+        if str(form.get("how")) == "count":
+            delta = flow.count_bottles(wine_id, str(form.get("bottles", "")), actor)
+            done = ("Counted, and the books already said so."
+                    if delta == 0 else f"Counted. That corrected the books by {delta:+d}.")
+        else:
+            flow.receive_bottles(wine_id, str(form.get("bottles", "")),
+                                 str(form.get("note", "")), actor)
+            done = "Bottles in."
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/cellar?done=Not done: {exc}", status_code=303)
+    return RedirectResponse(f"/admin/cellar?done={done}", status_code=303)
+
+
+@app.post("/admin/cellar/wines/{wine_id}/status")
+async def admin_wine_status(request: Request, wine_id: int,
+                            actor: str = Depends(require_admin)) -> RedirectResponse:
+    form = await request.form()
+    try:
+        flow.set_wine_status(wine_id, str(form.get("status", "")), actor)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/cellar?done=Not done: {exc}", status_code=303)
+    return RedirectResponse("/admin/cellar?done=Done.", status_code=303)
+
+
+@app.get("/admin/releases/{release_id}/plan", response_class=HTMLResponse)
+def admin_release_plan(request: Request, release_id: int,
+                       actor: str = Depends(require_admin)) -> HTMLResponse:
+    release = db.one('SELECT * FROM "release" WHERE id = ?', (release_id,))
+    if release is None:
+        raise HTTPException(status_code=404, detail="no such release")
+    plan = flow.plan_release(release_id)
+    composition: dict[str, dict[int, int]] = {}
+    for row in db.all("SELECT * FROM release_item WHERE release_id = ?", (release_id,)):
+        composition.setdefault(row["tier_key"], {})[int(row["wine_id"])] = int(row["bottles"])
+    raised = db.one(
+        'SELECT COUNT(*) AS n FROM "order" WHERE release_id = ?', (release_id,))
+    return admin_page(
+        request, "plan.html", "releases", release=release, plan=plan,
+        composition=composition, raised=int(raised["n"]),
+        wines=[w for w in flow.cellar() if w["status"] == "active"],
+        tiers=catalogue().tiers,
+    )
+
+
+@app.post("/admin/releases/{release_id}/compose")
+async def admin_compose(request: Request, release_id: int,
+                        actor: str = Depends(require_admin)) -> RedirectResponse:
+    """One tier's whole shipment, saved in one press.
+
+    Every wine in the cellar is a box, and a blank or a zero means that wine is
+    not in this shipment — so correcting a composition is editing what is on
+    the screen rather than remembering to delete something that is not.
+    """
+    form = await request.form()
+    tier_key = str(form.get("tier_key", ""))
+    back = f"/admin/releases/{release_id}/plan"
+    try:
+        for field, value in form.items():
+            if not field.startswith("bottles_"):
+                continue
+            wine_id = int(field.removeprefix("bottles_"))
+            flow.set_release_item(release_id, tier_key, wine_id,
+                                  str(value).strip() or "0", actor)
+    except (FlowError, ValueError) as exc:
+        return RedirectResponse(f"{back}?done=Not saved: {exc}", status_code=303)
+
+    plan = flow.plan_release(release_id)
+    tier = next((t for t in plan.tiers if t.tier_key == tier_key), None)
+    done = "Composed."
+    if tier is not None and not tier.balanced:
+        done = (f"Saved, but that is {tier.composed} bottles and {tier.name} promises"
+                f" {tier.bottles}.")
+    return RedirectResponse(f"{back}?done={done}", status_code=303)
 
 
 def settle(result: dict, background: BackgroundTasks | None = None) -> None:

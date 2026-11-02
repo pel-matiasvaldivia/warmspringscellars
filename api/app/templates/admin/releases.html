@@ -2,9 +2,11 @@
 {% block body %}
 <h1>Releases</h1>
 <p class="sub">
-  A release raises one order for every active member, and then charges them. Two
-  presses, not one: nothing is charged until somebody has looked at what was raised.
-  Running either twice is safe.
+  Compose a release, raise its orders, then charge them. Three presses, not one:
+  the composition says what each tier's shipment holds, raising it takes those
+  bottles out of <a href="/admin/cellar">the cellar</a> and raises orders only for
+  the members there is wine for, and nothing is charged until somebody has looked
+  at what was raised. Running any of them twice is safe.
 </p>
 
 <div class="card">
@@ -25,17 +27,22 @@
 <div class="empty">No releases planned.</div>
 {% else %}
 <table>
-  <tr><th>Name</th><th>Ships</th><th>Status</th><th class="num">Orders</th>
-      <th class="num">Unpaid</th><th></th></tr>
+  <tr><th>Name</th><th>Ships</th><th>Status</th><th>Composed</th>
+      <th class="num">Orders</th><th class="num">Unpaid</th><th></th></tr>
   {% for r in rows %}
   <tr>
-    <td>{{ r.name }}</td>
+    <td><a href="/admin/releases/{{ r.id }}/plan">{{ r.name }}</a></td>
     <td class="num">{{ r.ships_on }}</td>
     <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+    <td>
+      {% if r.composed %}<span class="pill ok">{{ r.composed }} wine(s)</span>
+      {% else %}<span class="pill bad">not composed</span>{% endif %}
+    </td>
     <td class="num">{{ r.order_count }}</td>
     <td class="num">{{ r.unpaid_count }}</td>
     <td>
       <div class="row">
+        <a class="btn ghost small" href="/admin/releases/{{ r.id }}/plan">Plan</a>
         <form method="post" action="/admin/releases/{{ r.id }}/generate">
           <button class="btn ghost small" type="submit">Raise orders</button>
         </form>

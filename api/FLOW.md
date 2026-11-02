@@ -22,8 +22,8 @@ from what actually happened rather than from the current state of a record.
          │ provider confirms payment (webhook)
          ▼
     MEMBERSHIP ◀────────────────────┐
-     (active)                       │ each release cycle
-         │                          │
+     (active)                       │ each release cycle, for the members
+         │                          │ the RELEASE PLAN says there is wine for
          ├──▶ ORDER (service order) ┘
          │      │ paid
          │      ├──▶ INVOICE   (sequential, immutable, PDF)
@@ -62,6 +62,19 @@ for them, and taking the money first is how a club ends up owing bottles it
 does not have. So a release raises an order per active membership, and the
 desk charges those orders against the saved cards in a second, deliberate
 press.
+
+**A release is composed before it is raised.** For each tier, which wines and
+how many bottles of each — and from that, the bottles on hand and the members
+who are owed a shipment, `stock.py` works out who can be filled. Only those
+memberships get an order, and the bottles leave stock in the same commit. The
+club can still be short of wine; what it cannot be is short of wine *and*
+holding the money for it.
+
+Members are filled **in the order they joined**, and that is the whole policy.
+It is the one rule a winery can say out loud to the member who misses out.
+Seniority is per bottle rather than one queue: somebody who joined later is
+still filled if their tier's wines held out, because holding their shipment
+back would not put a bottle in the earlier member's hands.
 
 **Invoices are immutable.** Once issued an invoice is never edited — a
 correction is a credit note plus a new invoice. The number comes from a
@@ -211,5 +224,11 @@ export, which is why it exists even though the API adapter works.
   Nothing chases it on a schedule, and nothing gives up on it either.
 - **Tax.** Orders carry a tax field and it is computed as zero. Sales tax on
   DTC wine depends on the destination and is not something to guess at.
-- **Inventory.** Nothing decrements stock. With five wines and a few thousand
-  bottles this is a real gap once the club has more members than bottles.
+- **Inventory beyond the club's own shelf.** `stock_move` counts the bottles
+  the club may draw on and nets out what raised orders took, which is what the
+  release plan needs. It is not the winery's production record: nothing here
+  knows about barrels, bottling runs, the tasting room or trade sales, so the
+  figure it works from is only as good as the last count somebody typed in.
+  A wine that leaves by some other door leaves this ledger too high until the
+  next count corrects it — which is why counting is a first-class action and
+  its correction is a movement anyone can read, rather than a silent edit.

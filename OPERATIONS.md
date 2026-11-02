@@ -64,7 +64,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 
 ---
 
-## 2. The seven tabs
+## 2. The eight tabs
 
 | Tab | What it is for |
 | --- | --- |
@@ -73,8 +73,9 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 | **Members** | Who is active, paused or cancelled |
 | **Orders** | Orders and their invoice PDFs |
 | **Shipments** | Shipments, from ready-to-pack to delivered |
-| **Releases** | The seasonal despatches (April and October) |
-| **Books** | QuickBooks: what is filed, and what is still owed |
+| **Releases** | The seasonal despatches, and what each one can actually fill |
+| **Cellar** | The bottles the club may draw on, and where they went |
+| **Books** | QuickBooks or Xero: what is filed, and what is still owed |
 | **Mail** | How outgoing mail is configured, and a button to test it |
 
 Pending applications and undelivered shipments float to the top of their lists
@@ -280,27 +281,92 @@ delivered is a conversation nobody can reconstruct six months later.
 
 ---
 
-## 6. The two despatches a year
+## 6. The three despatches a year
 
-April and October. On **Releases**:
+Spring, Fall and Christmas. On **Releases**:
 
 1. **"Plan it"** with a name (`Spring 2026`) and the shipping date.
-2. **"Raise orders"** raises **one order per active membership**, at each
-   member's own tier and price. They are raised `pending_payment`: **this
-   press takes no money.**
-3. **"Charge N"** charges those orders against the cards members left when
+2. **Compose it** — open the release and say what each tier's shipment holds.
+   §6.1 is about this press, and it is the one that is new.
+3. **"Raise orders"** raises one order **for each member there is wine for**,
+   at their own tier and price, and takes those bottles out of the cellar.
+   They are raised `pending_payment`: **this press takes no money.**
+4. **"Charge N"** charges those orders against the cards members left when
    they joined. This is the press that moves money.
 
-**Two presses, on purpose.** Between them is the moment to look at what was
-raised — who is in it, how many bottles that is, whether the wine exists —
-which is the only check standing between the cellar and a season it cannot
-fill. The button says how many orders are waiting, and disappears when none
-are.
+**Three presses, on purpose.** Between composing and raising you can see who
+is in the release and which wine runs out first. Between raising and charging
+you can see exactly what was raised. Those two gaps are the whole check
+standing between the cellar and a season it cannot fill. The Charge button
+says how many orders are waiting, and disappears when none are.
 
-**Both are safe to press twice.** The (member, release) pair is unique in the
-database, so raising again skips anyone already covered. Charging again skips
+**All of them are safe to press twice.** The (member, release) pair is unique
+in the database, so raising again skips anyone already covered — and takes
+bottles only for the orders that run raised. Charging again skips
 anyone already paid, and the provider is given the order's own reference as
 its key, so a charge that timed out settles once rather than twice.
+
+### 6.1 Composing a release, and who gets left out
+
+Click the release's name on **Releases**, or the **Plan** button. The page
+has three parts.
+
+**What a shipment holds.** A box per wine, per tier. Blank or zero means that
+wine is not in that shipment. If the bottles do not add up to what the tier
+promises — twelve for The Full Case — the page says so and keeps saying so
+until they do. The member reads the bottle count on their invoice.
+
+**The wine.** One row per wine: how many bottles one shipment of each tier
+holds, how many the whole club needs, how many are on hand, and how short
+that leaves you. *On hand* already nets out what earlier releases took.
+
+**Who cannot be filled.** The names, and the reason against each. Four
+reasons, and they are different conversations:
+
+| Reason | What it means |
+| --- | --- |
+| out of *a wine* | The release ran out. The wine, not the member, is the problem |
+| not licensed to ship to *a state* | The state closed after they joined — it will not ship, so it is not allocated wine either |
+| this release does not say what that tier gets | You composed one tier and not the other |
+| *a tier* is no longer in the catalogue | They are on a tier that was withdrawn |
+
+**Who gets filled when there is not enough: whoever joined first.** That is
+the whole rule, and it is deliberately one you can say out loud to the member
+who misses out. One surprise worth knowing: it works per bottle, not as a
+single queue. Somebody who joined later can still be filled after an earlier
+member was not, when they are in a tier whose wines held out. They are
+drinking different wine, and holding their shipment back would not put a
+bottle in the other member's hands.
+
+**A member with no card on file is still allocated wine**, and listed
+separately so you can telephone them first. They are not held back — they have
+a letter and a link, and their order waits at `failed` until they use it. But
+a bottle allocated to a card that will decline is a bottle held back from
+somebody who would have paid.
+
+**A release with no composition still works the old way** — one order per
+active member, nothing checked. The screen says so in red, and so does the
+message after you press. It is left possible because a club that has not
+written its inventory down yet still has to be able to ship.
+
+### 6.2 The Cellar tab
+
+Add a wine with a code and a name. Then, per wine, two buttons that look
+similar and mean different things:
+
+- **Received** adds the number you typed to what is there. Bottles arriving.
+- **Counted** says the shelf holds that many, and writes the *difference*.
+
+The difference matters. A count does not overwrite anything — it records the
+correction as a movement of its own, with both numbers in the note
+(`counted 114, books said 120`). A count that was itself wrong can be found
+later, instead of having quietly replaced the truth. **Every movement** at the
+bottom of the page is the whole history, and *On hand* is nothing but its sum.
+
+This is the club's own shelf, not the winery's production record. Nothing
+here knows about the tasting room or trade sales, so a wine that leaves by
+another door leaves this count too high until somebody counts again. Counting
+before composing a release is the habit that makes the rest of it true.
 
 ### When a card is declined
 
@@ -715,7 +781,11 @@ template is the only part that is versioned.
       is better not to get there
 - [ ] Backups of the `club-data` volume automated
 
-Two things that are **not** implemented and are worth keeping in mind: the
-per-customer, per-state volume limits that come with DTC permits, and inventory
-— the service raises orders without asking whether there are bottles. Both are
+One thing that is **not** implemented and is worth keeping in mind: the
+per-customer, per-state volume limits that come with DTC permits. It is
 recorded in `api/FLOW.md`.
+
+Stock is now checked — a composed release raises orders only for the members
+there are bottles for (§6.1) — but only against what somebody counted into the
+**Cellar** tab. It is the club's own shelf and not the winery's production
+record, so **count before composing the first real release**.

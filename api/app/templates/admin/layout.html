@@ -93,6 +93,11 @@ label{display:block;font-size:.66rem;letter-spacing:.1em;text-transform:uppercas
 .warn{border-left:3px solid var(--warn);background:var(--surface);border:1px solid var(--border);
       padding:.85rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--text-2)}
 .warn b{color:var(--text)}
+/* Scoped to <p> on purpose: `ok` is also a pill colour, and an unscoped
+   notice-box rule would give every <span class="pill ok"> this padding. */
+p.ok{border-left:3px solid var(--ok);background:var(--surface);border:1px solid var(--border);
+     padding:.85rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--text-2)}
+p.ok b{color:var(--text)}
 .empty{color:var(--muted);font-size:.85rem;padding:1.5rem;text-align:center;
        background:var(--surface);border:1px solid var(--border)}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8em;
@@ -111,6 +116,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8em;
     <a href="/admin/orders" class="{{ 'on' if section == 'orders' }}">Orders</a>
     <a href="/admin/shipments" class="{{ 'on' if section == 'shipments' }}">Shipments</a>
     <a href="/admin/releases" class="{{ 'on' if section == 'releases' }}">Releases</a>
+    <a href="/admin/cellar" class="{{ 'on' if section == 'cellar' }}">Cellar</a>
     <a href="/admin/accounting" class="{{ 'on' if section == 'accounting' }}">Books</a>
     <a href="/admin/mail" class="{{ 'on' if section == 'mail' }}">Mail</a>
   </nav>

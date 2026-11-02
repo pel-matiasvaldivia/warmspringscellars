@@ -1,0 +1,183 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>{{ release.name }}</h1>
+<p class="sub">
+  Ships {{ release.ships_on }} · <span class="pill {{ release.status }}">{{ release.status }}</span>
+  {% if raised %} · {{ raised }} order(s) already raised{% endif %}
+  · <a href="/admin/releases">back to releases</a>
+</p>
+
+{% if not plan.composed %}
+<p class="warn">
+  This release is not composed, so nothing can check the stock. Raising its
+  orders now would bill every active member whether or not there are bottles
+  for them. Say below what each tier's shipment holds.
+</p>
+{% elif plan.unbalanced %}
+<p class="warn">
+  {% for t in plan.unbalanced %}
+    {{ t.name }} is composed of {{ t.composed }} bottles and the club promised
+    {{ t.bottles }}.
+  {% endfor %}
+  Fix that before raising orders: the member reads the bottle count on the
+  invoice.
+</p>
+{% elif not plan.complete %}
+<p class="warn">
+  {{ plan.filled | length }} of {{ plan.filled | length + plan.unfilled | length }} members can be filled.
+  {% if plan.count('short') %}
+    {{ plan.count('short') }} cannot, because the wine runs out.
+  {% endif %}
+  Raising orders now raises them <b>only</b> for the {{ plan.filled | length }}
+  — nobody is charged for a shipment that cannot be packed.
+</p>
+{% else %}
+<p class="ok">
+  Every one of the {{ plan.filled | length }} active members can be filled:
+  {{ plan.bottles }} bottles.
+</p>
+{% endif %}
+
+<h2 style="margin:1.4rem 0 .6rem">The tiers</h2>
+<table>
+  <tr><th>Tier</th><th class="num">Promised</th><th class="num">Composed</th>
+      <th class="num">Members</th><th class="num">Can fill</th>
+      <th class="num">Stock would build</th></tr>
+  {% for t in plan.tiers %}
+  <tr>
+    <td>{{ t.name }}</td>
+    <td class="num">{{ t.bottles }}</td>
+    <td class="num"{% if t.members and not t.balanced %} style="color:var(--bad)"{% endif %}>
+      {{ t.composed }}</td>
+    <td class="num">{{ t.members }}</td>
+    <td class="num">{{ t.filled }}</td>
+    <td class="num">{{ '—' if t.ceiling is none else t.ceiling }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="log" style="margin-top:.6rem">
+  <b>Stock would build</b> is how many shipments of that tier the bottles could
+  make with nothing else drawing on them. The tiers share wine and the mix of
+  members is not something the winery chooses, so it is a number for deciding
+  what to hold back — not a forecast. <b>Can fill</b> is the forecast.
+</p>
+
+<h2 style="margin:1.6rem 0 .6rem">The wine</h2>
+{% if not plan.wines %}
+<p class="empty">Nothing composed yet.</p>
+{% else %}
+<table>
+  <tr><th>Wine</th>
+      {% for t in plan.tiers %}<th class="num">{{ t.name }}</th>{% endfor %}
+      <th class="num">Needed</th><th class="num">On hand</th>
+      <th class="num">Short by</th><th class="num">Taken</th><th class="num">Left</th></tr>
+  {% for w in plan.wines %}
+  <tr>
+    <td><code>{{ w.sku }}</code> {{ w.name }}</td>
+    {% for t in plan.tiers %}
+    <td class="num">{{ w.per_tier.get(t.tier_key) or '—' }}</td>
+    {% endfor %}
+    <td class="num">{{ w.demanded }}</td>
+    <td class="num">{{ w.on_hand }}</td>
+    <td class="num"{% if w.short_by %} style="color:var(--bad)"{% endif %}>
+      {{ w.short_by or '—' }}</td>
+    <td class="num">{{ w.allocated }}</td>
+    <td class="num">{{ w.left_over }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="log" style="margin-top:.6rem">
+  <b>Needed</b> is every active member filled. <b>On hand</b> already nets out
+  what earlier releases committed. The per-tier columns are bottles in one
+  shipment of that tier.
+</p>
+{% endif %}
+
+<h2 style="margin:1.6rem 0 .6rem">What a shipment holds</h2>
+{% if not wines %}
+<p class="empty">
+  No active wines in <a href="/admin/cellar">the cellar</a> to compose from yet.
+</p>
+{% else %}
+<div class="grid2">
+  {% for t in tiers %}
+  <div class="card">
+    <h3 style="margin:0 0 .2rem">{{ t.name }}</h3>
+    <p class="log" style="margin-bottom:.7rem">{{ t.bottles }} bottles per shipment</p>
+    <form method="post" action="/admin/releases/{{ release.id }}/compose">
+      <input type="hidden" name="tier_key" value="{{ t.key }}">
+      <table>
+        {% for w in wines %}
+        <tr>
+          <td><code>{{ w.sku }}</code> {{ w.name }}</td>
+          <td class="num log">{{ w.on_hand }} on hand</td>
+          <td style="width:5rem">
+            <input name="bottles_{{ w.id }}" inputmode="numeric" style="width:4rem"
+                   aria-label="bottles of {{ w.name }} in {{ t.name }}"
+                   value="{{ composition.get(t.key, {}).get(w.id, '') }}">
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      <p style="margin-top:.8rem"><button class="btn" type="submit">Save {{ t.name }}</button></p>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+<p class="log" style="margin-top:.75rem">
+  Blank or zero means that wine is not in that shipment. A retired wine is not
+  offered here, and one already composed into this release keeps its bottles
+  until you clear them.
+</p>
+{% endif %}
+
+{% if plan.unfilled %}
+<h2 style="margin:1.6rem 0 .6rem">Who cannot be filled</h2>
+<table>
+  <tr><th>Member</th><th>Tier</th><th>Why</th></tr>
+  {% for u in plan.unfilled %}
+  <tr>
+    <td><a href="/admin/memberships">{{ u.name }}</a></td>
+    <td>{{ tier_names.get(u.tier_key, u.tier_key) }}</td>
+    <td>{{ u.detail or u.reason }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="log" style="margin-top:.6rem">
+  Members are filled in the order they joined, and that is the whole policy:
+  when a wine runs out the people who joined first keep their allocation, which
+  is a thing the winery can say out loud to the member who misses out. Seniority
+  is per bottle, not one queue — somebody who joined later can still be filled
+  if their tier's wines held out, because holding their shipment back would not
+  put a bottle in anyone else's hands.
+</p>
+{% endif %}
+
+{% set cardless = plan.filled | selectattr('warning') | list %}
+{% if cardless %}
+<h2 style="margin:1.6rem 0 .6rem">Allocated, but no card on file</h2>
+<table>
+  <tr><th>Member</th><th>Tier</th></tr>
+  {% for f in cardless %}
+  <tr><td>{{ f.name }}</td><td>{{ tier_names.get(f.tier_key, f.tier_key) }}</td></tr>
+  {% endfor %}
+</table>
+<p class="log" style="margin-top:.6rem">
+  These are not held back — they have a letter and a link, and the order waits
+  at <code>failed</code> until they use it. But a bottle allocated to a card
+  that will decline is a bottle held from somebody who would have paid, so
+  they are worth a telephone call before the wine is packed.
+</p>
+{% endif %}
+
+<div class="card" style="margin-top:1.6rem">
+  <form method="post" action="/admin/releases/{{ release.id }}/generate" class="row">
+    <button class="btn" type="submit">Raise {{ plan.filled | length }} order(s)</button>
+    <span class="log" style="flex:1;min-width:14rem">
+      Nothing is charged by this. Charging is a second press, on Releases.
+      Running it again raises orders only for members who have none, and takes
+      bottles only for the orders it raised.
+    </span>
+  </form>
+</div>
+{% endblock %}

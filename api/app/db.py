@@ -125,6 +125,50 @@ CREATE TABLE IF NOT EXISTS "release" (
     status     TEXT NOT NULL DEFAULT 'planned'
 );
 
+-- The wines, as the club refers to them. Not the winery's whole production
+-- record: the few bottlings a release can be composed from.
+CREATE TABLE IF NOT EXISTS wine (
+    id         INTEGER PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    sku        TEXT NOT NULL UNIQUE,
+    name       TEXT NOT NULL,             -- '2021 Estate Cabernet Sauvignon'
+    vintage    INTEGER,
+    status     TEXT NOT NULL DEFAULT 'active'   -- active | retired
+);
+CREATE INDEX IF NOT EXISTS wine_status ON wine(status, name);
+
+-- Bottles in and bottles out, one signed row each, and on-hand is their sum.
+-- One summing rule and no stored balance to disagree with it: a physical
+-- count is not a figure that overwrites anything, it is an adjustment for the
+-- difference, which is why a miscount leaves a trail instead of erasing one.
+CREATE TABLE IF NOT EXISTS stock_move (
+    id         INTEGER PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    wine_id    INTEGER NOT NULL REFERENCES wine(id),
+    bottles    INTEGER NOT NULL,          -- + received or counted in, - committed
+    kind       TEXT NOT NULL,             -- received | count | allocated | returned
+    release_id INTEGER REFERENCES "release"(id),
+    note       TEXT,
+    actor      TEXT NOT NULL DEFAULT 'system'
+);
+CREATE INDEX IF NOT EXISTS stock_move_wine ON stock_move(wine_id, id);
+CREATE INDEX IF NOT EXISTS stock_move_release ON stock_move(release_id)
+    WHERE release_id IS NOT NULL;
+
+-- What one shipment of one tier is made of, in this release. Per release
+-- because spring's six bottles are not autumn's six, and per tier because
+-- that is the promise the catalogue makes — twelve bottles means twelve, and
+-- a composition that adds up to eleven is caught before the wine is packed.
+CREATE TABLE IF NOT EXISTS release_item (
+    id         INTEGER PRIMARY KEY,
+    release_id INTEGER NOT NULL REFERENCES "release"(id) ON DELETE CASCADE,
+    tier_key   TEXT NOT NULL,
+    wine_id    INTEGER NOT NULL REFERENCES wine(id),
+    bottles    INTEGER NOT NULL,
+    UNIQUE (release_id, tier_key, wine_id)
+);
+CREATE INDEX IF NOT EXISTS release_item_release ON release_item(release_id, tier_key);
+
 CREATE TABLE IF NOT EXISTS "order" (
     id             INTEGER PRIMARY KEY,
     created_at     TEXT NOT NULL,
