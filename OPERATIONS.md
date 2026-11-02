@@ -69,6 +69,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 | Tab | What it is for |
 | --- | --- |
 | **Applications** | Requests from the form on the site, and the ones added by hand |
+| **Waiting** | People in states the winery has no permit for, who asked to be told |
 | **Members** | Who is active, paused or cancelled |
 | **Orders** | Orders and their invoice PDFs |
 | **Shipments** | Shipments, from ready-to-pack to delivered |
@@ -129,6 +130,35 @@ Three things about the screen are worth knowing:
 The audit log on the card carries `entered_by_hand` with the name of whoever
 was signed in, next to the ordinary `received`, so a row added at the desk is
 never mistaken for one the site produced.
+
+### 3.1c People we cannot ship to yet
+
+A visitor who picks a state the winery has no permit for is told so on the
+spot, and then offered the only thing there is to offer: **we will write the
+day that changes.** The form's button changes to say so, and the same fields
+go to the waiting list instead of to Applications — no allocation is asked
+for, because none is being offered. Without that, the only thing a visitor in
+Alabama is ever told is no, and a name worth having the day the permit arrives
+is gone.
+
+They appear under **Waiting**, grouped by state, because a licence arrives for
+a state and not for a person. Somebody writing back to the letter the winery
+sends to those states is entered there by hand; that form offers only the
+unlicensed states, which is the mirror of §3.1b offering only the licensed
+ones.
+
+They are deliberately **not applications**. An application is a request for an
+allocation and gets an answer; this one cannot be answered until a licence
+nobody here controls arrives, and a pending row that can never be decided is a
+lie in the queue.
+
+**The day a state opens**, take it out of `UNLICENSED_STATES` in
+`api/app/config.py` and out of the `UNLICENSED` list in `index.html` — both,
+or the form and the server disagree about who may join. **Waiting** then shows
+a green line naming that state, because it can be licensed for weeks before
+anybody notices there are names under it. **"Into the queue"** turns a row into
+an ordinary application; approving it in **Applications** is what writes to
+them, as it does for everybody else. Nothing is sent by moving the row.
 
 ### 3.2 Approve or decline
 

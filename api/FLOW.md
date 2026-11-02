@@ -161,8 +161,11 @@ export, which is why it exists even though the API adapter works.
   regulated per state: permitted states, volume limits per customer per year,
   age verification at delivery, and tax collected at the destination. This
   service records the destination state and refuses the ones the winery has not
-  licensed (`config.SHIPPABLE_STATES`), but that list is a placeholder and the
-  volume limits are not implemented. Before taking real money this wants a
+  licensed (`config.UNLICENSED_STATES`, which is what `SHIPPABLE_STATES` is
+  derived from — somebody refused for that reason can join the `waiting` list
+  instead, and is turned into an ordinary application the day the state comes
+  off it), but that list is a placeholder and the volume limits are not
+  implemented. Before taking real money this wants a
   compliance provider (ShipCompliant, Avalara for Beverage Alcohol) wired in
   front of order creation.
 - **Address verification.** The delivery address is taken before checkout and

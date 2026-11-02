@@ -85,6 +85,31 @@ CREATE INDEX IF NOT EXISTS membership_status ON membership(status);
 CREATE UNIQUE INDEX IF NOT EXISTS membership_subscription
     ON membership(provider_subscription_id) WHERE provider_subscription_id IS NOT NULL;
 
+-- People the winery cannot ship to yet, who asked to be told when that
+-- changes. Deliberately not an application: an application is a request for
+-- an allocation and gets an answer, and this cannot be answered until a
+-- licence arrives that nobody here controls. When the state opens, a row
+-- becomes an ordinary application and goes through the ordinary queue.
+CREATE TABLE IF NOT EXISTS waiting (
+    id          INTEGER PRIMARY KEY,
+    created_at  TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'waiting',  -- waiting | invited | dropped
+    first_name  TEXT NOT NULL,
+    last_name   TEXT NOT NULL,
+    email       TEXT NOT NULL,
+    state       TEXT NOT NULL,
+    city        TEXT,
+    referral    TEXT,
+    note        TEXT,
+    invited_at  TEXT,
+    application_id INTEGER REFERENCES application(id)
+);
+CREATE INDEX IF NOT EXISTS waiting_state ON waiting(status, state, created_at);
+-- One row per person per state while they are still waiting: the same person
+-- asking twice is the same request, as it is on the application form.
+CREATE UNIQUE INDEX IF NOT EXISTS waiting_open
+    ON waiting(email, state) WHERE status = 'waiting';
+
 CREATE TABLE IF NOT EXISTS "release" (
     id         INTEGER PRIMARY KEY,
     created_at TEXT NOT NULL,

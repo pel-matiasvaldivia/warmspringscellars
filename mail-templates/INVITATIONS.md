@@ -129,30 +129,31 @@ to the sending platform's own address and nobody ever reads them. That is the
 trap in this letter: it is the only one of the three that asks for an answer
 rather than a click.
 
-With it set, the reply lands in the club mailbox, the automatic answer goes out
-and Cecilia gets the notice — and then it stops, because **the desk cannot file
-it**. "Add one by hand" offers only the licensed states, deliberately: an entry
-the service would refuse is better refused where somebody can answer it.
+With it set, the reply lands in the club mailbox, the automatic answer goes
+out and Cecilia gets the notice. From there it is one entry on the desk:
+**Waiting → "Add somebody by hand"**, with their state. That screen only
+offers the states the winery has no permit for, which is the mirror of "Add an
+application by hand" offering only the states it does.
 
-So for these 23, the record is this file and the CSV beside it. Add a column,
-write the date and what they said. That is a defensible tool for twenty-three
-people and an event that may be two years away — but be honest about what it
-means: **nothing in the system will remind anyone.** The day Alabama opens,
-somebody has to remember this file exists.
-
-If that is not good enough — and once there are a hundred of them it will not
-be — the fix is a short list of people waiting on a state, which the desk can
-hold and the licence can trigger. It does not exist yet and it has not been
-built on spec.
+They are not applications. An application is a request for an allocation and
+gets an answer; this cannot be answered until a licence arrives that nobody
+here controls, and a pending row that can never be decided is a lie in the
+queue. So the waiting list is its own list, grouped by state, because a licence
+arrives for a state and not for a person — that is the unit somebody acts on.
 
 ### The day a state opens
 
-1. Add it to `SHIPPABLE_STATES` in `api/app/config.py` and take it out of the
+1. Take it out of `UNLICENSED_STATES` in `api/app/config.py`, and out of the
    `UNLICENSED` list in `index.html` — both, or the form and the server
    disagree about who may join.
-2. Re-run the planner over the export: those people stop being held back and
-   fall into an ordinary wave.
-3. Write to the ones who asked to be told. They were promised it.
+2. Open **Waiting**. The people for that state now carry **"we can ship
+   here"**, and a green line at the top of the screen names it, because a
+   state can be licensed for weeks before anybody notices there are names
+   under it. **"Into the queue"** turns each row into an ordinary application.
+3. Approve them in **Applications** as usual. That is the step that writes to
+   them, and they were promised a letter.
+4. Re-run the planner over the export if it is still in use: those people stop
+   being held back and fall into an ordinary wave.
 
 ## Where the link goes
 

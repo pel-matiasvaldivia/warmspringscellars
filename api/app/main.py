@@ -30,7 +30,7 @@ from .accounting import AccountingError, build_ledger
 from .accounting import queue as ledger_queue
 from .accounting.quickbooks import new_state
 from .catalogue import catalogue
-from .config import SHIPPABLE_STATES, settings
+from .config import SHIPPABLE_STATES, UNLICENSED_STATES, settings
 from .db import Database, log
 from .flow import ALLOWED, Address, Flow, FlowError
 from .invoices import ensure_pdf, money
@@ -197,6 +197,34 @@ async def create_application(request: Request) -> JSONResponse:
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
 
     return JSONResponse({"ok": True, "application_id": app_id}, status_code=201)
+
+
+@app.post("/api/waiting")
+async def join_waiting_list(request: Request) -> JSONResponse:
+    """Somebody the winery cannot ship to, asking to be told when it can.
+
+    The form offers this instead of a dead end. Without it the only thing a
+    visitor in Alabama is told is no, and a name that would have been worth
+    having the day the permit arrives is gone.
+    """
+    if rate_limited(client_key(request)):
+        return JSONResponse(
+            {"ok": False, "error": "That is a lot of requests from one place. "
+                                   "Write to club@warmspringscellar.com instead."},
+            status_code=429,
+        )
+
+    if request.headers.get("content-type", "").startswith("application/json"):
+        data = await request.json()
+    else:
+        data = dict(await request.form())
+
+    try:
+        waiting_id = flow.join_waiting_list(data)
+    except FlowError as exc:
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+
+    return JSONResponse({"ok": True, "waiting_id": waiting_id}, status_code=201)
 
 
 # ── the member's offer ───────────────────────────────────────────────────
@@ -547,6 +575,56 @@ async def admin_decline(request: Request, app_id: int,
     except Exception as exc:                                   # noqa: BLE001
         done = f"Declined, but the email did not go out: {exc}"
     return RedirectResponse(f"/admin/applications/{app_id}?done={done}", status_code=303)
+
+
+@app.get("/admin/waiting", response_class=HTMLResponse)
+def admin_waiting(request: Request, actor: str = Depends(require_admin)) -> HTMLResponse:
+    rows = db.all("SELECT * FROM waiting ORDER BY (status != 'waiting'), state, created_at")
+    # Grouped by state, because a licence arrives for a state and not for a
+    # person: that is the unit the desk acts on.
+    states: dict[str, list] = {}
+    for row in rows:
+        states.setdefault(row["state"], []).append(row)
+    return admin_page(
+        request, "waiting.html", "waiting", rows=rows,
+        states=dict(sorted(states.items())),
+        open_now=sorted(SHIPPABLE_STATES & {r["state"] for r in rows if r["status"] == "waiting"}),
+        unlicensed=sorted(UNLICENSED_STATES),
+    )
+
+
+@app.post("/admin/waiting/new")
+async def admin_waiting_new(request: Request,
+                            actor: str = Depends(require_admin)) -> RedirectResponse:
+    """What somebody replying to the letter is written down as."""
+    form = await request.form()
+    try:
+        flow.join_waiting_list({k: str(v) for k, v in form.items()})
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/waiting?done=Not saved: {exc}", status_code=303)
+    return RedirectResponse("/admin/waiting?done=On the list.", status_code=303)
+
+
+@app.post("/admin/waiting/{waiting_id}/invite")
+def admin_waiting_invite(waiting_id: int,
+                         actor: str = Depends(require_admin)) -> RedirectResponse:
+    try:
+        app_id = flow.invite_from_waiting(waiting_id, actor)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/waiting?done=Not done: {exc}", status_code=303)
+    return RedirectResponse(
+        f"/admin/applications/{app_id}?done=Off the waiting list and into the queue. "
+        "Nothing has been sent to them yet — approving is what writes.", status_code=303)
+
+
+@app.post("/admin/waiting/{waiting_id}/drop")
+def admin_waiting_drop(waiting_id: int,
+                       actor: str = Depends(require_admin)) -> RedirectResponse:
+    try:
+        flow.drop_from_waiting(waiting_id, actor)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/waiting?done=Not done: {exc}", status_code=303)
+    return RedirectResponse("/admin/waiting?done=Taken off the list.", status_code=303)
 
 
 @app.get("/admin/memberships", response_class=HTMLResponse)

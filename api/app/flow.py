@@ -21,7 +21,7 @@ from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from .accounting.queue import enqueue
 from .catalogue import Tier, catalogue
-from .config import SHIPPABLE_STATES, Settings
+from .config import SHIPPABLE_STATES, US_STATES, Settings
 from .db import Database, log, next_in_sequence, now
 from .payments import PaidEvent, PaymentProvider, as_metadata
 
@@ -243,6 +243,93 @@ class Flow:
                 " decline_reason = ? WHERE id = ?", (now(), actor, reason or None, app_id),
             )
             log(con, "application", app_id, "declined", actor=actor, reason=reason)
+
+    # ── the waiting list ─────────────────────────────────────────────────
+    def join_waiting_list(self, data: dict) -> int:
+        """Somebody in a state the winery cannot ship to, who asked to be told.
+
+        The mirror image of create_application: that one refuses an unlicensed
+        state, and this one refuses a licensed one — there is nothing to wait
+        for, and the right answer is the form.
+        """
+        required = ("first_name", "last_name", "email", "state")
+        missing = [f for f in required if not str(data.get(f, "")).strip()]
+        if missing:
+            raise FlowError("missing required fields: " + ", ".join(missing))
+
+        email = str(data["email"]).strip().lower()
+        if "@" not in email or "." not in email.split("@")[-1]:
+            raise FlowError("that email address does not look right")
+
+        state = str(data["state"]).strip()
+        if state in SHIPPABLE_STATES:
+            raise FlowError(
+                f"We can already ship to {state} — ask for an allocation instead."
+            )
+        if state not in US_STATES:
+            raise FlowError(f"{state} is not a state we recognise.")
+
+        with self.db.transaction() as con:
+            open_row = con.execute(
+                "SELECT id FROM waiting WHERE email = ? AND state = ? AND status = 'waiting'",
+                (email, state),
+            ).fetchone()
+            if open_row:
+                log(con, "waiting", int(open_row["id"]), "asked_again")
+                return int(open_row["id"])
+
+            cur = con.execute(
+                "INSERT INTO waiting (created_at, status, first_name, last_name, email,"
+                " state, city, referral, note) VALUES (?, 'waiting', ?, ?, ?, ?, ?, ?, ?)",
+                (now(), str(data["first_name"]).strip(), str(data["last_name"]).strip(),
+                 email, state, (data.get("city") or "").strip() or None,
+                 (data.get("referral") or "").strip() or None,
+                 (data.get("note") or "").strip() or None),
+            )
+            waiting_id = int(cur.lastrowid)
+            log(con, "waiting", waiting_id, "joined", email=email, state=state)
+            return waiting_id
+
+    def invite_from_waiting(self, waiting_id: int, actor: str) -> int:
+        """The state opened. Turn the row into an ordinary application.
+
+        It does not approve anything and it does not send anything: it puts
+        the person in the same queue as everybody else, where somebody decides.
+        That is the whole point of waiting rather than being declined.
+        """
+        row = self.db.one("SELECT * FROM waiting WHERE id = ?", (waiting_id,))
+        if row is None:
+            raise FlowError("no such row on the waiting list")
+        if row["status"] != "waiting":
+            raise FlowError(f"that row is already {row['status']}")
+        if row["state"] not in SHIPPABLE_STATES:
+            raise FlowError(
+                f"we still cannot ship to {row['state']} — take it out of UNLICENSED_STATES first"
+            )
+
+        app_id = self.create_application({
+            "first_name": row["first_name"], "last_name": row["last_name"],
+            "email": row["email"], "state": row["state"], "city": row["city"],
+            "referral": " · ".join(x for x in (row["referral"], "waiting list") if x),
+            "note": row["note"],
+        })
+        with self.db.transaction() as con:
+            con.execute(
+                "UPDATE waiting SET status = 'invited', invited_at = ?, application_id = ?"
+                " WHERE id = ?", (now(), app_id, waiting_id),
+            )
+            log(con, "waiting", waiting_id, "invited", actor=actor, application=app_id)
+            log(con, "application", app_id, "from_waiting_list", actor=actor,
+                waited_since=row["created_at"][:10])
+        return app_id
+
+    def drop_from_waiting(self, waiting_id: int, actor: str) -> None:
+        with self.db.transaction() as con:
+            row = _require(con, "waiting", waiting_id)
+            if row["status"] != "waiting":
+                raise FlowError(f"that row is already {row['status']}")
+            con.execute("UPDATE waiting SET status = 'dropped' WHERE id = ?", (waiting_id,))
+            log(con, "waiting", waiting_id, "dropped", actor=actor)
 
     # ── offers ───────────────────────────────────────────────────────────
     def open_offer(self, token: str) -> tuple[sqlite3.Row, sqlite3.Row, list[Tier]]:

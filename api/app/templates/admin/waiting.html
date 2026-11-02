@@ -1,0 +1,120 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>Waiting on a licence</h1>
+<p class="sub">
+  People the winery cannot ship to yet who asked to be told when it can. They
+  are not applications: an application gets an answer, and this cannot be
+  answered until a permit arrives.
+</p>
+
+{% if open_now %}
+{# The only thing on this screen that is urgent. A state can be licensed for
+   weeks before anybody notices there are people on the list for it. #}
+<div class="warn" style="border-left-color:var(--ok)">
+  <b>{{ open_now | join(', ') }} {{ 'is' if open_now|length == 1 else 'are' }} open now</b>
+  — there are people below waiting for {{ 'it' if open_now|length == 1 else 'them' }}.
+  They were promised a letter. "Into the queue" puts them in Applications;
+  approving is what writes to them.
+</div>
+{% endif %}
+
+{% if not rows %}
+<div class="empty">Nobody is waiting.</div>
+{% else %}
+{% for state, group in states.items() %}
+  {% set waiting = group | selectattr('status', 'equalto', 'waiting') | list %}
+  <div class="card">
+    <h2 style="margin-bottom:.25rem">
+      {{ state }}
+      {% if state in unlicensed %}
+        <span class="pill warn" style="vertical-align:middle">no licence yet</span>
+      {% else %}
+        <span class="pill ok" style="vertical-align:middle">we can ship here</span>
+      {% endif %}
+    </h2>
+    <p class="sub" style="margin-bottom:1rem">
+      {{ waiting | length }} waiting{% if group|length != waiting|length %},
+      {{ group|length - waiting|length }} dealt with{% endif %}
+    </p>
+    <table>
+      <tr><th>Asked</th><th>Name</th><th>Email</th><th>City</th>
+          <th>Heard via</th><th>Status</th><th></th></tr>
+      {% for r in group %}
+      <tr>
+        <td class="num">{{ r.created_at[:10] }}</td>
+        <td>{{ r.first_name }} {{ r.last_name }}</td>
+        <td>{{ r.email }}</td>
+        <td>{{ r.city or '—' }}</td>
+        <td>{{ r.referral or '—' }}</td>
+        <td><span class="pill {{ 'pending' if r.status == 'waiting' else
+                                 ('approved' if r.status == 'invited' else 'declined') }}"
+            >{{ r.status }}</span></td>
+        <td>
+          {% if r.status == 'waiting' %}
+            <div class="row">
+              {% if state not in unlicensed %}
+                <form method="post" action="/admin/waiting/{{ r.id }}/invite">
+                  <button class="btn small" type="submit">Into the queue</button>
+                </form>
+              {% endif %}
+              <form method="post" action="/admin/waiting/{{ r.id }}/drop">
+                <button class="btn ghost small" type="submit">Remove</button>
+              </form>
+            </div>
+          {% elif r.application_id %}
+            <a class="btn ghost small" href="/admin/applications/{{ r.application_id }}">
+              Application #{{ r.application_id }}</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% if r.note %}
+      <tr><td></td><td colspan="6" class="log">{{ r.note }}</td></tr>
+      {% endif %}
+      {% endfor %}
+    </table>
+  </div>
+{% endfor %}
+{% endif %}
+
+<div class="card">
+  <h2>Add somebody by hand</h2>
+  <p class="sub" style="margin-bottom:1rem">
+    For a reply to the letter we send to states we cannot ship to — somebody
+    writing back to say yes, tell me when it changes.
+  </p>
+  <form method="post" action="/admin/waiting/new" style="max-width:560px">
+    <div class="grid2" style="gap:0 1.25rem">
+      <div>
+        <label for="first_name">First name</label>
+        <input id="first_name" name="first_name" required>
+      </div>
+      <div>
+        <label for="last_name">Last name</label>
+        <input id="last_name" name="last_name" required>
+      </div>
+    </div>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required>
+    <div class="grid2" style="gap:0 1.25rem">
+      <div>
+        <label for="state">State</label>
+        {# Only the unlicensed ones. Somewhere we can already ship to has
+           nothing to wait for, and the answer there is the form. #}
+        <select id="state" name="state" required>
+          <option value="" disabled selected>Choose a state…</option>
+          {% for s in unlicensed %}<option>{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="city">City <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input id="city" name="city">
+      </div>
+    </div>
+    <label for="referral">How it reached us</label>
+    <input id="referral" name="referral" value="Replied to the Deerfield letter">
+    <label for="note">Note <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+    <input id="note" name="note" placeholder="Asked about a work address in Tennessee as well.">
+    <p style="margin-top:1.25rem"><button class="btn" type="submit">Add to the list</button></p>
+  </form>
+</div>
+{% endblock %}

@@ -201,6 +201,99 @@ def test_the_form_is_rate_limited(client):
     assert res.status_code == 429
 
 
+# ── waiting on a licence ─────────────────────────────────────────────────
+WAITING = {"first_name": "Audra", "last_name": "Thomas", "email": "Audra@Example.com",
+           "state": "Arkansas", "city": "Little Rock",
+           "referral": "Replied to the Deerfield letter"}
+
+
+def test_somebody_we_cannot_ship_to_can_ask_to_be_told(client):
+    res = client.post("/api/waiting", json=WAITING)
+    assert res.status_code == 201, res.text
+    row = client.main.db.one("SELECT * FROM waiting ORDER BY id DESC")
+    assert (row["status"], row["state"], row["email"]) == (
+        "waiting", "Arkansas", "audra@example.com")
+
+    # Asking twice is asking once.
+    again = client.post("/api/waiting", json=WAITING)
+    assert again.json()["waiting_id"] == res.json()["waiting_id"]
+    assert client.main.db.one("SELECT COUNT(*) AS n FROM waiting")["n"] == 1
+    assert "asked_again" in [e["action"] for e in client.main.db.all(
+        "SELECT * FROM event WHERE subject = 'waiting'")]
+
+
+def test_the_waiting_list_refuses_a_state_we_can_already_ship_to(client):
+    res = client.post("/api/waiting", json={**WAITING, "state": "California"})
+    assert res.status_code == 400
+    assert "ask for an allocation instead" in res.json()["error"]
+    res = client.post("/api/waiting", json={**WAITING, "state": "Catalonia"})
+    assert res.status_code == 400
+    assert "not a state we recognise" in res.json()["error"]
+    assert client.main.db.one("SELECT COUNT(*) AS n FROM waiting")["n"] == 0
+
+
+def test_nobody_is_invited_from_the_waiting_list_while_the_state_is_shut(client):
+    waiting_id = client.post("/api/waiting", json=WAITING).json()["waiting_id"]
+    res = client.post(f"/admin/waiting/{waiting_id}/invite", auth=ADMIN, follow_redirects=False)
+    assert res.status_code == 303
+    assert "still cannot ship to Arkansas" in unquote(res.headers["location"])
+    assert client.main.db.one(
+        "SELECT status FROM waiting WHERE id = ?", (waiting_id,))["status"] == "waiting"
+    assert client.main.db.one("SELECT COUNT(*) AS n FROM application")["n"] == 0
+
+
+def test_when_the_state_opens_they_join_the_ordinary_queue(client, monkeypatch):
+    waiting_id = client.post("/api/waiting", json=WAITING).json()["waiting_id"]
+
+    # The licence arrives: Arkansas comes out of the unlicensed list. The
+    # modules import the names, so each one that holds a copy is patched —
+    # which is the test's way of doing what editing config.py does for real.
+    config = sys.modules["app.config"]
+    opened = config.SHIPPABLE_STATES | {"Arkansas"}
+    still_shut = config.UNLICENSED_STATES - {"Arkansas"}
+    for module in ("app.config", "app.flow", "app.main"):
+        if hasattr(sys.modules[module], "SHIPPABLE_STATES"):
+            monkeypatch.setattr(sys.modules[module], "SHIPPABLE_STATES", opened)
+        if hasattr(sys.modules[module], "UNLICENSED_STATES"):
+            monkeypatch.setattr(sys.modules[module], "UNLICENSED_STATES", still_shut)
+
+    page = client.get("/admin/waiting", auth=ADMIN)
+    assert "Arkansas" in page.text and "open now" in page.text
+
+    res = client.post(f"/admin/waiting/{waiting_id}/invite", auth=ADMIN, follow_redirects=False)
+    assert res.status_code == 303
+    row = client.main.db.one("SELECT * FROM waiting WHERE id = ?", (waiting_id,))
+    assert row["status"] == "invited"
+
+    application = client.main.db.one("SELECT * FROM application WHERE id = ?",
+                                    (row["application_id"],))
+    assert application["status"] == "pending"          # nothing is approved, nothing is sent
+    assert application["state"] == "Arkansas"
+    assert "waiting list" in application["referral"]
+    assert len(list((client.tmp / "outbox").glob("*.eml"))) == 0
+
+    # And a second attempt does not raise a second application.
+    client.post(f"/admin/waiting/{waiting_id}/invite", auth=ADMIN, follow_redirects=False)
+    assert client.main.db.one("SELECT COUNT(*) AS n FROM application")["n"] == 1
+
+
+def test_a_row_can_be_taken_off_the_waiting_list(client):
+    waiting_id = client.post("/api/waiting", json=WAITING).json()["waiting_id"]
+    res = client.post(f"/admin/waiting/{waiting_id}/drop", auth=ADMIN, follow_redirects=False)
+    assert res.status_code == 303
+    assert client.main.db.one(
+        "SELECT status FROM waiting WHERE id = ?", (waiting_id,))["status"] == "dropped"
+    # Which frees the unique index: they can ask again later.
+    assert client.post("/api/waiting", json=WAITING).status_code == 201
+
+
+def test_the_waiting_list_is_shut_without_credentials(client):
+    assert client.get("/admin/waiting").status_code == 401
+    assert client.post("/admin/waiting/1/invite").status_code == 401
+    assert client.post("/admin/waiting/1/drop").status_code == 401
+    assert client.post("/admin/waiting/new", data=WAITING).status_code == 401
+
+
 # ── where the wine goes ──────────────────────────────────────────────────
 def test_the_address_is_asked_for_before_payment_and_kept(client):
     apply_(client)

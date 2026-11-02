@@ -165,18 +165,30 @@ class Settings:
         return out
 
 
-# Shipping destinations the winery is licensed for. A placeholder: the real
-# list comes from the winery's permits, and the per-customer volume limits that
-# go with them are not implemented at all. See FLOW.md.
-SHIPPABLE_STATES = {
-    "Alaska", "Arizona", "California", "Colorado", "Connecticut", "District of Columbia",
-    "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas",
-    "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Missouri",
-    "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York",
-    "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-    "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Vermont",
-    "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming",
+US_STATES = {
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+    "Delaware", "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois",
+    "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts",
+    "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada",
+    "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+    "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+    "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+    "West Virginia", "Wisconsin", "Wyoming",
 }
+
+# The states the winery has no permit for. Written as the short list rather
+# than the long one, because this is the list that changes: a licence arriving
+# is one line deleted here, not a name added to forty-five others. Direct wine
+# shipping is licensed state by state; the real list comes from the winery's
+# permits, and the per-customer volume limits that go with them are not
+# implemented at all. See FLOW.md.
+#
+# Take one out and the same name has to come out of UNLICENSED in index.html,
+# or the form and the server disagree about who may join. People already on
+# the waiting list for that state are then invited from /admin/waiting.
+UNLICENSED_STATES = {"Alabama", "Arkansas", "Delaware", "Kentucky", "Mississippi", "Utah"}
+
+SHIPPABLE_STATES = US_STATES - UNLICENSED_STATES
 
 
 settings = Settings()

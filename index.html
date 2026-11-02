@@ -2679,7 +2679,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
         <circle cx="24" cy="24" r="21" style="--len: 132"/>
         <path d="M15 24.5l6.5 6.5L33 18" style="--len: 30"/>
       </svg>
-      <h3>Your request is with us</h3>
+      <h3 id="joinSuccessTitle">Your request is with us</h3>
       <p id="joinSuccessMsg">Cecilia will be in touch within 48 hours. Watch your inbox &mdash; and keep an eye on the spam folder, just in case.</p>
     </div>
   </div>
@@ -3129,17 +3129,32 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
   // up front rather than after the whole form has been filled in.
   var UNLICENSED = ['Alabama', 'Arkansas', 'Delaware', 'Kentucky', 'Mississippi', 'Utah'];
 
+  // The state they chose, when it is one we have no permit for. The form then
+  // stops being a request for an allocation and becomes a request to be told
+  // when there is one — same fields, same button, different destination.
+  // Without it the only thing a visitor in Alabama is ever told is no.
+  var waitingFor = '';
+  var submitLabel = $('.join-submit', form) ? $('.join-submit', form).textContent : '';
+
   var stateField = $('#f-state');
   if (stateField) {
     stateField.addEventListener('change', function () {
       var field = fieldOf(stateField);
       var slot = $('.field-error', field);
-      if (UNLICENSED.indexOf(stateField.value) >= 0) {
+      var button = $('.join-submit', form);
+      waitingFor = UNLICENSED.indexOf(stateField.value) >= 0 ? stateField.value : '';
+
+      if (waitingFor) {
         field.classList.add('has-error');
-        if (slot) slot.textContent = 'We cannot ship wine to ' + stateField.value + ' yet.';
+        if (slot) {
+          slot.textContent = 'We cannot ship wine to ' + waitingFor + ' yet — leave us your ' +
+                             'name and we will write the day that changes.';
+        }
+        if (button) button.textContent = 'Tell Me When You Can Ship';
       } else {
         field.classList.remove('has-error');
         if (slot) slot.textContent = '';
+        if (button) button.textContent = submitLabel;
       }
     });
   }
@@ -3159,6 +3174,10 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
 
     var firstBad = null;
     controls.forEach(function (input) {
+      // Nobody waiting on a licence is asked which allocation they want: we
+      // are not offering them one yet, and it would be a strange thing to
+      // insist on from somebody we are telling no.
+      if (waitingFor && input.id === 'f-tier') return;
       if (!validate(input, true) && !firstBad) firstBad = input;
     });
 
@@ -3190,7 +3209,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       note: $('#f-note').value.trim()
     };
 
-    fetch('/api/applications', {
+    fetch(waitingFor ? '/api/waiting' : '/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -3205,12 +3224,23 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
         return;
       }
 
-      var tier = $('#f-tier');
-      var tierName = tier.options[tier.selectedIndex].textContent.split('—')[0].trim();
-      $('#joinSuccessMsg').textContent =
-        (body.first_name ? body.first_name + ', your' : 'Your') + ' request for ' + tierName +
-        ' is with Cecilia. She reads every one, and you will hear from us ' +
-        'either way — keep an eye on your spam folder, just in case.';
+      if (waitingFor) {
+        // "Your request is with us" would be a promise we are not making: no
+        // request was made, because there was nothing to request.
+        $('#joinSuccessTitle').textContent = 'We will write to you';
+        $('#joinSuccessMsg').textContent =
+          (body.first_name ? body.first_name + ', you are' : 'You are') + ' on the list for ' +
+          waitingFor + '. We will write the day we can ship there, and nothing before it. ' +
+          'If you have an address in a state we already reach — work, family, a second ' +
+          'home — write to club@warmspringscellar.com and we can start today.';
+      } else {
+        var tier = $('#f-tier');
+        var tierName = tier.options[tier.selectedIndex].textContent.split('—')[0].trim();
+        $('#joinSuccessMsg').textContent =
+          (body.first_name ? body.first_name + ', your' : 'Your') + ' request for ' + tierName +
+          ' is with Cecilia. She reads every one, and you will hear from us ' +
+          'either way — keep an eye on your spam folder, just in case.';
+      }
 
       form.style.display = 'none';
       success.classList.add('show');

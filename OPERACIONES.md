@@ -72,6 +72,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 | Pestaña | Para qué |
 | --- | --- |
 | **Applications** | Las solicitudes del formulario del sitio, y las cargadas a mano |
+| **Waiting** | Gente en estados sin permiso, que pidió que se le avise |
 | **Members** | Quién está activo, en pausa o dado de baja |
 | **Orders** | Las órdenes y sus facturas en PDF |
 | **Shipments** | Los envíos, de "listo para empacar" a "entregado" |
@@ -132,6 +133,33 @@ Tres cosas de esa pantalla conviene saber:
 En el registro de la ficha queda `entered_by_hand` con el usuario que estaba
 conectado, al lado del `received` de siempre, así una fila cargada en el
 escritorio nunca se confunde con una que produjo el sitio.
+
+### 3.1c Gente a la que todavía no podemos despachar
+
+Al visitante que elige un estado sin permiso se le dice en el momento, y se le
+ofrece lo único que hay para ofrecer: **le escribimos el día que eso cambie.**
+El botón del formulario pasa a decir eso, y los mismos campos van a la lista de
+espera en vez de a Applications — no se le pide nivel, porque no se le está
+ofreciendo ninguno. Sin eso, lo único que un visitante de Alabama escucha es
+que no, y un nombre que valía el día que llega el permiso se pierde.
+
+Aparecen en **Waiting**, agrupados por estado, porque la licencia llega para un
+estado y no para una persona. A quien responda la carta que la bodega manda a
+esos estados se lo carga ahí a mano; ese formulario ofrece solo los estados sin
+permiso, el espejo del §3.1b que ofrece solo los habilitados.
+
+A propósito **no son solicitudes**. Una solicitud es un pedido de allocation y
+recibe respuesta; esta no se puede responder hasta que llegue una licencia que
+nadie acá controla, y una fila pendiente que nunca se puede decidir es una
+mentira en la cola.
+
+**El día que un estado se abre**, sacalo de `UNLICENSED_STATES` en
+`api/app/config.py` y de la lista `UNLICENSED` en `index.html` — las dos
+puntas, o el formulario y el servidor se contradicen. **Waiting** muestra
+entonces una línea verde nombrando ese estado, porque puede estar habilitado
+semanas antes de que alguien note que hay nombres abajo. **"Into the queue"**
+convierte la fila en una solicitud común; aprobarla en **Applications** es lo
+que le escribe, igual que a todos. Mover la fila no manda nada.
 
 ### 3.2 Aprobar o declinar
 
