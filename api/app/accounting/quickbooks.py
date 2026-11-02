@@ -39,8 +39,8 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 
-from ..db import Database, now
 from .base import AccountingError, Customer, Invoice, NotConnected, Payment
+from .tokens import EXPIRY_SKEW_SECONDS, Tokens, TokenStore  # noqa: F401
 
 AUTHORIZE = "https://appcenter.intuit.com/connect/oauth2"
 TOKEN = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
@@ -64,10 +64,6 @@ REQUEST_ID_MAX = 50
 # months apart, so without it the connection dies between two of them.
 KEEPALIVE_DAYS = 30
 
-# Refresh a little early. A token that expires between the check and the call
-# is a 401 that looks like a configuration problem and is not one.
-EXPIRY_SKEW_SECONDS = 120
-
 
 def _cents(value: int) -> float:
     """Intuit takes decimal amounts. Only ever two places, from integer cents."""
@@ -87,70 +83,6 @@ def request_id(kind: str, key: str) -> str:
 def _escape(value: str) -> str:
     """Quote escaping for Intuit's query language, which is SQL-shaped."""
     return value.replace("\\", "\\\\").replace("'", "\\'")
-
-
-@dataclass
-class Tokens:
-    realm_id: str = ""
-    access_token: str = ""
-    refresh_token: str = ""
-    access_expires_at: str = ""
-    refresh_expires_at: str = ""
-
-    @property
-    def connected(self) -> bool:
-        return bool(self.realm_id and self.refresh_token)
-
-    @property
-    def access_valid(self) -> bool:
-        if not self.access_token or not self.access_expires_at:
-            return False
-        try:
-            expiry = datetime.fromisoformat(self.access_expires_at)
-        except ValueError:
-            return False
-        return expiry - timedelta(seconds=EXPIRY_SKEW_SECONDS) > datetime.now(timezone.utc)
-
-
-class TokenStore:
-    """Tokens in the club's own database, on the volume that gets backed up."""
-
-    PROVIDER = "quickbooks"
-
-    def __init__(self, db: Database):
-        self.db = db
-
-    def read(self) -> Tokens:
-        row = self.db.one("SELECT * FROM oauth_token WHERE provider = ?", (self.PROVIDER,))
-        if row is None:
-            return Tokens()
-        return Tokens(
-            realm_id=row["realm_id"] or "",
-            access_token=row["access_token"] or "",
-            refresh_token=row["refresh_token"] or "",
-            access_expires_at=row["access_expires_at"] or "",
-            refresh_expires_at=row["refresh_expires_at"] or "",
-        )
-
-    def write(self, tokens: Tokens) -> None:
-        with self.db.transaction() as con:
-            con.execute(
-                "INSERT INTO oauth_token (provider, realm_id, access_token, refresh_token,"
-                " access_expires_at, refresh_expires_at, updated_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?)"
-                " ON CONFLICT(provider) DO UPDATE SET realm_id = excluded.realm_id,"
-                " access_token = excluded.access_token,"
-                " refresh_token = excluded.refresh_token,"
-                " access_expires_at = excluded.access_expires_at,"
-                " refresh_expires_at = excluded.refresh_expires_at,"
-                " updated_at = excluded.updated_at",
-                (self.PROVIDER, tokens.realm_id, tokens.access_token, tokens.refresh_token,
-                 tokens.access_expires_at, tokens.refresh_expires_at, now()),
-            )
-
-    def clear(self) -> None:
-        with self.db.transaction() as con:
-            con.execute("DELETE FROM oauth_token WHERE provider = ?", (self.PROVIDER,))
 
 
 @dataclass

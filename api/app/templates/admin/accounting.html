@@ -1,20 +1,38 @@
 {% extends "admin/layout.html" %}
 {% block body %}
 <h1>The books</h1>
-<p class="sub">Every invoice and every payment, on its way to QuickBooks.</p>
+<p class="sub">Every invoice and every payment, on its way to the accounting system.</p>
 
 <div class="grid2">
   <div class="card">
     <h2>
-      QuickBooks Online</h2>
+      {{ 'Xero' if ledger_name == 'xero' else 'QuickBooks Online'
+         if ledger_name == 'quickbooks' else 'No accounting system' }}</h2>
 
-    {% if not configured %}
+    {% if ambiguous %}
+      {# Both sets of credentials present. Picking one would file a winery's
+         invoices into the system nobody is reading, so nothing is picked. #}
+      <p style="color:var(--bad)">
+        QuickBooks and Xero are both configured, and <code>LEDGER</code> says which
+        neither. Nothing is pushed until it does: set <code>LEDGER=quickbooks</code>
+        or <code>LEDGER=xero</code> in <code>.env</code> and restart.</p>
+      <p style="color:var(--text-2);margin-top:.75rem">
+        The queue below is untouched and keeps everything meanwhile.</p>
+
+    {% elif not configured %}
       <p style="color:var(--text-2)">
-        No credentials yet. Create an app at
-        <a href="https://developer.intuit.com" rel="noopener">developer.intuit.com</a>,
-        then put its client id and secret in <code>.env</code> as
-        <code>QBO_CLIENT_ID</code> and <code>QBO_CLIENT_SECRET</code>, with this
-        exact redirect URI registered on the Intuit side:</p>
+        No credentials yet. Either system will do, and the club posts the same two
+        documents to both:</p>
+      <ul class="steps" style="margin:.6rem 0">
+        <li><b>QuickBooks</b> — an app at
+          <a href="https://developer.intuit.com" rel="noopener">developer.intuit.com</a>,
+          then <code>QBO_CLIENT_ID</code> and <code>QBO_CLIENT_SECRET</code>.</li>
+        <li><b>Xero</b> — an app at
+          <a href="https://developer.xero.com" rel="noopener">developer.xero.com</a>,
+          then <code>XERO_CLIENT_ID</code> and <code>XERO_CLIENT_SECRET</code>.</li>
+      </ul>
+      <p style="color:var(--text-2)">
+        Register this exact redirect URI on whichever side you choose:</p>
       <p><code>{{ redirect_uri }}</code></p>
       <p style="color:var(--text-2);margin-top:.75rem">
         Nothing is lost in the meantime — the queue below keeps everything, and
@@ -23,25 +41,36 @@
     {% elif not status.connected %}
       <p style="color:var(--text-2)">{{ status.detail }}</p>
       <p style="margin-top:.9rem">
-        <a class="btn" href="/admin/accounting/connect">Connect to QuickBooks</a></p>
+        <a class="btn" href="/admin/accounting/connect">Connect to
+          {{ 'Xero' if ledger_name == 'xero' else 'QuickBooks' }}</a></p>
       <p class="log" style="margin-top:.6rem">
-        Environment: <b>{{ status.environment }}</b> · redirect:
-        <code>{{ redirect_uri }}</code></p>
+        {% if status.environment %}Environment: <b>{{ status.environment }}</b> · {% endif %}
+        redirect: <code>{{ redirect_uri }}</code></p>
 
     {% else %}
       <table>
-        <tr><th>Company</th><td>{{ status.company }}</td></tr>
+        <tr><th>{{ 'Organisation' if ledger_name == 'xero' else 'Company' }}</th>
+            <td>{{ status.company }}</td></tr>
+        {% if status.environment %}
         <tr><th>Environment</th><td>{{ status.environment }}</td></tr>
+        {% endif %}
         <tr><th>Token renews</th><td>{{ status.access_expires_at or '—' }}</td></tr>
         <tr><th>Re-authorise before</th><td>{{ status.reauthorise_before or '—' }}</td></tr>
+        {% if ledger_name == 'xero' %}
+        <tr><th>Wine account</th><td>{{ wine_item or 'not set' }}</td></tr>
+        <tr><th>Shipping account</th><td>{{ shipping_item or 'not set' }}</td></tr>
+        <tr><th>Payments land in</th>
+            <td>{{ bank_account or 'not set — payments will not post' }}</td></tr>
+        {% else %}
         <tr><th>Wine item</th><td>{{ wine_item }}</td></tr>
         <tr><th>Shipping item</th><td>{{ shipping_item }}</td></tr>
+        {% endif %}
         <tr><th>On payment</th>
             <td>{{ 'pushed automatically' if autosync else 'queued for review' }}</td></tr>
       </table>
       <p class="log" style="margin-top:.75rem">{{ status.detail }}</p>
       <form method="post" action="/admin/accounting/disconnect" style="margin-top:.9rem"
-            onsubmit="return confirm('Disconnect QuickBooks? The queue is kept.')">
+            onsubmit="return confirm('Disconnect? The queue is kept.')">
         <button class="btn ghost small" type="submit">Disconnect</button>
       </form>
     {% endif %}
@@ -95,7 +124,7 @@
   {% endfor %}
 </table>
 <p class="log" style="margin-top:.75rem">
-  Pushing the same document twice is safe: an invoice QuickBooks already holds
+  Pushing the same document twice is safe: an invoice the books already hold
   under that number is adopted, not duplicated.</p>
 {% else %}
 <p class="empty">Nothing has been invoiced yet.</p>

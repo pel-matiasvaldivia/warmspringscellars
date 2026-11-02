@@ -343,14 +343,24 @@ reembolsar. `cancelled` no tiene vuelta.
 
 ---
 
-## 7. Los libros: QuickBooks
+## 7. Los libros: QuickBooks o Xero
 
-La pestaña **Books**. Cada factura y cada pago viajan a QuickBooks Online como
+La pestaña **Books**. Cada factura y cada pago viajan al sistema contable como
 dos documentos: la factura (*invoice*) y el pago que la cancela (*payment*).
 
+**Sirve cualquiera de los dos**, y el club manda los mismos dos documentos a
+ambos. Cuál está en uso es una sola configuración; nada más en el servicio
+nota la diferencia, y la cola, el escritorio y el export CSV son idénticos.
+Se configura QuickBooks (`QBO_CLIENT_ID` / `QBO_CLIENT_SECRET`) o Xero
+(`XERO_CLIENT_ID` / `XERO_CLIENT_SECRET`), y si están los dos hay que poner
+`LEDGER=quickbooks` o `LEDGER=xero`. **Con los dos configurados y sin
+`LEDGER`, no se manda nada**: elegir uno por adivinanza archivaría las
+facturas de la bodega en el sistema que nadie está mirando, así que el
+servicio encola y lo dice en pantalla.
+
 **Los libros van siempre detrás, nunca en el camino.** El socio que pagó es
-socio, haya contestado Intuit o no. Por eso emitir la factura no llama a
-QuickBooks: encola el documento y el envío se hace después. De ahí salen tres
+socio, haya contestado el sistema contable o no. Por eso emitir la factura no
+lo llama: encola el documento y el envío se hace después. De ahí salen tres
 cosas que conviene saber:
 
 - Una orden que se confirmó **siempre** tiene su papeleo en cola, y una que se
@@ -358,8 +368,9 @@ cosas que conviene saber:
 - Un envío que falla **queda a la vista**. La cola de Books es la respuesta
   permanente a "¿qué no saben todavía los libros?", que es mejor preguntar en
   marzo que descubrir en enero.
-- **Reintentar es gratis.** Si la factura ya está en QuickBooks con ese número,
-  el reintento la adopta en lugar de escribir una segunda.
+- **Reintentar es gratis.** Si la factura ya está con ese número, el reintento
+  la adopta en lugar de escribir una segunda. Los dos adaptadores buscan el
+  número antes de escribir.
 
 ### 7.1 Conectar la primera vez
 
@@ -373,6 +384,36 @@ cosas que conviene saber:
    reales. `docker compose up -d` para que los tome.
 4. En **Books** → **"Connect to QuickBooks"**. Intuit pide permiso, elegís la
    empresa y vuelve. Eso es todo: la empresa queda guardada.
+
+### 7.1b Conectar Xero en su lugar
+
+1. En [developer.xero.com](https://developer.xero.com) → *My Apps* → crear una
+   **Web app**.
+2. Registrar en Xero **la misma** URI de retorno:
+   `https://<dominio>/admin/accounting/callback`. Una sola dirección sirve para
+   los dos; el adaptador configurado es el que lee el código.
+3. Poner `XERO_CLIENT_ID` y `XERO_CLIENT_SECRET` en `.env`, más tres cosas que
+   solo puede decidir quien lleva los libros — y Xero quiere **códigos del plan
+   de cuentas**, no nombres de productos, porque toma la cuenta en el renglón
+   mismo de la factura:
+   - `XERO_WINE_ACCOUNT` — dónde cae el ingreso de la allocation.
+   - `XERO_SHIPPING_ACCOUNT` — dónde cae el flete, hoy sin uso porque todos los
+     niveles lo incluyen.
+   - `XERO_BANK_ACCOUNT` — dónde cae el pago con tarjeta. **Xero rechaza un
+     pago sin una cuenta donde caer**, así que sin esto las facturas se
+     registran y los pagos no. Lo habitual es una cuenta puente: la pasarela
+     deposita neto de su comisión y agrupado.
+4. En **Books** → **"Connect to Xero"**. Xero pide permiso y vuelve **sin
+   nombrar la organización** — hay que preguntársela aparte, que es lo que hace
+   el adaptador. **Toma la primera organización que abre ese login.** Para una
+   bodega con una sola organización en Xero eso está bien; si se entra con el
+   usuario de un estudio contable, que puede abrir veinte, es una moneda al
+   aire. La pantalla de Books muestra cuál tomó: hay que mirarla.
+
+> **Xero corta la conexión a los sesenta días sin uso, no a los cien.** Eso es
+> menos que el hueco entre el despacho de primavera y el de otoño. El servicio
+> la refresca solo, todos los días, y con eso alcanza — pero si el contenedor
+> estuvo dos meses apagado, alguien tiene que volver a autorizar.
 
 **Antes del primer envío, el ítem `Wine Club Allocation` tiene que existir en
 QuickBooks** (Sales → Products and services), con ese nombre exacto.

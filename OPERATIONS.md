@@ -342,14 +342,23 @@ not come back.
 
 ---
 
-## 7. The books: QuickBooks
+## 7. The books: QuickBooks or Xero
 
-The **Books** tab. Every invoice and every payment travels to QuickBooks Online
-as two documents: the invoice, and the payment that settles it.
+The **Books** tab. Every invoice and every payment travels to the accounting
+system as two documents: the invoice, and the payment that settles it.
+
+**Either system will do**, and the club posts the same two documents to both.
+Which one is in use is one setting; nothing else in the service knows the
+difference, and the queue, the desk and the CSV export are the same either
+way. Configure QuickBooks (`QBO_CLIENT_ID` / `QBO_CLIENT_SECRET`) or Xero
+(`XERO_CLIENT_ID` / `XERO_CLIENT_SECRET`), and if both are configured set
+`LEDGER=quickbooks` or `LEDGER=xero`. **With both configured and no `LEDGER`,
+nothing is pushed at all** — picking one would file the winery's invoices into
+the system nobody is reading, so the service queues and says so on the screen.
 
 **The books are downstream, and never in the way.** A member who has paid is a
-member whether or not Intuit answered. So issuing an invoice does not call
-QuickBooks: it queues the document, and the push happens afterwards. Three
+member whether or not the accounting system answered. So issuing an invoice
+does not call it: it queues the document, and the push happens afterwards. Three
 things follow:
 
 - An order that committed **always** has its paperwork queued, and one that
@@ -357,8 +366,8 @@ things follow:
 - A push that fails **stays visible**. The Books queue is the standing answer
   to "what do the books not know about yet?", which is better asked in March
   than discovered in January.
-- **Retrying is free.** An invoice QuickBooks already holds under that number is
-  adopted, not duplicated.
+- **Retrying is free.** An invoice already held under that number is adopted,
+  not duplicated. Both adapters look the number up before writing.
 
 ### 7.1 Connecting the first time
 
@@ -372,6 +381,36 @@ things follow:
    `docker compose up -d` to pick them up.
 4. On **Books** → **"Connect to QuickBooks"**. Intuit asks for consent, you
    choose the company, and it comes back. That is all: the company is stored.
+
+### 7.1b Connecting Xero instead
+
+1. At [developer.xero.com](https://developer.xero.com) → *My Apps* → create a
+   **Web app**.
+2. Register the **same** redirect URI on the Xero side:
+   `https://<your domain>/admin/accounting/callback`. One address serves both;
+   whichever adapter is configured is the one that reads the code.
+3. Put `XERO_CLIENT_ID` and `XERO_CLIENT_SECRET` in `.env`, plus three things
+   only the bookkeeper can decide — and Xero wants **account codes from the
+   chart of accounts**, not product names, because it takes the account on the
+   invoice line itself:
+   - `XERO_WINE_ACCOUNT` — where the allocation revenue lands.
+   - `XERO_SHIPPING_ACCOUNT` — where carriage lands, unused while every tier
+     includes it.
+   - `XERO_BANK_ACCOUNT` — where a card payment lands. **Xero refuses a
+     payment with no account to land in**, so without it invoices post and
+     payments do not. A clearing account is usually right: the processor
+     deposits net of its fee, in batches.
+4. On **Books** → **"Connect to Xero"**. Xero asks for consent and comes back
+   without naming an organisation — it has to be asked for separately, which
+   the adapter does. **It takes the first organisation the login opens.** For a
+   winery with one Xero organisation that is right; signing in with an
+   accountant's own login, which may open twenty, it is a coin toss. The Books
+   page prints which one it took, so check it.
+
+> **Xero drops the connection after sixty days unused, not a hundred.** That is
+> shorter than the gap between the spring and autumn releases. The service
+> refreshes it daily on its own and that is enough — but if the container is
+> down for two months, somebody has to authorise again.
 
 **Before the first push, the item `Wine Club Allocation` must already exist in
 QuickBooks** (Sales → Products and services), under exactly that name.

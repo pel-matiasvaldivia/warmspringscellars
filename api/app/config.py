@@ -93,6 +93,49 @@ class Settings:
     # automatic.
     qbo_autosync: bool = field(default_factory=lambda: _bool("QBO_AUTOSYNC", False))
 
+    # ── Xero ─────────────────────────────────────────────────────────────
+    # The other half of the same choice. The organisation is not configured
+    # here either: its tenant id is asked for after consent and stored with
+    # the tokens.
+    xero_client_id: str = field(default_factory=lambda: _env("XERO_CLIENT_ID"))
+    xero_client_secret: str = field(default_factory=lambda: _env("XERO_CLIENT_SECRET"))
+    xero_redirect_uri_raw: str = field(default_factory=lambda: _env("XERO_REDIRECT_URI"))
+    # Account codes from the chart of accounts, not product names: Xero takes
+    # the account on the line itself. Which account the money lands in is the
+    # bookkeeper's call, so these have no useful default.
+    xero_wine_account: str = field(default_factory=lambda: _env("XERO_WINE_ACCOUNT"))
+    xero_shipping_account: str = field(
+        default_factory=lambda: _env("XERO_SHIPPING_ACCOUNT"))
+    # Where a card payment lands. Xero refuses a payment without one.
+    xero_bank_account: str = field(default_factory=lambda: _env("XERO_BANK_ACCOUNT"))
+
+    # Which accounting system, when both are configured. Left empty the
+    # service works it out from whichever has credentials.
+    ledger_choice: str = field(default_factory=lambda: _env("LEDGER", "").strip().lower())
+
+    @property
+    def xero_configured(self) -> bool:
+        return bool(self.xero_client_id and self.xero_client_secret)
+
+    @property
+    def ledger_name(self) -> str:
+        """Which accounting system to talk to: 'quickbooks', 'xero' or 'none'.
+
+        An explicit LEDGER wins. Otherwise whichever one has credentials, and
+        'ambiguous' when both do — which is not a thing to guess at, because
+        guessing wrong files a winery's invoices into the system nobody is
+        reading.
+        """
+        if self.ledger_choice in {"quickbooks", "xero", "none"}:
+            return self.ledger_choice
+        if self.quickbooks_configured and self.xero_configured:
+            return "ambiguous"
+        if self.xero_configured:
+            return "xero"
+        if self.quickbooks_configured:
+            return "quickbooks"
+        return "none"
+
     @property
     def db_path(self) -> Path:
         return self.data_dir / "club.sqlite3"
@@ -118,6 +161,12 @@ class Settings:
         typed twice is a value that disagrees with itself eventually.
         """
         return (self.qbo_redirect_uri_raw
+                or f"{self.public_base_url}/admin/accounting/callback")
+
+    @property
+    def xero_redirect_uri(self) -> str:
+        """The same hop, for Xero, and registered in the Xero app the same way."""
+        return (self.xero_redirect_uri_raw
                 or f"{self.public_base_url}/admin/accounting/callback")
 
     @property
@@ -156,13 +205,23 @@ class Settings:
                        "to be named too.")
         if not self.admin_password:
             out.append("ADMIN_PASSWORD is unset: /admin is closed until it is set.")
-        if not self.quickbooks_configured:
-            out.append("QBO_CLIENT_ID/QBO_CLIENT_SECRET are unset: invoices queue up for "
-                       "QuickBooks instead of reaching it. Nothing is lost — the queue is "
-                       "at /admin/accounting, and exports as CSV.")
-        elif self.payments_live and self.qbo_environment != "production":
+        if self.ledger_name == "ambiguous":
+            out.append("Both QuickBooks and Xero are configured and LEDGER says which "
+                       "neither: nothing is pushed until LEDGER is set to 'quickbooks' "
+                       "or 'xero'. Guessing would file the books into the system "
+                       "nobody is reading.")
+        elif self.ledger_name == "none":
+            out.append("No accounting system is configured: invoices queue up instead of "
+                       "reaching one. Nothing is lost — the queue is at /admin/accounting, "
+                       "and exports as CSV. Set QBO_CLIENT_ID/QBO_CLIENT_SECRET, or "
+                       "XERO_CLIENT_ID/XERO_CLIENT_SECRET.")
+        elif (self.ledger_name == "quickbooks" and self.payments_live
+                and self.qbo_environment != "production"):
             out.append("Stripe is live but QBO_ENVIRONMENT is 'sandbox': real money would "
                        "be booked into a practice company.")
+        elif self.ledger_name == "xero" and not self.xero_bank_account:
+            out.append("XERO_BANK_ACCOUNT is unset: invoices will post but payments will "
+                       "not, because Xero refuses a payment with no account to land in.")
         return out
 
 

@@ -74,10 +74,13 @@ KEEPALIVE_EVERY_SECONDS = 24 * 3600
 
 
 async def keep_books_connected() -> None:
-    """Once a day, refresh QuickBooks if its hundred-day lapse is near.
+    """Once a day, refresh the accounting connection if its lapse is near.
 
     Releases are months apart. Without this, the connection would lapse
     between two of them and the next release would queue with nowhere to go.
+    QuickBooks allows a hundred days of that and Xero sixty, which is shorter
+    than the gap between spring and autumn — so for Xero this is not an
+    optimisation, it is the only thing holding the connection open.
     """
     keep_alive = getattr(ledger, "keep_alive", None)
     if keep_alive is None:
@@ -85,9 +88,9 @@ async def keep_books_connected() -> None:
     while True:
         try:
             if await asyncio.to_thread(keep_alive):
-                print("[club] QuickBooks connection refreshed by the keep-alive")
+                print(f"[club] {ledger.name} connection refreshed by the keep-alive")
         except Exception as exc:                               # noqa: BLE001
-            print(f"[club] QuickBooks keep-alive failed: {exc}")
+            print(f"[club] {ledger.name} keep-alive failed: {exc}")
         await asyncio.sleep(KEEPALIVE_EVERY_SECONDS)
 
 
@@ -916,10 +919,15 @@ def admin_accounting(request: Request, actor: str = Depends(require_admin)) -> H
     return admin_page(
         request, "accounting.html", "accounting",
         status=ledger.status(), ledger_name=ledger.name,
-        configured=settings.quickbooks_configured,
+        configured=ledger.live, ambiguous=settings.ledger_name == "ambiguous",
         autosync=settings.qbo_autosync,
-        wine_item=settings.qbo_wine_item, shipping_item=settings.qbo_shipping_item,
-        redirect_uri=settings.qbo_redirect_uri,
+        wine_item=(settings.xero_wine_account if settings.ledger_name == "xero"
+                   else settings.qbo_wine_item),
+        shipping_item=(settings.xero_shipping_account if settings.ledger_name == "xero"
+                       else settings.qbo_shipping_item),
+        bank_account=settings.xero_bank_account,
+        redirect_uri=(settings.xero_redirect_uri if settings.ledger_name == "xero"
+                      else settings.qbo_redirect_uri),
         rows=ledger_queue.tasks(db),
         outstanding=len(ledger_queue.pending(db)),
     )
@@ -927,8 +935,8 @@ def admin_accounting(request: Request, actor: str = Depends(require_admin)) -> H
 
 @app.get("/admin/accounting/connect")
 def admin_accounting_connect(actor: str = Depends(require_admin)) -> RedirectResponse:
-    if not settings.quickbooks_configured:
-        raise HTTPException(400, "QuickBooks is not configured")
+    if not ledger.live:
+        raise HTTPException(400, "no accounting system is configured")
     url = ledger.authorize_url(_state_signer.dumps(new_state()))
     return RedirectResponse(url, status_code=303)
 
@@ -937,29 +945,34 @@ def admin_accounting_connect(actor: str = Depends(require_admin)) -> RedirectRes
 def admin_accounting_callback(request: Request, actor: str = Depends(require_admin),
                               code: str = "", realmId: str = "",   # noqa: N803
                               state: str = "", error: str = "") -> RedirectResponse:
-    """Where Intuit sends the browser back after consent.
+    """Where the accounting system sends the browser back after consent.
 
-    Behind the desk's own password on purpose: Intuit redirects the staff
-    browser, not a server, so the address restriction and the password both
-    still apply to this hop.
+    One address for both: it is registered in whichever app the winery made,
+    and the adapter in use is the one that reads the code. Behind the desk's
+    own password on purpose — the provider redirects the staff browser, not a
+    server, so the address restriction and the password both apply to this
+    hop too.
     """
     if error:
-        return RedirectResponse(f"/admin/accounting?done=Intuit returned: {error}",
+        return RedirectResponse(f"/admin/accounting?done={ledger.name} returned: {error}",
                                 status_code=303)
     try:
         _state_signer.loads(state, max_age=STATE_MAX_AGE)
     except BadSignature:
         raise HTTPException(400, "that authorisation did not start here") from None
-    if not code or not realmId:
-        raise HTTPException(400, "Intuit sent no code or no company")
+    # Intuit names the company on the way back; Xero does not, and its
+    # adapter asks which organisation the token opens once it has one.
+    if not code:
+        raise HTTPException(400, "the accounting system sent no code")
 
     try:
-        ledger.exchange_code(code, realmId)
+        tokens = ledger.exchange_code(code, realmId)
     except AccountingError as exc:
         return RedirectResponse(f"/admin/accounting?done=Could not finish: {exc}",
                                 status_code=303)
+    company = getattr(tokens, "realm_id", "") or realmId
     return RedirectResponse(
-        f"/admin/accounting?done=Connected to QuickBooks company {realmId}.",
+        f"/admin/accounting?done=Connected to {ledger.name} company {company}.",
         status_code=303)
 
 
@@ -988,7 +1001,7 @@ def admin_accounting_retry(task_id: int,
     if task is None:
         raise HTTPException(404)
     done = ledger_queue.push_one(db, ledger, task, actor) if ledger.live else \
-        "QuickBooks is not connected, so nothing was pushed."
+        "No accounting system is connected, so nothing was pushed."
     return RedirectResponse(f"/admin/accounting?done={done}", status_code=303)
 
 

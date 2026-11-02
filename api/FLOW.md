@@ -115,6 +115,12 @@ before they do anything outside this machine:
   Until those are set the service uses `payments/fake.py`, which moves orders
   through the same states without a network call, so the rest of the flow can
   be developed and demonstrated.
+- **The books.** `accounting/quickbooks.py` and `accounting/xero.py` are two
+  adapters behind one three-method port, and `LEDGER` says which is in use —
+  or whichever has credentials, when only one does. Both configured and no
+  answer is deliberately a refusal, not a default. Until one is connected,
+  `NullLedger` refuses every push and the work stays in `ledger_task`, where
+  it is visible and exportable.
 - **Email.** `mail/smtp.py` needs `SMTP_HOST` and friends. Without them the
   service writes each message to `var/outbox/` as a `.eml` file you can open in
   any mail client — useful in development, and the only reason the approval
