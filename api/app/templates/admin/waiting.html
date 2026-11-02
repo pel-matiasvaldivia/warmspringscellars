@@ -26,10 +26,13 @@
   <div class="card">
     <h2 style="margin-bottom:.25rem">
       {{ state }}
+      {# "pending" and "approved" rather than "warn" and "ok": .warn is also a
+         standalone class for the notice boxes at the top of every page, and a
+         pill wearing both gets that box's padding. #}
       {% if state in unlicensed %}
-        <span class="pill warn" style="vertical-align:middle">no licence yet</span>
+        <span class="pill pending" style="vertical-align:middle">no licence yet</span>
       {% else %}
-        <span class="pill ok" style="vertical-align:middle">we can ship here</span>
+        <span class="pill approved" style="vertical-align:middle">we can ship here</span>
       {% endif %}
     </h2>
     <p class="sub" style="margin-bottom:1rem">
