@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from ..config import Settings
 from .base import (
-    CheckoutSession,
-    PaidEvent,
+    CardSaved,
+    Charge,
     PaymentError,
     PaymentProvider,
+    SetupSession,
     WebhookError,
     as_metadata,
     cancel_url_for,
@@ -17,7 +18,7 @@ from .fake import FakeProvider
 from .stripe_provider import StripeProvider
 
 __all__ = [
-    "CheckoutSession", "PaidEvent", "PaymentError", "PaymentProvider", "WebhookError",
+    "CardSaved", "Charge", "PaymentError", "PaymentProvider", "SetupSession", "WebhookError",
     "FakeProvider", "StripeProvider", "as_metadata", "cancel_url_for", "success_url_for",
     "build_provider",
 ]

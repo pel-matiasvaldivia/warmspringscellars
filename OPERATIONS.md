@@ -217,14 +217,25 @@ With Stripe live, the membership is only confirmed when the webhook arrives. If
 a member says they paid and **Orders** does not show `paid`, the problem is the
 webhook, not the member (§9).
 
-### 3.4 What happens with nobody pressing anything
+### 3.4 Joining takes no money
 
-Once payment clears, the service creates the **membership** (`active`), the
-**order** (`paid`), the **invoice** (sequentially numbered, no gaps) and the
-**shipment** (`ready`).
+Once the card is saved, the service creates the **membership** (`active`) and
+stops there. No order, no invoice, no shipment, and **nothing charged**.
 
-The invoice is also **queued for QuickBooks** at that same moment, in the same
-transaction. Reaching the books is a separate step, and it is §7.
+That is the whole billing model and it is worth saying plainly: **the club
+charges when a release goes out, never when somebody joins.** At the moment a
+member signs up nobody knows whether there is wine for them — that is what the
+release decides — and taking money first is how a club ends up owing bottles it
+does not have.
+
+So the card sits with the payment provider until §6 charges it. The member's
+welcome letter says so in its second line, because a card typed into a payment
+page is a card most people assume was just charged, and a bank statement with
+nothing on it is a worry rather than a relief.
+
+There is **no subscription**. Nothing inside Stripe bills anybody on a
+schedule, so when the shipment calendar moves there is no second calendar to
+keep in step with it.
 
 ---
 
@@ -275,12 +286,33 @@ April and October. On **Releases**:
 
 1. **"Plan it"** with a name (`Spring 2026`) and the shipping date.
 2. **"Raise orders"** raises **one order per active membership**, at each
-   member's own tier and price.
+   member's own tier and price. They are raised `pending_payment`: **this
+   press takes no money.**
+3. **"Charge N"** charges those orders against the cards members left when
+   they joined. This is the press that moves money.
 
-**"Raise orders" is safe to press twice.** The (member, release) pair is unique
-in the database, so a second run skips anyone already covered rather than
-billing them again. If new members joined after the first run, pressing it
-again is exactly the right thing to do.
+**Two presses, on purpose.** Between them is the moment to look at what was
+raised — who is in it, how many bottles that is, whether the wine exists —
+which is the only check standing between the cellar and a season it cannot
+fill. The button says how many orders are waiting, and disappears when none
+are.
+
+**Both are safe to press twice.** The (member, release) pair is unique in the
+database, so raising again skips anyone already covered. Charging again skips
+anyone already paid, and the provider is given the order's own reference as
+its key, so a charge that timed out settles once rather than twice.
+
+### When a card is declined
+
+The order goes to **`failed`** and stays there with the reason against it in
+**Orders**, in the provider's own words — a dead card and a bank asking for its
+customer look identical without them. The member gets one letter: their
+allocation is held, not lost, and a link to put in another card. Nothing is
+charged by that link; once the new card is on file, press **Charge** on that
+order again.
+
+Nothing chases a failed order on a schedule, and nothing gives up on it
+either. It waits on the Orders screen until a person deals with it.
 
 A membership left on a tier that no longer exists in the catalogue is skipped
 and logged. It is not billed at whatever happens to be nearest.

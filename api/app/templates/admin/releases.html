@@ -1,7 +1,11 @@
 {% extends "admin/layout.html" %}
 {% block body %}
 <h1>Releases</h1>
-<p class="sub">A release raises one order for every active member. Running it twice is safe.</p>
+<p class="sub">
+  A release raises one order for every active member, and then charges them. Two
+  presses, not one: nothing is charged until somebody has looked at what was raised.
+  Running either twice is safe.
+</p>
 
 <div class="card">
   <form method="post" action="/admin/releases" class="row">
@@ -21,17 +25,26 @@
 <div class="empty">No releases planned.</div>
 {% else %}
 <table>
-  <tr><th>Name</th><th>Ships</th><th>Status</th><th class="num">Orders</th><th></th></tr>
+  <tr><th>Name</th><th>Ships</th><th>Status</th><th class="num">Orders</th>
+      <th class="num">Unpaid</th><th></th></tr>
   {% for r in rows %}
   <tr>
     <td>{{ r.name }}</td>
     <td class="num">{{ r.ships_on }}</td>
     <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
     <td class="num">{{ r.order_count }}</td>
+    <td class="num">{{ r.unpaid_count }}</td>
     <td>
-      <form method="post" action="/admin/releases/{{ r.id }}/generate">
-        <button class="btn ghost small" type="submit">Raise orders</button>
-      </form>
+      <div class="row">
+        <form method="post" action="/admin/releases/{{ r.id }}/generate">
+          <button class="btn ghost small" type="submit">Raise orders</button>
+        </form>
+        {% if r.unpaid_count %}
+        <form method="post" action="/admin/releases/{{ r.id }}/charge">
+          <button class="btn small" type="submit">Charge {{ r.unpaid_count }}</button>
+        </form>
+        {% endif %}
+      </div>
     </td>
   </tr>
   {% endfor %}

@@ -23,7 +23,7 @@ from .accounting.queue import enqueue
 from .catalogue import Tier, catalogue
 from .config import SHIPPABLE_STATES, US_STATES, Settings
 from .db import Database, log, next_in_sequence, now
-from .payments import PaidEvent, PaymentProvider, as_metadata
+from .payments import CardSaved, PaymentProvider, as_metadata
 
 
 class FlowError(RuntimeError):
@@ -36,6 +36,11 @@ class FlowError(RuntimeError):
 # later, when the wine is already in a truck.
 PO_BOX = re.compile(r"\b(?:p\.?\s*o\.?|post\s+office)[\s.]*box\b", re.I)
 POSTCODE = re.compile(r"^\d{5}(?:-\d{4})?$")
+
+# How long a "put in another card" link keeps working. Longer than an
+# invitation, because a declined card is the club's problem to chase and
+# the member may be travelling.
+CARD_LINK_DAYS = 30
 
 
 @dataclass(frozen=True)
@@ -154,6 +159,51 @@ class Flow:
         except BadSignature as exc:
             raise FlowError("this invitation link is not valid") from exc
         return int(data["offer"])
+
+    # ── card links ───────────────────────────────────────────────────────
+    # A member whose card was declined has to be able to put in another one.
+    # Signed like an offer and for the same reason: no account, no password,
+    # and a link that stops working on its own.
+    @property
+    def _card_signer(self) -> URLSafeTimedSerializer:
+        return URLSafeTimedSerializer(self.settings.secret_key, salt="wsc-card")
+
+    def card_token(self, membership_id: int) -> str:
+        return self._card_signer.dumps({"membership": membership_id})
+
+    def read_card_token(self, token: str) -> int:
+        try:
+            data = self._card_signer.loads(token, max_age=CARD_LINK_DAYS * 86400)
+        except SignatureExpired as exc:
+            raise FlowError("this link has expired — write to us and we will send "
+                            "another") from exc
+        except BadSignature as exc:
+            raise FlowError("this link is not valid") from exc
+        return int(data["membership"])
+
+    def card_url(self, membership_id: int) -> str:
+        return f"{self.settings.public_base_url}/club/card/{self.card_token(membership_id)}"
+
+    def start_card_replacement(self, token: str) -> str:
+        membership_id = self.read_card_token(token)
+        member = self.db.one("SELECT * FROM membership WHERE id = ?", (membership_id,))
+        if member is None:
+            raise FlowError("this link is not valid")
+        if member["status"] == "cancelled":
+            raise FlowError("this membership is closed")
+
+        session = self.payments.create_setup(
+            reference=f"card-{membership_id}-{now()}",
+            description="Warm Springs Cellar — card on file",
+            customer_email=member["email"],
+            success_url=f"{self.settings.public_base_url}/club/card/{token}/done",
+            cancel_url=f"{self.settings.public_base_url}/club/card/{token}",
+            metadata=as_metadata(membership_id=membership_id),
+        )
+        with self.db.transaction() as con:
+            log(con, "membership", membership_id, "card_replacement_started",
+                session=session.id)
+        return session.url
 
     def offer_url(self, offer_id: int) -> str:
         return f"{self.settings.public_base_url}/club/offer/{self.offer_token(offer_id)}"
@@ -359,7 +409,7 @@ class Flow:
         tiers = [t for t in (catalogue().get(k) for k in keys) if t is not None]
         return offer, app, tiers
 
-    def start_checkout(self, token: str, tier_key: str, address: Address) -> str:
+    def start_card_setup(self, token: str, tier_key: str, address: Address) -> str:
         offer, app, tiers = self.open_offer(token)
         tier = next((t for t in tiers if t.key == tier_key), None)
         if tier is None:
@@ -378,12 +428,9 @@ class Flow:
                 state=address.state, postcode=address.postcode)
 
         reference = f"offer-{offer['id']}-{tier.key}"
-        session = self.payments.create_checkout(
+        session = self.payments.create_setup(
             reference=reference,
             description=f"Warm Springs Cellar — {tier.name}",
-            amount_cents=tier.total_cents,
-            currency=catalogue().currency,
-            interval_months=12 // max(catalogue().shipments_per_year, 1),
             customer_email=app["email"],
             success_url=f"{self.settings.public_base_url}/club/offer/{token}/welcome",
             cancel_url=f"{self.settings.public_base_url}/club/offer/{token}?checkout=cancelled",
@@ -391,13 +438,19 @@ class Flow:
                                  tier_key=tier.key),
         )
         with self.db.transaction() as con:
-            log(con, "offer", int(offer["id"]), "checkout_started",
+            log(con, "offer", int(offer["id"]), "card_setup_started",
                 tier=tier.key, session=session.id, provider=self.payments.name)
         return session.url
 
-    # ── the webhook: where money becomes a membership ────────────────────
-    def accept_payment(self, event: PaidEvent) -> int | None:
-        """Turn a confirmed payment into a membership, order, invoice and shipment.
+    # ── the webhook: where a saved card becomes a membership ─────────────
+    def accept_card(self, event: CardSaved) -> int | None:
+        """Turn a saved card into a membership. No money has moved.
+
+        It raises no order and issues no invoice, because at this moment
+        nobody knows whether there is wine: the club charges when a release
+        goes out, and a release is only raised against stock. What the member
+        has done is agree to be charged, and the card is now held where it can
+        be.
 
         Idempotent on the provider's event id: a provider that retries a
         delivery, and they all do, must not create a second membership.
@@ -438,25 +491,141 @@ class Flow:
             cur = con.execute(
                 "INSERT INTO membership (application_id, created_at, status, tier_key, email,"
                 " first_name, last_name, ship_line1, ship_line2, ship_city, ship_state,"
-                " ship_postcode, provider, provider_customer_id, provider_subscription_id)"
+                " ship_postcode, provider, provider_customer_id, provider_payment_method)"
                 " VALUES (?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (app["id"], now(), tier.key, app["email"], app["first_name"], app["last_name"],
                  offer["ship_line1"], offer["ship_line2"], offer["ship_city"],
                  offer["ship_state"] or app["state"], offer["ship_postcode"],
                  self.payments.name, event.customer_id or None,
-                 event.subscription_id or None),
+                 event.payment_method_id or None),
             )
             membership_id = int(cur.lastrowid)
             log(con, "offer", offer_id, "accepted", membership_id=membership_id)
             log(con, "membership", membership_id, "created",
                 tier=tier.key, provider=self.payments.name)
-
-            order_id = self._create_order(con, membership_id, tier, release_id=None)
-            self._mark_paid(con, order_id, event.session_id)
-            self._issue_invoice(con, order_id)
-            self._create_shipment(con, order_id)
+            log(con, "membership", membership_id, "card_saved", session=event.session_id)
 
         return membership_id
+
+    def replace_card(self, event: CardSaved) -> int | None:
+        """A member who came back and put in a different card.
+
+        The same webhook as joining; what tells them apart is the metadata on
+        the session, which carries a membership rather than an offer.
+        """
+        membership_id = int(event.metadata.get("membership_id", 0) or 0)
+        if not membership_id:
+            raise FlowError("the saved card named no membership")
+
+        with self.db.transaction() as con:
+            seen = con.execute(
+                "SELECT 1 FROM webhook_seen WHERE provider = ? AND event_id = ?",
+                (self.payments.name, event.event_id),
+            ).fetchone()
+            if seen:
+                return None
+            con.execute(
+                "INSERT INTO webhook_seen (provider, event_id, received_at) VALUES (?, ?, ?)",
+                (self.payments.name, event.event_id, now()),
+            )
+            _require(con, "membership", membership_id)
+            con.execute(
+                "UPDATE membership SET provider_customer_id = ?, provider_payment_method = ?"
+                " WHERE id = ?",
+                (event.customer_id or None, event.payment_method_id or None, membership_id),
+            )
+            log(con, "membership", membership_id, "card_replaced", session=event.session_id)
+        return membership_id
+
+    # ── charging: when a release goes out ────────────────────────────────
+    def charge_order(self, order_id: int, actor: str) -> dict:
+        """Charge one order against the card its member left with us.
+
+        Returns what happened rather than raising it. A release is charged one
+        order at a time and a declined card is an answer, not a fault — the
+        other members in that release are still owed their wine.
+        """
+        row = self.db.one(
+            'SELECT o.*, m.id AS membership_id, m.first_name, m.email, m.status AS member_status,'
+            ' m.provider_customer_id, m.provider_payment_method'
+            ' FROM "order" o JOIN membership m ON m.id = o.membership_id WHERE o.id = ?',
+            (order_id,),
+        )
+        if row is None:
+            raise FlowError("no such order")
+        if row["status"] not in {"pending_payment", "failed"}:
+            raise FlowError(f"that order is already {row['status']}")
+        if row["member_status"] != "active":
+            return self._charge_failed(order_id, actor,
+                                       f"the membership is {row['member_status']}", False)
+        if not row["provider_customer_id"] or not row["provider_payment_method"]:
+            return self._charge_failed(order_id, actor, "no card on file", True)
+
+        tier = catalogue().get(row["tier_key"])
+        charge = self.payments.charge(
+            reference=row["reference"],
+            amount_cents=int(row["total_cents"]),
+            currency=row["currency"],
+            customer_id=row["provider_customer_id"],
+            payment_method_id=row["provider_payment_method"],
+            description=f"Warm Springs Cellar — {tier.name if tier else row['tier_key']}"
+                        f" — {row['reference']}",
+            metadata=as_metadata(order_id=order_id, membership_id=row["membership_id"],
+                                 reference=row["reference"]),
+        )
+
+        if not charge.paid:
+            return self._charge_failed(order_id, actor, charge.error, charge.needs_member)
+
+        with self.db.transaction() as con:
+            if row["status"] == "failed":
+                # Back through the state machine rather than around it: a
+                # failed order returns to pending before it can be paid.
+                con.execute("UPDATE \"order\" SET status = 'pending_payment' WHERE id = ?",
+                            (order_id,))
+                log(con, "order", order_id, "pending_payment", actor=actor, detail="retried")
+            con.execute("UPDATE \"order\" SET charge_error = NULL WHERE id = ?", (order_id,))
+            self._mark_paid(con, order_id, charge.id)
+            invoice_id = self._issue_invoice(con, order_id)
+            self._create_shipment(con, order_id)
+        return {"order_id": order_id, "reference": row["reference"], "paid": True,
+                "invoice_id": invoice_id, "membership_id": int(row["membership_id"])}
+
+    def _charge_failed(self, order_id: int, actor: str, reason: str,
+                       needs_member: bool) -> dict:
+        with self.db.transaction() as con:
+            order = _require(con, "order", order_id)
+            if order["status"] == "pending_payment":
+                guard("order", order["status"], "failed")
+                con.execute("UPDATE \"order\" SET status = 'failed' WHERE id = ?", (order_id,))
+            con.execute("UPDATE \"order\" SET charge_error = ? WHERE id = ?", (reason, order_id))
+            log(con, "order", order_id, "charge_failed", actor=actor, reason=reason,
+                needs_member=needs_member)
+        return {"order_id": order_id, "reference": order["reference"], "paid": False,
+                "error": reason, "needs_member": needs_member,
+                "membership_id": int(order["membership_id"])}
+
+    def charge_release(self, release_id: int, actor: str) -> list[dict]:
+        """Charge everything this release raised that has not been paid yet.
+
+        Safe to run again: an order already paid is skipped, and the provider
+        is given the order's own reference as its idempotency key, so a second
+        attempt at one that timed out settles the first payment rather than
+        taking a second.
+        """
+        with self.db.transaction() as con:
+            _require(con, "release", release_id)
+        rows = self.db.all(
+            'SELECT id FROM "order" WHERE release_id = ?'
+            " AND status IN ('pending_payment', 'failed') ORDER BY id",
+            (release_id,),
+        )
+        results = [self.charge_order(int(row["id"]), actor) for row in rows]
+        with self.db.transaction() as con:
+            log(con, "release", release_id, "charged", actor=actor,
+                paid=sum(1 for r in results if r["paid"]),
+                failed=sum(1 for r in results if not r["paid"]))
+        return results
 
     # ── orders, invoices, shipments ──────────────────────────────────────
     def _create_order(self, con: sqlite3.Connection, membership_id: int, tier: Tier,

@@ -88,20 +88,53 @@ ADDRESS = {
 }
 
 
-def pay(client, token: str, tier_key: str, **address) -> None:
-    """Walk the member through checkout, including the provider's callback."""
+def join(client, token: str, tier_key: str, **address) -> int:
+    """Walk the member to the card page, including the provider's callback.
+
+    No money moves here. They end with a membership and a card on file.
+    """
     res = client.post(f"/club/offer/{token}/checkout",
                       data={"tier_key": tier_key, **ADDRESS, **address},
                       follow_redirects=False)
     assert res.status_code == 303, res.text
     sandbox = res.headers["location"]
-    assert "/club/sandbox/checkout" in sandbox
+    assert "/club/sandbox/card" in sandbox
 
     page = client.get(sandbox)
     assert page.status_code == 200
-    confirm = sandbox.replace("/checkout?", "/confirm?")
-    done = client.get(confirm, follow_redirects=False)
+    done = client.get(sandbox.replace("/card?", "/card/confirm?"), follow_redirects=False)
     assert done.status_code == 303, done.text
+    return int(client.main.db.one("SELECT id FROM membership ORDER BY id DESC")["id"])
+
+
+def plan_release(client, name: str = "", ships_on: str = "2026-04-15") -> int:
+    """A release, with its orders raised but nothing charged."""
+    count = client.main.db.one('SELECT COUNT(*) c FROM "release"')["c"]
+    client.post("/admin/releases",
+                data={"name": name or f"Season {count + 1}", "ships_on": ships_on},
+                auth=ADMIN, follow_redirects=False)
+    release_id = int(client.main.db.one('SELECT id FROM "release" ORDER BY id DESC')["id"])
+    client.post(f"/admin/releases/{release_id}/generate", auth=ADMIN, follow_redirects=False)
+    return release_id
+
+
+def pay(client, token: str, tier_key: str, **address) -> int:
+    """Join, raise a release, and charge that one member's order.
+
+    What used to happen in a single step at checkout now takes three: the card
+    is saved when they join, and money moves only when a release goes out.
+    Only their own order is charged, so a test with several members does not
+    bill the earlier ones again.
+    """
+    membership_id = join(client, token, tier_key, **address)
+    release_id = plan_release(client)
+    order = client.main.db.one(
+        'SELECT id FROM "order" WHERE membership_id = ? AND release_id = ?',
+        (membership_id, release_id))
+    res = client.post(f"/admin/orders/{order['id']}/charge", auth=ADMIN,
+                      follow_redirects=False)
+    assert res.status_code == 303, res.text
+    return membership_id
 
 
 # ── the whole thing ──────────────────────────────────────────────────────
@@ -130,7 +163,7 @@ def test_request_to_shipment(client):
     membership = client.main.db.one("SELECT * FROM membership WHERE application_id = ?", (app_id,))
     assert membership["status"] == "active"
     assert membership["tier_key"] == "founders-reserve"
-    assert membership["provider_subscription_id"].startswith("sub_fake_")
+    assert membership["provider_payment_method"].startswith("pm_fake_")
 
     order = client.main.db.one('SELECT * FROM "order" WHERE membership_id = ?', (membership["id"],))
     assert order["status"] == "paid"
@@ -144,8 +177,8 @@ def test_request_to_shipment(client):
     shipment = client.main.db.one("SELECT * FROM shipment WHERE order_id = ?", (order["id"],))
     assert shipment["status"] == "ready"
 
-    # the receipt went out too
-    assert len(list((client.tmp / "outbox").glob("*.eml"))) == 2
+    # the welcome went out when the card was saved, the receipt when it was charged
+    assert len(list((client.tmp / "outbox").glob("*.eml"))) == 3
 
     # pack it, ship it, deliver it
     sid = int(shipment["id"])
@@ -199,6 +232,149 @@ def test_the_form_is_rate_limited(client):
         client.post("/api/applications", json={**APPLICATION, "email": f"a{i}@example.com"})
     res = client.post("/api/applications", json={**APPLICATION, "email": "last@example.com"})
     assert res.status_code == 429
+
+
+# ── money moves when a release goes out, not when somebody joins ─────────
+def test_joining_saves_a_card_and_charges_nothing(client):
+    apply_(client)
+    membership_id = join(client, approve(client), "founders-reserve")
+
+    member = client.main.db.one("SELECT * FROM membership WHERE id = ?", (membership_id,))
+    assert member["status"] == "active"
+    assert member["provider_customer_id"].startswith("cus_fake_")
+    assert member["provider_payment_method"].startswith("pm_fake_")
+    assert client.main.db.one('SELECT COUNT(*) c FROM "order"')["c"] == 0
+    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 0
+
+    # and the letter they get says so, because a card page that charges
+    # nothing is not what most people assume they just did
+    welcome = sorted((client.tmp / "outbox").glob("*.eml"))[-1].read_text()
+    assert "Nothing has been charged" in welcome
+
+
+def test_a_release_raises_orders_and_only_charging_takes_the_money(client):
+    apply_(client)
+    join(client, approve(client), "founders-reserve")
+
+    client.post("/admin/releases", data={"name": "Spring 2026", "ships_on": "2026-04-15"},
+                auth=ADMIN, follow_redirects=False)
+    release_id = int(client.main.db.one('SELECT id FROM "release" ORDER BY id DESC')["id"])
+    client.post(f"/admin/releases/{release_id}/generate", auth=ADMIN, follow_redirects=False)
+
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["status"] == "pending_payment"
+    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 0
+
+    res = client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                      follow_redirects=False)
+    assert res.status_code == 303
+    assert "1 charged" in unquote(res.headers["location"])
+
+    order = client.main.db.one('SELECT * FROM "order" WHERE id = ?', (order["id"],))
+    assert order["status"] == "paid"
+    assert order["provider_payment_id"].startswith("pi_fake_")
+    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 1
+    assert client.main.db.one("SELECT COUNT(*) c FROM shipment")["c"] == 1
+
+    # charging the release again finds nothing left to charge
+    again = client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                        follow_redirects=False)
+    assert "0 charged" in unquote(again.headers["location"])
+    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 1
+
+
+def test_a_declined_card_holds_the_order_and_writes_to_the_member(client):
+    apply_(client)
+    join(client, approve(client), "founders-reserve")
+    release_id = plan_release(client)
+
+    # the provider refuses, as a bank sometimes does
+    from app.payments.base import Charge
+    client.main.payments.charge = lambda **kw: Charge(
+        id="pi_x", paid=False, error="Your card was declined.", needs_member=False)
+
+    before = len(list((client.tmp / "outbox").glob("*.eml")))
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN, follow_redirects=False)
+
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["status"] == "failed"
+    assert order["charge_error"] == "Your card was declined."
+    # no invoice for money that never arrived
+    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 0
+
+    letters = sorted((client.tmp / "outbox").glob("*.eml"))
+    assert len(letters) == before + 1
+    told = letters[-1].read_text()
+    assert "declined" in told
+    assert "/club/card/" in told              # with a way to fix it themselves
+
+
+def test_a_member_can_put_in_another_card_and_the_order_then_charges(client):
+    apply_(client)
+    membership_id = join(client, approve(client), "founders-reserve")
+    release_id = plan_release(client)
+
+    from app.payments.base import Charge
+    real_charge = client.main.payments.charge
+    client.main.payments.charge = lambda **kw: Charge(id="pi_x", paid=False, error="Declined.")
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN, follow_redirects=False)
+
+    # they open the link from the letter and leave a different card
+    token = client.main.flow.card_token(membership_id)
+    page = client.get(f"/club/card/{token}")
+    assert page.status_code == 200 and "a new card" in page.text
+
+    was = client.main.db.one(
+        "SELECT provider_payment_method p FROM membership WHERE id = ?", (membership_id,))["p"]
+    started = client.get(f"/club/card/{token}/start", follow_redirects=False)
+    assert started.status_code == 303
+    sandbox = started.headers["location"]
+    client.get(sandbox.replace("/card?", "/card/confirm?"), follow_redirects=False)
+
+    now_on_file = client.main.db.one(
+        "SELECT provider_payment_method p FROM membership WHERE id = ?", (membership_id,))["p"]
+    assert now_on_file and now_on_file != was
+    assert "card_replaced" in [e["action"] for e in client.main.db.all(
+        "SELECT * FROM event WHERE subject = 'membership' AND subject_id = ?", (membership_id,))]
+
+    # and the desk charges the held order again, which now goes through
+    client.main.payments.charge = real_charge
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    res = client.post(f"/admin/orders/{order['id']}/charge", auth=ADMIN,
+                      follow_redirects=False)
+    assert res.status_code == 303
+    order = client.main.db.one('SELECT * FROM "order" WHERE id = ?', (order["id"],))
+    assert order["status"] == "paid"
+    assert order["charge_error"] is None
+    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 1
+
+
+def test_a_membership_with_no_card_is_not_charged_and_says_why(client):
+    apply_(client)
+    membership_id = join(client, approve(client), "founders-reserve")
+    with client.main.db.transaction() as con:
+        con.execute("UPDATE membership SET provider_payment_method = NULL WHERE id = ?",
+                    (membership_id,))
+
+    release_id = plan_release(client)
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN, follow_redirects=False)
+
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["status"] == "failed"
+    assert order["charge_error"] == "no card on file"
+
+
+def test_a_paused_member_is_not_charged(client):
+    apply_(client)
+    membership_id = join(client, approve(client), "founders-reserve")
+    release_id = plan_release(client)
+    client.post(f"/admin/memberships/{membership_id}/status", data={"target": "paused"},
+                auth=ADMIN, follow_redirects=False)
+
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN, follow_redirects=False)
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["status"] == "failed"
+    assert "paused" in order["charge_error"]
 
 
 # ── waiting on a licence ─────────────────────────────────────────────────
@@ -476,15 +652,16 @@ def test_a_replayed_webhook_does_not_create_a_second_membership(client):
                       data={"tier_key": "founders-reserve", **ADDRESS},
                       follow_redirects=False)
     sandbox = res.headers["location"]
-    confirm = sandbox.replace("/checkout?", "/confirm?")
+    confirm = sandbox.replace("/card?", "/card/confirm?")
 
     client.get(confirm, follow_redirects=False)
     # the provider retries the identical delivery, as they all do
     client.get(confirm, follow_redirects=False)
 
     assert client.main.db.one("SELECT COUNT(*) c FROM membership")["c"] == 1
-    assert client.main.db.one('SELECT COUNT(*) c FROM "order"')["c"] == 1
-    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 1
+    # and joining bills nobody: the money waits for a release
+    assert client.main.db.one('SELECT COUNT(*) c FROM "order"')["c"] == 0
+    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 0
 
 
 def test_an_unsigned_webhook_is_refused(client):

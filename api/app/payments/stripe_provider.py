@@ -1,8 +1,13 @@
-"""Stripe Checkout, in subscription mode.
+"""Stripe Checkout in setup mode, and charges the club decides the timing of.
 
 Written against Stripe's documented HTTP API rather than the SDK: the service
-needs two calls and a signature check, and a direct httpx call is easier to
-read and to pin than a dependency that moves.
+needs a handful of calls and a signature check, and a direct httpx call is
+easier to read and to pin than a dependency that moves.
+
+No subscription is created. Stripe can only bill on an even interval, and the
+club ships in spring, autumn and at Christmas — four months apart on paper,
+six and two and four in fact. More to the point, a subscription charges
+whether or not there is wine: the club charges when a release goes out.
 
 NOT EXERCISED AGAINST LIVE STRIPE from the machine this was written on — it has
 no egress to api.stripe.com. The request shapes follow Stripe's documentation;
@@ -19,7 +24,7 @@ import time
 
 import httpx
 
-from .base import CheckoutSession, PaidEvent, PaymentError, WebhookError
+from .base import CardSaved, Charge, PaymentError, SetupSession, WebhookError
 
 API = "https://api.stripe.com/v1"
 
@@ -59,88 +64,157 @@ class StripeProvider:
         self._webhook_secret = webhook_secret
         self._timeout = timeout
 
-    # ── checkout ─────────────────────────────────────────────────────────
-    def create_checkout(
+    # ── the page where a card is saved ───────────────────────────────────
+    def create_setup(
         self,
         *,
         reference: str,
         description: str,
-        amount_cents: int,
-        currency: str,
-        interval_months: int,
         customer_email: str,
         success_url: str,
         cancel_url: str,
         metadata: dict[str, str],
-    ) -> CheckoutSession:
+    ) -> SetupSession:
         payload = {
-            "mode": "subscription",
+            # Setup mode takes a card and charges nothing. Checkout creates the
+            # Customer to attach it to, which is what `customer` on the
+            # completed session carries back.
+            "mode": "setup",
+            "payment_method_types": ["card"],
             "success_url": success_url,
             "cancel_url": cancel_url,
             "customer_email": customer_email,
             "client_reference_id": reference,
-            "line_items": [
-                {
-                    "quantity": 1,
-                    "price_data": {
-                        "currency": currency,
-                        "unit_amount": amount_cents,
-                        # Twice a year is six months, which Stripe expresses as
-                        # a month interval counted six at a time.
-                        "recurring": {"interval": "month", "interval_count": interval_months},
-                        "product_data": {"name": description},
-                    },
-                }
-            ],
             # Stripe is deliberately NOT asked to collect a shipping address.
-            # The club takes it before checkout, because whether the wine may
-            # be sent at all depends on the state and that has to be settled
-            # before money moves. Asking twice would leave two addresses that
-            # can disagree, and no answer to which one the box is packed from.
+            # The club takes it before this page, because whether the wine may
+            # be sent at all depends on the state. Asking twice would leave two
+            # addresses that can disagree, and no answer to which one the box
+            # is packed from.
             "metadata": metadata,
-            "subscription_data": {"metadata": metadata},
+            "setup_intent_data": {"metadata": metadata, "description": description},
         }
+        body = self._post("/checkout/sessions", payload, f"setup-{reference}")
+        if not body.get("url"):
+            raise PaymentError("Stripe returned a session with no URL")
+        return SetupSession(id=body["id"], url=body["url"])
 
+    # ── charging a card that is already on file ──────────────────────────
+    def charge(
+        self,
+        *,
+        reference: str,
+        amount_cents: int,
+        currency: str,
+        customer_id: str,
+        payment_method_id: str,
+        description: str,
+        metadata: dict[str, str],
+    ) -> Charge:
+        payload = {
+            "amount": amount_cents,
+            "currency": currency,
+            "customer": customer_id,
+            "payment_method": payment_method_id,
+            # Nobody is at the keyboard: this runs on the morning a release is
+            # charged. Telling Stripe so is what lets the bank apply the
+            # exemption it agreed to when the card was saved.
+            "off_session": True,
+            "confirm": True,
+            "description": description,
+            "metadata": metadata,
+        }
+        # Keyed on the order's own reference, so charging a release twice —
+        # by a double click, or a retry after a timeout — settles the same
+        # payment rather than taking the money again.
         try:
             res = httpx.post(
-                f"{API}/checkout/sessions",
+                f"{API}/payment_intents",
                 data=_form(payload),
                 auth=(self._key, ""),
                 timeout=self._timeout,
-                headers={"Idempotency-Key": f"checkout-{reference}"},
+                headers={"Idempotency-Key": f"charge-{reference}"},
             )
         except httpx.HTTPError as exc:
             raise PaymentError(f"could not reach Stripe: {exc}") from exc
 
-        if res.status_code >= 400:
-            detail = res.json().get("error", {}).get("message", res.text)
-            raise PaymentError(f"Stripe refused the checkout session: {detail}")
+        body = res.json() if res.content else {}
+        if res.status_code < 400:
+            status = body.get("status")
+            if status == "succeeded":
+                return Charge(id=body.get("id", ""), paid=True)
+            # requires_action and friends: taken, not settled.
+            return Charge(id=body.get("id", ""), paid=False,
+                          error=f"the payment is {status} rather than settled",
+                          needs_member=status == "requires_action")
 
-        body = res.json()
-        if not body.get("url"):
-            raise PaymentError("Stripe returned a session with no URL")
-        return CheckoutSession(id=body["id"], url=body["url"])
+        error = body.get("error", {})
+        intent = error.get("payment_intent") or {}
+        code = error.get("code", "")
+        return Charge(
+            id=intent.get("id", ""),
+            paid=False,
+            error=error.get("message") or res.text,
+            needs_member=code == "authentication_required",
+        )
 
     # ── webhooks ─────────────────────────────────────────────────────────
-    def parse_webhook(self, payload: bytes, signature: str | None) -> PaidEvent | None:
+    def parse_webhook(self, payload: bytes, signature: str | None) -> CardSaved | None:
         event = self.verify(payload, signature)
 
         if event.get("type") != "checkout.session.completed":
             return None
 
         session = event["data"]["object"]
-        if session.get("payment_status") not in {"paid", "no_payment_required"}:
+        if session.get("mode") != "setup" or session.get("status") != "complete":
             return None
 
-        return PaidEvent(
+        customer = session.get("customer") or ""
+        setup_intent = session.get("setup_intent") or ""
+        if not customer or not setup_intent:
+            raise PaymentError("a completed setup session carried no customer or intent")
+
+        # The card itself is on the SetupIntent, not on the session, so it
+        # takes one more call to learn which card was saved. Doing it here
+        # keeps the rest of the service from knowing Stripe's shape.
+        intent = self._get(f"/setup_intents/{setup_intent}")
+        payment_method = intent.get("payment_method") or ""
+        if not payment_method:
+            raise PaymentError("the setup intent completed with no payment method")
+
+        return CardSaved(
             event_id=event["id"],
             session_id=session["id"],
-            customer_id=session.get("customer") or "",
-            subscription_id=session.get("subscription") or "",
-            amount_cents=int(session.get("amount_total") or 0),
-            currency=(session.get("currency") or "usd"),
+            customer_id=customer,
+            payment_method_id=payment_method,
             metadata=dict(session.get("metadata") or {}),
         )
+
+    # ── talking to Stripe ────────────────────────────────────────────────
+    def _post(self, path: str, payload: dict, idempotency: str) -> dict:
+        try:
+            res = httpx.post(
+                f"{API}{path}",
+                data=_form(payload),
+                auth=(self._key, ""),
+                timeout=self._timeout,
+                headers={"Idempotency-Key": idempotency},
+            )
+        except httpx.HTTPError as exc:
+            raise PaymentError(f"could not reach Stripe: {exc}") from exc
+        if res.status_code >= 400:
+            detail = res.json().get("error", {}).get("message", res.text)
+            raise PaymentError(f"Stripe refused {path}: {detail}")
+        return res.json()
+
+    def _get(self, path: str) -> dict:
+        try:
+            res = httpx.get(f"{API}{path}", auth=(self._key, ""), timeout=self._timeout)
+        except httpx.HTTPError as exc:
+            raise PaymentError(f"could not reach Stripe: {exc}") from exc
+        if res.status_code >= 400:
+            detail = res.json().get("error", {}).get("message", res.text)
+            raise PaymentError(f"Stripe refused {path}: {detail}")
+        return res.json()
 
     def verify(self, payload: bytes, signature: str | None) -> dict:
         """Check the Stripe-Signature header and return the decoded event.

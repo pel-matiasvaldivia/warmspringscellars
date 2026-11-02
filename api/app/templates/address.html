@@ -98,7 +98,7 @@
     </select>
   </div>
 
-  <button class="btn" type="submit">Continue to payment</button>
+  <button class="btn" type="submit">Continue</button>
 
   <p class="small">
     Someone over 21 has to sign for wine, so this needs to be an address where a
@@ -107,9 +107,13 @@
     <a href="mailto:club@warmspringscellar.com">club@warmspringscellar.com</a> and
     we will tell you the moment that changes.
   </p>
+  <p class="small">
+    The next page is our payment provider's, where you leave a card.
+    <strong>Nothing is charged there.</strong> We charge when a release ships.
+  </p>
   {% if not payments_live %}
   <p class="small"><em>This installation is running without payment credentials,
-    so checkout is simulated and no money will move.</em></p>
+    so that page is simulated and no card is really stored.</em></p>
   {% endif %}
 </form>
 {% endblock %}

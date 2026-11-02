@@ -7,7 +7,7 @@
 {% else %}
 <table>
   <tr><th>Reference</th><th>Raised</th><th>Member</th><th>Allocation</th><th>Release</th>
-      <th class="num">Total</th><th>Status</th><th>Invoice</th></tr>
+      <th class="num">Total</th><th>Status</th><th>Invoice</th><th></th></tr>
   {% for r in rows %}
   <tr>
     <td><code>{{ r.reference }}</code></td>
@@ -16,11 +16,22 @@
     <td>{{ tier_names.get(r.tier_key, r.tier_key) }}</td>
     <td>{{ r.release_name or '—' }}</td>
     <td class="num">{{ money(r.total_cents, r.currency) }}</td>
-    <td><span class="pill {{ r.status }}">{{ r.status.replace('_',' ') }}</span></td>
+    <td><span class="pill {{ r.status }}">{{ r.status.replace('_',' ') }}</span>
+        {# The provider's own words. A dead card and a bank asking for the
+           cardholder look the same on this screen without them. #}
+        {% if r.charge_error %}<br><span class="log" style="color:var(--bad)"
+          >{{ r.charge_error }}</span>{% endif %}</td>
     <td>
       {% if r.invoice_number %}
         <a href="/admin/invoices/{{ r.invoice_id }}.pdf">{{ r.invoice_number }}</a>
       {% else %}—{% endif %}
+    </td>
+    <td>
+      {% if r.status in ('pending_payment', 'failed') %}
+        <form method="post" action="/admin/orders/{{ r.id }}/charge">
+          <button class="btn ghost small" type="submit">Charge</button>
+        </form>
+      {% endif %}
     </td>
   </tr>
   {% endfor %}

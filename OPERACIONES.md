@@ -218,14 +218,25 @@ Con Stripe activo, el alta solo se confirma cuando llega el webhook. Si el socio
 dice que pagó y en **Orders** no aparece `paid`, el problema está en el webhook,
 no en el socio (ver §9).
 
-### 3.4 Lo que se genera solo
+### 3.4 Sumarse no cobra nada
 
-Con el pago acreditado, el sistema crea sin intervención: la **membresía**
-(`active`), la **orden** (`paid`), la **factura** (con número correlativo sin
-huecos) y el **envío** (`ready`). No hay nada que apretar en este paso.
+Con la tarjeta guardada, el sistema crea la **membresía** (`active`) y se
+detiene ahí. Sin orden, sin factura, sin envío y **sin cobrar**.
 
-La factura también **se encola para QuickBooks** en el mismo momento, en la
-misma transacción. Llegar a los libros es otro paso, y es el §7.
+Ese es el modelo de cobro completo y conviene decirlo sin vueltas: **el club
+cobra cuando sale un despacho, nunca cuando alguien se suscribe.** En el
+momento en que un socio se anota, nadie sabe todavía si hay vino para él —eso
+lo decide el release— y cobrar primero es exactamente cómo un club termina
+debiendo botellas que no tiene.
+
+Así que la tarjeta queda guardada en la pasarela hasta que el §6 la cobre. La
+carta de bienvenida se lo dice en el segundo renglón, porque una tarjeta
+cargada en una página de pago es una tarjeta que casi todos dan por cobrada, y
+un resumen sin el cargo preocupa en vez de tranquilizar.
+
+**No hay suscripción.** Nada dentro de Stripe le cobra a nadie por calendario,
+así que cuando cambien las fechas de despacho no hay un segundo calendario que
+mantener sincronizado.
 
 ---
 
@@ -276,12 +287,33 @@ Abril y octubre, dos por año. En **Releases**:
 
 1. **"Plan it"** con nombre (`Spring 2026`) y fecha de despacho.
 2. **"Raise orders"** levanta **una orden por cada membresía activa**, con el
-   nivel y el precio de cada una.
+   nivel y el precio de cada una. Salen en `pending_payment`: **ese botón no
+   cobra nada.**
+3. **"Charge N"** cobra esas órdenes contra las tarjetas que los socios
+   dejaron al sumarse. Ese es el botón que mueve la plata.
 
-**"Raise orders" se puede apretar dos veces sin miedo.** El par
-(socio, despacho) es único en la base, así que la segunda corrida saltea a quien
-ya tiene orden en lugar de cobrarle de nuevo. Si entraron socios nuevos después
-de la primera corrida, apretarlo otra vez es exactamente lo que hay que hacer.
+**Dos botones, a propósito.** En el medio está el momento de mirar lo que se
+levantó —quiénes son, cuántas botellas son, si el vino existe—, que es el único
+control entre la bodega y una temporada que no puede cumplir. El botón dice
+cuántas órdenes quedan por cobrar, y desaparece cuando no queda ninguna.
+
+**Los dos se pueden apretar dos veces sin miedo.** El par (socio, despacho) es
+único en la base, así que volver a levantar saltea a quien ya tiene orden.
+Volver a cobrar saltea a quien ya pagó, y a la pasarela se le pasa la
+referencia de la orden como clave, así que un cobro que se cortó por timeout se
+salda una vez y no dos.
+
+### Cuando una tarjeta es rechazada
+
+La orden pasa a **`failed`** y se queda ahí, con el motivo al lado en
+**Orders**, en las palabras de la pasarela: una tarjeta vencida y un banco que
+quiere hablar con su cliente se ven idénticas sin eso. Al socio le llega una
+sola carta: su allocation está reservada, no perdida, y un link para cargar
+otra tarjeta. Ese link no cobra nada; una vez que la tarjeta nueva está
+guardada, se aprieta **Charge** otra vez en esa orden.
+
+Nada persigue a una orden fallida por calendario, y nada la da por perdida
+tampoco. Espera en la pantalla de Orders hasta que una persona la resuelva.
 
 Si una membresía quedó con un nivel que ya no existe en el catálogo, se la
 saltea y queda anotado en el registro. No se la factura "a lo que salga".

@@ -77,6 +77,13 @@ CREATE TABLE IF NOT EXISTS membership (
     ship_postcode   TEXT,
     provider        TEXT,                 -- 'stripe' | 'fake'
     provider_customer_id     TEXT,
+    -- The card itself stays with the provider; this is its handle, and what
+    -- a release is charged against. A membership without one cannot be
+    -- charged, which the despatch screens say rather than discovering it on
+    -- the morning the wine goes out.
+    provider_payment_method  TEXT,
+    -- Unused since the club stopped running subscriptions, and kept because
+    -- memberships created under one still carry theirs.
     provider_subscription_id TEXT,
     paused_until    TEXT,
     cancelled_at    TEXT
@@ -133,6 +140,9 @@ CREATE TABLE IF NOT EXISTS "order" (
     total_cents    INTEGER NOT NULL,
     currency       TEXT NOT NULL,
     provider_payment_id TEXT,
+    -- Why the last charge did not go through, in the provider's own words,
+    -- so the desk can tell a dead card from a bank asking for the member.
+    charge_error   TEXT,
     paid_at        TEXT,
     UNIQUE (membership_id, release_id)
 );
@@ -244,6 +254,8 @@ ADDED_COLUMNS: dict[str, dict[str, str]] = {
         "ship_line1": "TEXT", "ship_line2": "TEXT", "ship_city": "TEXT",
         "ship_state": "TEXT", "ship_postcode": "TEXT",
     },
+    "membership": {"provider_payment_method": "TEXT"},
+    "order": {"charge_error": "TEXT"},
 }
 
 

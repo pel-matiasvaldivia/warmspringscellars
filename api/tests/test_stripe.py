@@ -31,16 +31,15 @@ def provider() -> StripeProvider:
 # ── form encoding ────────────────────────────────────────────────────────
 def test_nested_payloads_use_stripe_bracket_encoding():
     encoded = dict(_form({
-        "mode": "subscription",
-        "line_items": [{"quantity": 1, "price_data": {"unit_amount": 18000}}],
+        "mode": "setup",
+        "payment_method_types": ["card"],
+        "setup_intent_data": {"metadata": {"offer_id": "7"}},
         "metadata": {"offer_id": "7"},
-        "shipping_address_collection": {"allowed_countries": ["US"]},
     }))
-    assert encoded["mode"] == "subscription"
-    assert encoded["line_items[0][quantity]"] == "1"
-    assert encoded["line_items[0][price_data][unit_amount]"] == "18000"
+    assert encoded["mode"] == "setup"
+    assert encoded["payment_method_types[0]"] == "card"
+    assert encoded["setup_intent_data[metadata][offer_id]"] == "7"
     assert encoded["metadata[offer_id]"] == "7"
-    assert encoded["shipping_address_collection[allowed_countries][0]"] == "US"
 
 
 def test_booleans_and_nulls_are_handled_the_way_stripe_wants():
@@ -105,17 +104,29 @@ def test_several_signatures_in_one_header_are_all_tried(provider):
 
 
 # ── event decoding ───────────────────────────────────────────────────────
+class Answer:
+    """The two things the adapter reads off an httpx response."""
+
+    def __init__(self, status_code: int, body: dict):
+        self.status_code = status_code
+        self._body = body
+        self.text = json.dumps(body)
+        self.content = self.text.encode()
+
+    def json(self) -> dict:
+        return self._body
+
+
 def completed_session(**overrides) -> bytes:
     body = {
         "id": "evt_test",
         "type": "checkout.session.completed",
         "data": {"object": {
             "id": "cs_test_123",
-            "payment_status": "paid",
+            "mode": "setup",
+            "status": "complete",
             "customer": "cus_123",
-            "subscription": "sub_123",
-            "amount_total": 34000,
-            "currency": "usd",
+            "setup_intent": "seti_123",
             "metadata": {"offer_id": "7", "tier_key": "founders-reserve"},
             **overrides,
         }},
@@ -123,21 +134,105 @@ def completed_session(**overrides) -> bytes:
     return json.dumps(body).encode()
 
 
-def test_a_completed_checkout_becomes_a_paid_event(provider):
+@pytest.fixture()
+def saved_card(monkeypatch):
+    """Stripe answering the one GET the adapter makes to learn which card it is."""
+    asked: list[str] = []
+
+    def fake_get(url, **kwargs):
+        asked.append(url)
+        return Answer(200, {"id": "seti_123", "payment_method": "pm_123"})
+
+    monkeypatch.setattr("app.payments.stripe_provider.httpx.get", fake_get)
+    return asked
+
+
+def test_a_saved_card_becomes_an_event_carrying_the_card(provider, saved_card):
     payload = completed_session()
     event = provider.parse_webhook(payload, sign_payload(SECRET, payload))
     assert event is not None
     assert event.session_id == "cs_test_123"
-    assert event.subscription_id == "sub_123"
-    assert event.amount_cents == 34000
+    assert event.customer_id == "cus_123"
+    # the card is on the setup intent, not on the session, so it took a look
+    assert event.payment_method_id == "pm_123"
+    assert saved_card == ["https://api.stripe.com/v1/setup_intents/seti_123"]
     assert event.metadata["tier_key"] == "founders-reserve"
 
 
-def test_an_unpaid_checkout_is_ignored(provider):
-    payload = completed_session(payment_status="unpaid")
+def test_a_session_that_is_not_a_card_setup_is_ignored(provider):
+    payload = completed_session(mode="payment")
+    assert provider.parse_webhook(payload, sign_payload(SECRET, payload)) is None
+
+
+def test_an_unfinished_session_is_ignored(provider):
+    payload = completed_session(status="open")
     assert provider.parse_webhook(payload, sign_payload(SECRET, payload)) is None
 
 
 def test_events_we_do_not_act_on_are_ignored(provider):
     payload = json.dumps({"id": "evt_x", "type": "invoice.paid", "data": {"object": {}}}).encode()
     assert provider.parse_webhook(payload, sign_payload(SECRET, payload)) is None
+
+
+# ── charging a saved card ────────────────────────────────────────────────
+def charge_with(monkeypatch, answer: Answer) -> dict:
+    """Charge against a stubbed Stripe, handing back what was sent to it."""
+    sent: dict = {}
+
+    def fake_post(url, data=None, **kwargs):
+        sent["url"] = url
+        sent["data"] = dict(data or [])
+        sent["headers"] = kwargs.get("headers", {})
+        return answer
+
+    monkeypatch.setattr("app.payments.stripe_provider.httpx.post", fake_post)
+    return sent
+
+
+def test_a_charge_that_succeeds_is_paid(provider, monkeypatch):
+    sent = charge_with(monkeypatch, Answer(200, {"id": "pi_1", "status": "succeeded"}))
+    charge = provider.charge(
+        reference="WSC-2026-0001", amount_cents=27500, currency="usd",
+        customer_id="cus_123", payment_method_id="pm_123",
+        description="Warm Springs Cellar", metadata={"order_id": "4"},
+    )
+    assert charge.paid and charge.id == "pi_1"
+    assert sent["url"].endswith("/payment_intents")
+    assert sent["data"]["amount"] == "27500"
+    assert sent["data"]["customer"] == "cus_123"
+    assert sent["data"]["payment_method"] == "pm_123"
+    # nobody is at the keyboard, and the bank is told so
+    assert sent["data"]["off_session"] == "true"
+    assert sent["data"]["confirm"] == "true"
+    # keyed on the order, so a retry settles the first payment, not a second
+    assert sent["headers"]["Idempotency-Key"] == "charge-WSC-2026-0001"
+
+
+def test_a_declined_card_comes_back_as_an_answer_not_an_exception(provider, monkeypatch):
+    charge_with(monkeypatch, Answer(402, {"error": {
+        "code": "card_declined", "message": "Your card was declined.",
+        "payment_intent": {"id": "pi_2"}}}))
+    charge = provider.charge(
+        reference="WSC-2026-0002", amount_cents=27500, currency="usd",
+        customer_id="cus_123", payment_method_id="pm_123",
+        description="x", metadata={},
+    )
+    assert not charge.paid
+    assert charge.id == "pi_2"
+    assert "declined" in charge.error
+    assert not charge.needs_member
+
+
+def test_a_bank_that_wants_the_member_is_told_apart_from_a_decline(provider, monkeypatch):
+    charge_with(monkeypatch, Answer(402, {"error": {
+        "code": "authentication_required",
+        "message": "The payment requires authentication.",
+        "payment_intent": {"id": "pi_3"}}}))
+    charge = provider.charge(
+        reference="WSC-2026-0003", amount_cents=27500, currency="usd",
+        customer_id="cus_123", payment_method_id="pm_123",
+        description="x", metadata={},
+    )
+    assert not charge.paid
+    # retrying this one in the night fails every time; only the member can settle it
+    assert charge.needs_member

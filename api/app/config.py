@@ -142,7 +142,8 @@ class Settings:
             out.append("SECRET_KEY is unset: offer links are signed with a key that "
                        "changes on restart, so every link already sent stops working.")
         if not self.payments_live:
-            out.append("STRIPE_SECRET_KEY is unset: checkout is simulated and no money moves.")
+            out.append("STRIPE_SECRET_KEY is unset: the card page is simulated, no card "
+                       "is stored and a release charges nobody.")
         elif not self.stripe_webhook_secret:
             out.append("STRIPE_WEBHOOK_SECRET is unset: webhooks cannot be verified and "
                        "are refused.")

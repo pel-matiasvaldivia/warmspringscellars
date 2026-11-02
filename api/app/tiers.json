@@ -20,11 +20,10 @@
     "for carriage again.",
     "",
     "Three shipments a year now, not two: spring, fall and Christmas. The",
-    "months are what the despatch screens count from. Stripe is billed on an",
-    "even interval derived from the count — 12 / 3, so every four months —",
-    "which is close but not the same as those three dates; it is the model",
-    "the subscription has always used and it did not fit two shipments",
-    "exactly either."
+    "months are what the despatch screens count from. Nothing bills on an",
+    "interval any more: a member saves a card when they join and the club",
+    "charges it when a release goes out, so these three dates are the whole",
+    "calendar and there is no second one inside Stripe to keep in step."
   ],
 
   "currency": "usd",

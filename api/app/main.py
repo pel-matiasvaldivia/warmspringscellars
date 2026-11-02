@@ -35,7 +35,14 @@ from .db import Database, log
 from .flow import ALLOWED, Address, Flow, FlowError
 from .invoices import ensure_pdf, money
 from .mail import build_mailer, check as mail_check
-from .notify import send_decline, send_invitation, send_receipt, send_shipment_notice
+from .notify import (
+    send_charge_failed,
+    send_decline,
+    send_invitation,
+    send_receipt,
+    send_shipment_notice,
+    send_welcome,
+)
 from .payments import WebhookError, build_provider
 from .payments.fake import FakeProvider, unb64
 
@@ -305,12 +312,67 @@ async def start_checkout(request: Request, token: str) -> Response:
     data = {key: str(value) for key, value in form.items()}
     try:
         address = Address.parse(data)
-        url = flow.start_checkout(token, tier_key, address)
+        url = flow.start_card_setup(token, tier_key, address)
     except FlowError as exc:
         # Back to the form with what they typed. A redirect carrying the error
         # would empty five fields to complain about one of them.
         return address_page(request, token, chosen, data, str(exc))
     return RedirectResponse(url, status_code=303)
+
+
+@app.get("/club/card/{token}", response_class=HTMLResponse)
+def show_card_page(request: Request, token: str) -> HTMLResponse:
+    """Where a member whose card was declined puts in another one."""
+    try:
+        membership_id = flow.read_card_token(token)
+    except FlowError as exc:
+        return offer_problem(request, str(exc))
+    member = db.one("SELECT * FROM membership WHERE id = ?", (membership_id,))
+    if member is None:
+        return offer_problem(request, "this link is not valid")
+
+    return templates.TemplateResponse(
+        request, "message.html",
+        {"eyebrow": "Your membership", "heading": f"{member['first_name']}, a new card",
+         "body": "The card we had on file was declined when we came to charge this "
+                 "season's shipment. Putting in another one takes a minute, and nothing "
+                 "is charged on this page — we charge again once the card is saved, "
+                 "and your wine goes out with the rest of the release.",
+         "cta_url": f"/club/card/{token}/start", "cta_label": "Put in a card"},
+    )
+
+
+@app.get("/club/card/{token}/start")
+def start_card_replacement(request: Request, token: str) -> Response:
+    try:
+        url = flow.start_card_replacement(token)
+    except FlowError as exc:
+        return offer_problem(request, str(exc))
+    return RedirectResponse(url, status_code=303)
+
+
+@app.get("/club/card/{token}/done", response_class=HTMLResponse)
+def card_replaced(request: Request, token: str) -> HTMLResponse:
+    """Shown on the way back. Like the welcome page, it reports rather than acts:
+    the card is saved by the webhook, not by a browser arriving here."""
+    try:
+        membership_id = flow.read_card_token(token)
+    except FlowError as exc:
+        return offer_problem(request, str(exc))
+    member = db.one("SELECT * FROM membership WHERE id = ?", (membership_id,))
+    saved = bool(member and member["provider_payment_method"])
+    return templates.TemplateResponse(
+        request, "message.html",
+        {"eyebrow": "Your membership",
+         "heading": "Thank you" if saved else "Still working on it",
+         "body": "We have the new card. Nothing has been charged yet — the cellar "
+                 "will run this season's charge again, and you will get the receipt by "
+                 "email."
+                 if saved else
+                 "Our provider has not confirmed the card yet. It is usually seconds. "
+                 "If you do not hear from us today, write to club@warmspringscellar.com.",
+         "cta_url": "/", "cta_label": "Back to the cellar"},
+    )
 
 
 @app.get("/club/offer/{token}/welcome", response_class=HTMLResponse)
@@ -343,33 +405,32 @@ def welcome(request: Request, token: str) -> HTMLResponse:
 
 
 # ── sandbox checkout, only when there is no real provider ────────────────
-@app.get("/club/sandbox/checkout", response_class=HTMLResponse)
-def sandbox_checkout(request: Request, d: str, s: str) -> HTMLResponse:
+@app.get("/club/sandbox/card", response_class=HTMLResponse)
+def sandbox_card(request: Request, d: str, s: str) -> HTMLResponse:
     if payments.live:
         raise HTTPException(404)
     body = json.loads(unb64(d))
     return templates.TemplateResponse(
         request, "message.html",
-        {"eyebrow": "Sandbox checkout",
-         "heading": f"{money(body['amount_cents'], body['currency'])} — {body['description']}",
+        {"eyebrow": "Sandbox", "heading": f"Save a card — {body['description']}",
          "body": "There are no payment credentials on this installation, so this page "
                  "stands in for the provider's. Confirming it runs exactly the same "
-                 "webhook the real provider would, and no money moves.",
-         "cta_url": f"/club/sandbox/confirm?d={d}&s={s}",
-         "cta_label": "Confirm payment"},
+                 "webhook the real provider would. Nothing is charged here and nothing "
+                 "would be charged at the real one either: the card is charged when a "
+                 "release ships.",
+         "cta_url": f"/club/sandbox/card/confirm?d={d}&s={s}",
+         "cta_label": "Save the card"},
     )
 
 
-@app.get("/club/sandbox/confirm")
-async def sandbox_confirm(d: str, s: str,
-                          background: BackgroundTasks) -> RedirectResponse:
+@app.get("/club/sandbox/card/confirm")
+async def sandbox_card_confirm(d: str, s: str,
+                               background: BackgroundTasks) -> RedirectResponse:
     if payments.live or not isinstance(payments, FakeProvider):
         raise HTTPException(404)
     body = json.loads(unb64(d))
-    payload, signature = payments.sandbox_delivery(
-        body["session_id"], int(body["amount_cents"]), body["currency"], body["metadata"],
-    )
-    await handle_payment(payload, signature, background)
+    payload, signature = payments.sandbox_delivery(body["session_id"], body["metadata"])
+    await handle_card(payload, signature, background)
     return RedirectResponse(body["success_url"], status_code=303)
 
 
@@ -385,42 +446,47 @@ def push_books() -> None:
     ledger_queue.drain(db, ledger, actor="autosync")
 
 
-async def handle_payment(payload: bytes, signature: str | None,
-                         background: BackgroundTasks | None = None) -> int | None:
+async def handle_card(payload: bytes, signature: str | None,
+                      background: BackgroundTasks | None = None) -> int | None:
+    """A card the provider has taken and is holding for us.
+
+    Two kinds arrive on the same path: a new member finishing their invitation,
+    and an existing one replacing a card that was declined. The metadata on the
+    session says which, because only the service that made the session knows.
+    """
     event = payments.parse_webhook(payload, signature)
     if event is None:
         return None
 
-    membership_id = flow.accept_payment(event)
+    if event.metadata.get("membership_id"):
+        return flow.replace_card(event)
+
+    membership_id = flow.accept_card(event)
     if membership_id is None:          # a retry of something already handled
         return None
 
     member = db.one("SELECT * FROM membership WHERE id = ?", (membership_id,))
-    order = db.one('SELECT * FROM "order" WHERE membership_id = ? ORDER BY id DESC LIMIT 1',
-                   (membership_id,))
-    invoice = db.one("SELECT * FROM invoice WHERE order_id = ?", (order["id"],))
     tier = catalogue().get(member["tier_key"])
-
     try:
-        ensure_pdf(db, settings.invoice_dir, int(invoice["id"]))
-    except Exception as exc:                                   # noqa: BLE001
-        # A PDF that will not render must not undo a payment that already
-        # happened; the invoice row is the record and the file can be rebuilt.
+        sent = send_welcome(mailer, member, tier, next_release(), settings.mail_reply_to)
         with db.transaction() as con:
-            log(con, "invoice", int(invoice["id"]), "pdf_failed", error=str(exc))
-
-    try:
-        sent = send_receipt(mailer, member, order, invoice, tier, settings.mail_reply_to)
-        with db.transaction() as con:
-            log(con, "membership", membership_id, "receipt_sent", to=sent)
+            log(con, "membership", membership_id, "welcome_sent", to=sent)
     except Exception as exc:                                   # noqa: BLE001
         with db.transaction() as con:
-            log(con, "membership", membership_id, "receipt_failed", error=str(exc))
-
-    if settings.qbo_autosync and ledger.live and background is not None:
-        background.add_task(push_books)
+            log(con, "membership", membership_id, "welcome_failed", error=str(exc))
 
     return membership_id
+
+
+def next_release() -> str:
+    """The next release a new member will be in, for the welcome letter.
+
+    A name and a date if one is planned, and an honest nothing if not — better
+    than a promise the winery has not made yet.
+    """
+    row = db.one("SELECT name, ships_on FROM \"release\" WHERE ships_on >= date('now')"
+                 " AND status != 'cancelled' ORDER BY ships_on LIMIT 1")
+    return f"{row['name']} ({row['ships_on']})" if row else ""
 
 
 @app.post("/api/payments/webhook")
@@ -428,7 +494,7 @@ async def payments_webhook(request: Request, background: BackgroundTasks) -> Res
     payload = await request.body()
     signature = request.headers.get("stripe-signature") or request.headers.get("x-signature")
     try:
-        await handle_payment(payload, signature, background)
+        await handle_card(payload, signature, background)
     except WebhookError as exc:
         # 400 so the provider marks the delivery failed and retries, rather
         # than 200 which would silently drop a real payment.
@@ -716,7 +782,9 @@ async def admin_shipment_advance(request: Request, shipment_id: int,
 @app.get("/admin/releases", response_class=HTMLResponse)
 def admin_releases(request: Request, actor: str = Depends(require_admin)) -> HTMLResponse:
     rows = db.all(
-        'SELECT r.*, (SELECT COUNT(*) FROM "order" o WHERE o.release_id = r.id) AS order_count'
+        'SELECT r.*, (SELECT COUNT(*) FROM "order" o WHERE o.release_id = r.id) AS order_count,'
+        ' (SELECT COUNT(*) FROM "order" o WHERE o.release_id = r.id'
+        "  AND o.status IN ('pending_payment', 'failed')) AS unpaid_count"
         ' FROM "release" r ORDER BY r.ships_on DESC'
     )
     return admin_page(request, "releases.html", "releases", rows=rows)
@@ -734,8 +802,97 @@ async def admin_create_release(request: Request,
 def admin_generate_orders(release_id: int,
                           actor: str = Depends(require_admin)) -> RedirectResponse:
     created = flow.generate_release_orders(release_id, actor)
-    done = f"{len(created)} order(s) raised."
+    done = f"{len(created)} order(s) raised. Nothing is charged until you press Charge."
     return RedirectResponse(f"/admin/releases?done={done}", status_code=303)
+
+
+def settle(result: dict, background: BackgroundTasks | None = None) -> None:
+    """Everything after a charge that went through: the PDF, the receipt, the books.
+
+    Separate from the charge itself because none of it may undo a payment that
+    already happened. A receipt that will not send is a line in the log and a
+    thing for the desk to do by hand, not a reason to leave money taken and no
+    order to show for it.
+    """
+    order = db.one('SELECT * FROM "order" WHERE id = ?', (result["order_id"],))
+    member = db.one("SELECT * FROM membership WHERE id = ?", (result["membership_id"],))
+    invoice = db.one("SELECT * FROM invoice WHERE id = ?", (result["invoice_id"],))
+    tier = catalogue().get(member["tier_key"])
+
+    try:
+        ensure_pdf(db, settings.invoice_dir, int(invoice["id"]))
+    except Exception as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, "invoice", int(invoice["id"]), "pdf_failed", error=str(exc))
+
+    try:
+        sent = send_receipt(mailer, member, order, invoice, tier, settings.mail_reply_to)
+        with db.transaction() as con:
+            log(con, "order", int(order["id"]), "receipt_sent", to=sent)
+    except Exception as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, "order", int(order["id"]), "receipt_failed", error=str(exc))
+
+    if settings.qbo_autosync and ledger.live and background is not None:
+        background.add_task(push_books)
+
+
+def tell_them_the_card_failed(result: dict) -> None:
+    """A declined card is only worth recording if the member hears about it.
+
+    The letter carries a link to put in another one, because for a bank asking
+    for the cardholder there is nothing the desk can do from this end.
+    """
+    member = db.one("SELECT * FROM membership WHERE id = ?", (result["membership_id"],))
+    order = db.one('SELECT * FROM "order" WHERE id = ?', (result["order_id"],))
+    try:
+        sent = send_charge_failed(mailer, member, order, result["error"],
+                                  flow.card_url(int(member["id"])), settings.mail_reply_to)
+        with db.transaction() as con:
+            log(con, "order", int(order["id"]), "decline_notice_sent", to=sent)
+    except Exception as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, "order", int(order["id"]), "decline_notice_failed", error=str(exc))
+
+
+@app.post("/admin/releases/{release_id}/charge")
+def admin_charge_release(release_id: int, background: BackgroundTasks,
+                         actor: str = Depends(require_admin)) -> RedirectResponse:
+    try:
+        results = flow.charge_release(release_id, actor)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/releases?done=Not done: {exc}", status_code=303)
+
+    for result in results:
+        if result["paid"]:
+            settle(result, background)
+        else:
+            tell_them_the_card_failed(result)
+
+    paid = sum(1 for r in results if r["paid"])
+    failed = len(results) - paid
+    done = f"{paid} charged."
+    if failed:
+        done += (f" {failed} did not go through — they are in Orders as failed, "
+                 "and each of them has been written to.")
+    return RedirectResponse(f"/admin/releases?done={done}", status_code=303)
+
+
+@app.post("/admin/orders/{order_id}/charge")
+def admin_charge_order(order_id: int, background: BackgroundTasks,
+                       actor: str = Depends(require_admin)) -> RedirectResponse:
+    try:
+        result = flow.charge_order(order_id, actor)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin/orders?done=Not done: {exc}", status_code=303)
+    if result["paid"]:
+        settle(result, background)
+        return RedirectResponse(f"/admin/orders?done={result['reference']} is paid.",
+                                status_code=303)
+    tell_them_the_card_failed(result)
+    return RedirectResponse(
+        f"/admin/orders?done=Declined again: {result['error']} They have been written to.",
+        status_code=303)
 
 
 @app.get("/admin/invoices/{invoice_id}.pdf")

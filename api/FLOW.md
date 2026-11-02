@@ -47,16 +47,21 @@ with the service secret, carrying the application id and an expiry; the offer
 page validates the signature on every request. No password, nothing to reset,
 and the link cannot be guessed or edited.
 
-**Payment happens at the provider, never here.** The service creates a checkout
-session and redirects. Card details never touch this code or this database,
-which keeps the whole thing out of PCI scope. Membership is only created when
-the provider's webhook confirms the money moved — not when the member returns
-from checkout, because a browser redirect proves nothing.
+**Cards live at the provider, never here.** The service sends the member to a
+hosted page that saves a card and charges nothing. Card details never touch
+this code or this database, which keeps the whole thing out of PCI scope.
+Membership is only created when the provider's webhook confirms the card is
+held — not when the member returns from that page, because a browser redirect
+proves nothing.
 
-**Orders are generated per release, not per payment.** A subscription bills on
-its own cycle; a release happens when the wine is ready. They are separate
-clocks, so a release cycle creates an order for every active membership, and
-payment attaches to the order when it settles.
+**Money moves per release, not per signup.** A subscription bills on its own
+cycle; a release happens when the wine is ready, and the two were never going
+to line up — three shipments a year fall six, two and four months apart. More
+to the point, at the moment somebody joins nobody knows whether there is wine
+for them, and taking the money first is how a club ends up owing bottles it
+does not have. So a release raises an order per active membership, and the
+desk charges those orders against the saved cards in a second, deliberate
+press.
 
 **Invoices are immutable.** Once issued an invoice is never edited — a
 correction is a credit note plus a new invoice. The number comes from a
@@ -104,8 +109,9 @@ Everything above runs end to end against the fake payment provider and the file
 outbox, which is what the tests exercise. Three adapters need real credentials
 before they do anything outside this machine:
 
-- **Payments.** `payments/stripe_provider.py` speaks Stripe Checkout in
-  subscription mode. It needs `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
+- **Payments.** `payments/stripe_provider.py` speaks Stripe Checkout in setup
+  mode, and charges saved cards off-session when a release goes out. It needs
+  `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
   Until those are set the service uses `payments/fake.py`, which moves orders
   through the same states without a network call, so the rest of the flow can
   be developed and demonstrated.
@@ -175,6 +181,9 @@ export, which is why it exists even though the API adapter works.
   address *exists* — no USPS or carrier lookup — so a typed street can still be
   wrong. The member reads it back on the welcome page and on the invoice, which
   is the cheapest correction there is, and the desk can change it on **Members**.
+- **Dunning.** A declined card gets one letter with a link to replace it, and
+  the order waits at `failed` until somebody charges it again from the desk.
+  Nothing chases it on a schedule, and nothing gives up on it either.
 - **Tax.** Orders carry a tax field and it is computed as zero. Sales tax on
   DTC wine depends on the destination and is not something to guess at.
 - **Inventory.** Nothing decrements stock. With five wines and a few thousand
