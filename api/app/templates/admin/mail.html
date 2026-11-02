@@ -97,6 +97,15 @@
         <td>Microsoft 365 has basic authentication switched off for that
             mailbox. It is not the password: move to OAuth2 — three settings
             in <code>.env</code>, documented in the operations manual, §8.3.</td></tr>
+    <tr><th>535 5.7.3</th>
+        <td>The tenant would not let that account authenticate at all. Three
+            things cause it and they are not the password either: authenticated
+            SMTP is off for the mailbox (Microsoft 365 admin → the user → Mail →
+            Manage email apps), or off for the whole tenant, or Security
+            Defaults and Conditional Access are refusing legacy sign-ins.
+            <strong>A shared mailbox cannot sign in at all</strong> — it has no
+            password by design — so if <code>{{ mail_from }}</code> is one, the
+            answer is OAuth2 (§8.3) rather than anything to fix here.</td></tr>
     <tr><th>AADSTS7000215</th>
         <td>The client secret is wrong, or has expired. They do expire, and the
             day one lapses mail stops going out without the settings having

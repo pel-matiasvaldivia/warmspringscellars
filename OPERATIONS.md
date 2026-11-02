@@ -599,6 +599,7 @@ The adapter logs the refusal as the server worded it, code included.
 | --- | --- |
 | The member never got the invitation | Is there an `SMTP_HOST` notice at the top? Then the mail is in `/srv/var/outbox`. Copy the link off the card instead. |
 | The server answers `535 5.7.139` | Microsoft 365 has turned basic authentication off for that mailbox. It is not the password: move to OAuth2 (§8.3). |
+| The server answers `535 5.7.3` | The tenant refused the sign-in itself. Authenticated SMTP off for the mailbox (admin centre → the user → Mail → Manage email apps), off for the tenant, or Security Defaults / Conditional Access blocking legacy sign-ins. **A shared mailbox has no password and cannot sign in at all**, so if the club address is one, OAuth2 (§8.3) is the only way, not a setting to flip. |
 | "this invitation link is not valid" | `SECRET_KEY` changed (a restart without it fixed in `.env`). Every earlier invitation is dead: approve again. |
 | "this invitation has expired" | More than 14 days. A fresh request. |
 | Paid, but the order is still `pending_payment` | The webhook did not arrive. Stripe → Developers → Webhooks → Recent deliveries. It must point at `https://<domain>/api/payments/webhook` and be subscribed to `checkout.session.completed`. Replaying the delivery is safe: a repeated event does not charge or invoice twice. |

@@ -600,6 +600,7 @@ registra el rechazo tal como lo dijo el servidor, con el código incluido.
 | --- | --- |
 | El socio no recibió la invitación | ¿Hay aviso de `SMTP_HOST` arriba? Si sí, el mail está en `/srv/var/outbox`. Copiale el link desde la ficha. |
 | El servidor contesta `535 5.7.139` | Microsoft 365 apagó la autenticación básica para esa casilla. No es la contraseña: hay que pasar a OAuth2 (§8.3). |
+| El servidor contesta `535 5.7.3` | El inquilino rechazó el inicio de sesión en sí. SMTP autenticado apagado para esa casilla (centro de administración → el usuario → Correo → Administrar aplicaciones de correo), apagado para todo el inquilino, o Security Defaults / Acceso condicional bloqueando inicios heredados. **Una casilla compartida no tiene contraseña y no puede iniciar sesión**, así que si la dirección del club es una, OAuth2 (§8.3) es el único camino, no un interruptor que haya que buscar. |
 | "this invitation link is not valid" | `SECRET_KEY` cambió (reinicio sin la variable fijada en `.env`). Toda invitación anterior murió: hay que aprobar de nuevo. |
 | "this invitation has expired" | Pasaron más de 14 días. Solicitud nueva. |
 | Pagó y la orden sigue `pending_payment` | El webhook no llegó. Stripe → Developers → Webhooks → Recent deliveries. Debe apuntar a `https://<dominio>/api/payments/webhook` y estar suscripto a `checkout.session.completed`. Reintentar la entrega desde ahí es seguro: un evento repetido no cobra ni factura dos veces. |
