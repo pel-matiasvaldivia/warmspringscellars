@@ -1,13 +1,14 @@
-"""OAuth tokens for an accounting system, in the club's own database.
+"""OAuth tokens for the accounting system, in the club's own database.
 
-Shared by both adapters because both have the same awkward property: the
-refresh token is replaced on every refresh, so a value baked into the
-environment would be stale an hour after the first sync. They live on the
-volume that gets backed up, one row per provider.
+Here rather than in the environment because Intuit replaces the refresh
+token on every refresh: a value baked into `.env` would be stale an hour
+after the first sync. These live on the volume that gets backed up.
 
-`realm_id` is Intuit's word for the company. Xero calls the same thing a
-tenant id and it goes in the same column: a migration to rename it would
-touch a backup format to gain a word.
+The row is keyed by provider although only QuickBooks writes one. That
+costs nothing, and it is the column that would let a second adapter be
+connected beside this one without a migration.
+
+`realm_id` is Intuit's word for the company.
 """
 
 from __future__ import annotations

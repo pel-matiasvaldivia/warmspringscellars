@@ -7,9 +7,10 @@ in the accounting system, where an accountant can see it.
 The port is deliberately one-way. The club never reads balances back, never
 lets the ledger change an order, and never blocks a payment on the ledger
 being reachable: a member who has paid is a member, whether or not the books
-answered. Two adapters implement it — QuickBooks and Xero — and which one is
-in use is a setting; nothing above this file knows the difference. That is why pushes run from a queue (see `queue.py`) rather than
-inside the webhook's transaction.
+answered. QuickBooks is the adapter behind it, and nothing above this file
+knows that: the port stays three methods wide so a second one could be
+written without disturbing the club. That is why pushes run from a queue
+(see `queue.py`) rather than inside the webhook's transaction.
 """
 
 from __future__ import annotations
@@ -106,9 +107,8 @@ class NullLedger:
 
     def status(self) -> dict:
         return {"connected": False, "company": None, "detail":
-                "No accounting system is configured. Set QBO_CLIENT_ID and "
-                "QBO_CLIENT_SECRET for QuickBooks, or XERO_CLIENT_ID and "
-                "XERO_CLIENT_SECRET for Xero — and LEDGER if both are set."}
+                "QuickBooks is not configured. Set QBO_CLIENT_ID and "
+                "QBO_CLIENT_SECRET, then authorise the company from this page."}
 
     def push_invoice(self, invoice: Invoice) -> str:
         raise NotConnected("no accounting system is connected")

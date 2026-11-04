@@ -78,9 +78,8 @@ async def keep_books_connected() -> None:
 
     Releases are months apart. Without this, the connection would lapse
     between two of them and the next release would queue with nowhere to go.
-    QuickBooks allows a hundred days of that and Xero sixty, which is shorter
-    than the gap between spring and autumn — so for Xero this is not an
-    optimisation, it is the only thing holding the connection open.
+    Intuit's refresh token expires after a hundred days of not being used,
+    and a club that syncs three times a year can cross that on its own.
     """
     keep_alive = getattr(ledger, "keep_alive", None)
     if keep_alive is None:
@@ -1038,15 +1037,11 @@ def admin_accounting(request: Request, actor: str = Depends(require_admin)) -> H
     return admin_page(
         request, "accounting.html", "accounting",
         status=ledger.status(), ledger_name=ledger.name,
-        configured=ledger.live, ambiguous=settings.ledger_name == "ambiguous",
+        configured=ledger.live,
         autosync=settings.qbo_autosync,
-        wine_item=(settings.xero_wine_account if settings.ledger_name == "xero"
-                   else settings.qbo_wine_item),
-        shipping_item=(settings.xero_shipping_account if settings.ledger_name == "xero"
-                       else settings.qbo_shipping_item),
-        bank_account=settings.xero_bank_account,
-        redirect_uri=(settings.xero_redirect_uri if settings.ledger_name == "xero"
-                      else settings.qbo_redirect_uri),
+        wine_item=settings.qbo_wine_item,
+        shipping_item=settings.qbo_shipping_item,
+        redirect_uri=settings.qbo_redirect_uri,
         rows=ledger_queue.tasks(db),
         outstanding=len(ledger_queue.pending(db)),
     )
@@ -1064,13 +1059,11 @@ def admin_accounting_connect(actor: str = Depends(require_admin)) -> RedirectRes
 def admin_accounting_callback(request: Request, actor: str = Depends(require_admin),
                               code: str = "", realmId: str = "",   # noqa: N803
                               state: str = "", error: str = "") -> RedirectResponse:
-    """Where the accounting system sends the browser back after consent.
+    """Where QuickBooks sends the browser back after consent.
 
-    One address for both: it is registered in whichever app the winery made,
-    and the adapter in use is the one that reads the code. Behind the desk's
-    own password on purpose — the provider redirects the staff browser, not a
-    server, so the address restriction and the password both apply to this
-    hop too.
+    Behind the desk's own password on purpose — Intuit redirects the staff
+    browser, not a server, so the address restriction and the password both
+    apply to this hop too.
     """
     if error:
         return RedirectResponse(f"/admin/accounting?done={ledger.name} returned: {error}",
@@ -1079,8 +1072,7 @@ def admin_accounting_callback(request: Request, actor: str = Depends(require_adm
         _state_signer.loads(state, max_age=STATE_MAX_AGE)
     except BadSignature:
         raise HTTPException(400, "that authorisation did not start here") from None
-    # Intuit names the company on the way back; Xero does not, and its
-    # adapter asks which organisation the token opens once it has one.
+    # Intuit names the company on the way back, in realmId.
     if not code:
         raise HTTPException(400, "the accounting system sent no code")
 

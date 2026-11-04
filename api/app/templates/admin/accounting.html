@@ -6,33 +6,15 @@
 <div class="grid2">
   <div class="card">
     <h2>
-      {{ 'Xero' if ledger_name == 'xero' else 'QuickBooks Online'
-         if ledger_name == 'quickbooks' else 'No accounting system' }}</h2>
+      {{ 'QuickBooks Online' if configured else 'No accounting system' }}</h2>
 
-    {% if ambiguous %}
-      {# Both sets of credentials present. Picking one would file a winery's
-         invoices into the system nobody is reading, so nothing is picked. #}
-      <p style="color:var(--bad)">
-        QuickBooks and Xero are both configured, and <code>LEDGER</code> names
-        neither. Nothing is pushed until it does: set <code>LEDGER=quickbooks</code>
-        or <code>LEDGER=xero</code> in <code>.env</code> and restart.</p>
-      <p style="color:var(--text-2);margin-top:.75rem">
-        The queue below is untouched and keeps everything meanwhile.</p>
-
-    {% elif not configured %}
+    {% if not configured %}
       <p style="color:var(--text-2)">
-        No credentials yet. Either system will do, and the club posts the same two
-        documents to both:</p>
-      <ul class="steps" style="margin:.6rem 0">
-        <li><b>QuickBooks</b> — an app at
-          <a href="https://developer.intuit.com" rel="noopener">developer.intuit.com</a>,
-          then <code>QBO_CLIENT_ID</code> and <code>QBO_CLIENT_SECRET</code>.</li>
-        <li><b>Xero</b> — an app at
-          <a href="https://developer.xero.com" rel="noopener">developer.xero.com</a>,
-          then <code>XERO_CLIENT_ID</code> and <code>XERO_CLIENT_SECRET</code>.</li>
-      </ul>
+        No credentials yet. Make an app at
+        <a href="https://developer.intuit.com" rel="noopener">developer.intuit.com</a>,
+        then set <code>QBO_CLIENT_ID</code> and <code>QBO_CLIENT_SECRET</code>.</p>
       <p style="color:var(--text-2)">
-        Register this exact redirect URI on whichever side you choose:</p>
+        Register this exact redirect URI in that app:</p>
       <p><code>{{ redirect_uri }}</code></p>
       <p style="color:var(--text-2);margin-top:.75rem">
         Nothing is lost in the meantime — the queue below keeps everything, and
@@ -41,30 +23,21 @@
     {% elif not status.connected %}
       <p style="color:var(--text-2)">{{ status.detail }}</p>
       <p style="margin-top:.9rem">
-        <a class="btn" href="/admin/accounting/connect">Connect to
-          {{ 'Xero' if ledger_name == 'xero' else 'QuickBooks' }}</a></p>
+        <a class="btn" href="/admin/accounting/connect">Connect to QuickBooks</a></p>
       <p class="log" style="margin-top:.6rem">
         {% if status.environment %}Environment: <b>{{ status.environment }}</b> · {% endif %}
         redirect: <code>{{ redirect_uri }}</code></p>
 
     {% else %}
       <table>
-        <tr><th>{{ 'Organisation' if ledger_name == 'xero' else 'Company' }}</th>
-            <td>{{ status.company }}</td></tr>
+        <tr><th>Company</th><td>{{ status.company }}</td></tr>
         {% if status.environment %}
         <tr><th>Environment</th><td>{{ status.environment }}</td></tr>
         {% endif %}
         <tr><th>Token renews</th><td>{{ status.access_expires_at or '—' }}</td></tr>
         <tr><th>Re-authorise before</th><td>{{ status.reauthorise_before or '—' }}</td></tr>
-        {% if ledger_name == 'xero' %}
-        <tr><th>Wine account</th><td>{{ wine_item or 'not set' }}</td></tr>
-        <tr><th>Shipping account</th><td>{{ shipping_item or 'not set' }}</td></tr>
-        <tr><th>Payments land in</th>
-            <td>{{ bank_account or 'not set — payments will not post' }}</td></tr>
-        {% else %}
         <tr><th>Wine item</th><td>{{ wine_item }}</td></tr>
         <tr><th>Shipping item</th><td>{{ shipping_item }}</td></tr>
-        {% endif %}
         <tr><th>On payment</th>
             <td>{{ 'pushed automatically' if autosync else 'queued for review' }}</td></tr>
       </table>

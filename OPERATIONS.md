@@ -75,7 +75,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 | **Shipments** | Shipments, from ready-to-pack to delivered |
 | **Releases** | The seasonal despatches, and what each one can actually fill |
 | **Cellar** | The bottles the club may draw on, and where they went |
-| **Books** | QuickBooks or Xero: what is filed, and what is still owed |
+| **Books** | QuickBooks: what is filed, and what is still owed |
 | **Mail** | How outgoing mail is configured, and a button to test it |
 
 Pending applications and undelivered shipments float to the top of their lists
@@ -408,19 +408,15 @@ not come back.
 
 ---
 
-## 7. The books: QuickBooks or Xero
+## 7. The books: QuickBooks
 
-The **Books** tab. Every invoice and every payment travels to the accounting
-system as two documents: the invoice, and the payment that settles it.
+The **Books** tab. Every invoice and every payment travels to QuickBooks as
+two documents: the invoice, and the payment that settles it.
 
-**Either system will do**, and the club posts the same two documents to both.
-Which one is in use is one setting; nothing else in the service knows the
-difference, and the queue, the desk and the CSV export are the same either
-way. Configure QuickBooks (`QBO_CLIENT_ID` / `QBO_CLIENT_SECRET`) or Xero
-(`XERO_CLIENT_ID` / `XERO_CLIENT_SECRET`), and if both are configured set
-`LEDGER=quickbooks` or `LEDGER=xero`. **With both configured and no `LEDGER`,
-nothing is pushed at all** — picking one would file the winery's invoices into
-the system nobody is reading, so the service queues and says so on the screen.
+QuickBooks is the winery's accounting system and the only one the service
+talks to. Set `QBO_CLIENT_ID` and `QBO_CLIENT_SECRET`, then authorise the
+company once from the Books tab. Until that is done the queue holds
+everything, and the CSV export is a full substitute.
 
 **The books are downstream, and never in the way.** A member who has paid is a
 member whether or not the accounting system answered. So issuing an invoice
@@ -447,36 +443,6 @@ things follow:
    `docker compose up -d` to pick them up.
 4. On **Books** → **"Connect to QuickBooks"**. Intuit asks for consent, you
    choose the company, and it comes back. That is all: the company is stored.
-
-### 7.1b Connecting Xero instead
-
-1. At [developer.xero.com](https://developer.xero.com) → *My Apps* → create a
-   **Web app**.
-2. Register the **same** redirect URI on the Xero side:
-   `https://<your domain>/admin/accounting/callback`. One address serves both;
-   whichever adapter is configured is the one that reads the code.
-3. Put `XERO_CLIENT_ID` and `XERO_CLIENT_SECRET` in `.env`, plus three things
-   only the bookkeeper can decide — and Xero wants **account codes from the
-   chart of accounts**, not product names, because it takes the account on the
-   invoice line itself:
-   - `XERO_WINE_ACCOUNT` — where the allocation revenue lands.
-   - `XERO_SHIPPING_ACCOUNT` — where carriage lands, unused while every tier
-     includes it.
-   - `XERO_BANK_ACCOUNT` — where a card payment lands. **Xero refuses a
-     payment with no account to land in**, so without it invoices post and
-     payments do not. A clearing account is usually right: the processor
-     deposits net of its fee, in batches.
-4. On **Books** → **"Connect to Xero"**. Xero asks for consent and comes back
-   without naming an organisation — it has to be asked for separately, which
-   the adapter does. **It takes the first organisation the login opens.** For a
-   winery with one Xero organisation that is right; signing in with an
-   accountant's own login, which may open twenty, it is a coin toss. The Books
-   page prints which one it took, so check it.
-
-> **Xero drops the connection after sixty days unused, not a hundred.** That is
-> shorter than the gap between the spring and autumn releases. The service
-> refreshes it daily on its own and that is enough — but if the container is
-> down for two months, somebody has to authorise again.
 
 **Before the first push, the item `Wine Club Allocation` must already exist in
 QuickBooks** (Sales → Products and services), under exactly that name.

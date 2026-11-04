@@ -569,19 +569,23 @@ def test_the_keep_alive_refreshes_only_near_the_lapse(monkeypatch, tmp_path):
     assert after - datetime.now(timezone.utc) > timedelta(days=90)
 
 
-# ── which accounting system ──────────────────────────────────────────────
+# ── whether the books are reachable at all ───────────────────────────────
 def settings_with(monkeypatch, **env):
     from app.config import Settings
 
-    for key in ("QBO_CLIENT_ID", "QBO_CLIENT_SECRET", "XERO_CLIENT_ID",
-                "XERO_CLIENT_SECRET", "LEDGER", "XERO_BANK_ACCOUNT"):
+    for key in ("QBO_CLIENT_ID", "QBO_CLIENT_SECRET"):
         monkeypatch.delenv(key, raising=False)
     for key, value in env.items():
         monkeypatch.setenv(key, value)
     return Settings()
 
 
-def test_the_configured_system_is_the_one_that_is_used(monkeypatch, tmp_path):
+def test_without_credentials_the_ledger_refuses_rather_than_pretending(monkeypatch, tmp_path):
+    """There is no simulated accounting system, on purpose.
+
+    A club that cannot reach its books should accumulate a visible queue, not
+    a pile of invoices it believes were filed.
+    """
     from app.accounting import build_ledger
     from app.db import Database
 
@@ -589,49 +593,39 @@ def test_the_configured_system_is_the_one_that_is_used(monkeypatch, tmp_path):
 
     nothing = settings_with(monkeypatch)
     assert nothing.ledger_name == "none"
-    assert build_ledger(nothing, db).name == "none"
+    ledger = build_ledger(nothing, db)
+    assert ledger.name == "none"
+    assert not ledger.live
+    assert any("QBO_CLIENT_ID" in w for w in nothing.warnings())
 
     qbo = settings_with(monkeypatch, QBO_CLIENT_ID="a", QBO_CLIENT_SECRET="b")
+    assert qbo.ledger_name == "quickbooks"
     assert build_ledger(qbo, db).name == "quickbooks"
 
-    xero = settings_with(monkeypatch, XERO_CLIENT_ID="a", XERO_CLIENT_SECRET="b")
-    assert build_ledger(xero, db).name == "xero"
+
+def test_live_payments_into_a_practice_company_is_warned_about(monkeypatch):
+    """The pairing that quietly books real money into a sandbox."""
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_x")
+    monkeypatch.setenv("QBO_ENVIRONMENT", "sandbox")
+    risky = settings_with(monkeypatch, QBO_CLIENT_ID="a", QBO_CLIENT_SECRET="b")
+    assert any("practice company" in w for w in risky.warnings())
+
+    monkeypatch.setenv("QBO_ENVIRONMENT", "production")
+    fine = settings_with(monkeypatch, QBO_CLIENT_ID="a", QBO_CLIENT_SECRET="b")
+    assert not any("practice company" in w for w in fine.warnings())
 
 
-def test_two_systems_and_no_answer_pushes_to_neither(monkeypatch, tmp_path):
-    """Guessing would file a winery's invoices where nobody is reading."""
-    from app.accounting import build_ledger
-    from app.db import Database
-
-    both = settings_with(monkeypatch, QBO_CLIENT_ID="a", QBO_CLIENT_SECRET="b",
-                         XERO_CLIENT_ID="c", XERO_CLIENT_SECRET="d")
-    assert both.ledger_name == "ambiguous"
-    assert build_ledger(both, Database(tmp_path / "both.sqlite3")).name == "none"
-    assert any("LEDGER" in w for w in both.warnings())
-
-    told = settings_with(monkeypatch, QBO_CLIENT_ID="a", QBO_CLIENT_SECRET="b",
-                         XERO_CLIENT_ID="c", XERO_CLIENT_SECRET="d", LEDGER="xero")
-    assert build_ledger(told, Database(tmp_path / "told.sqlite3")).name == "xero"
-
-
-def test_xero_without_a_bank_account_is_warned_about_before_a_release(monkeypatch):
-    xero = settings_with(monkeypatch, XERO_CLIENT_ID="a", XERO_CLIENT_SECRET="b")
-    assert any("XERO_BANK_ACCOUNT" in w for w in xero.warnings())
-    ready = settings_with(monkeypatch, XERO_CLIENT_ID="a", XERO_CLIENT_SECRET="b",
-                          XERO_BANK_ACCOUNT="090")
-    assert not any("XERO_BANK_ACCOUNT" in w for w in ready.warnings())
-
-
-def test_each_system_keeps_its_own_tokens(tmp_path):
-    """A winery that tried one and moved does not lose the other's row."""
+def test_the_tokens_survive_a_restart_and_can_be_cleared(tmp_path):
+    """They live in the database because Intuit replaces them on every refresh."""
     from app.accounting.tokens import TokenStore, Tokens
     from app.db import Database
 
-    db = Database(tmp_path / "two.sqlite3")
+    db = Database(tmp_path / "tokens.sqlite3")
     TokenStore(db, "quickbooks").write(Tokens(realm_id="realm-1", refresh_token="q"))
-    TokenStore(db, "xero").write(Tokens(realm_id="tenant-7", refresh_token="x"))
 
+    # a second store object is a second process, as far as this proves
     assert TokenStore(db, "quickbooks").read().realm_id == "realm-1"
-    assert TokenStore(db, "xero").read().realm_id == "tenant-7"
-    TokenStore(db, "xero").clear()
-    assert TokenStore(db, "quickbooks").read().refresh_token == "q"
+    assert TokenStore(db, "quickbooks").read().connected
+
+    TokenStore(db, "quickbooks").clear()
+    assert not TokenStore(db, "quickbooks").read().connected

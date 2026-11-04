@@ -107,11 +107,10 @@ things follow from that split, and each is the reason for it:
 - A push that fails stays visible. The queue at `/admin/accounting` is the
   standing answer to "what do the books not know about yet?", which is better
   asked in March than discovered in January.
-- Retrying is free. Every push is keyed on something the books can recognise —
-  the invoice number, as Intuit's `DocNumber` or Xero's `InvoiceNumber` — so a
-  second attempt adopts the document the first one created instead of writing a
-  second. Each adapter also sends the provider's own idempotency header
-  (`Request-Id`, `Idempotency-Key`), a second guard on the same risk.
+- Retrying is free. Every push is keyed on something QuickBooks can recognise —
+  the invoice number, as its `DocNumber` — so a second attempt adopts the
+  document the first one created instead of writing a second. The adapter also
+  sends Intuit's own `Request-Id`, a second guard on the same risk.
 
 Payments queue behind their invoice: a payment links to an invoice id that only
 exists once the invoice has landed, so the queue does them in that order and
@@ -129,11 +128,10 @@ before they do anything outside this machine:
   Until those are set the service uses `payments/fake.py`, which moves orders
   through the same states without a network call, so the rest of the flow can
   be developed and demonstrated.
-- **The books.** `accounting/quickbooks.py` and `accounting/xero.py` are two
-  adapters behind one three-method port, and `LEDGER` says which is in use —
-  or whichever has credentials, when only one does. Both configured and no
-  answer is deliberately a refusal, not a default. Either way a human has to
-  authorise the company once from `/admin/accounting`. Until that happens,
+- **The books.** `accounting/quickbooks.py` speaks Intuit's Accounting API,
+  behind a three-method port that nothing above it looks through. It needs
+  `QBO_CLIENT_ID` and `QBO_CLIENT_SECRET`, and then a human to authorise the
+  company once from `/admin/accounting`. Until that happens,
   `NullLedger` refuses every push and the work stays in `ledger_task`, where
   it is visible and exportable. There is no simulated accounting system in
   production: a club that cannot reach its books should accumulate a visible
@@ -151,46 +149,30 @@ before they do anything outside this machine:
 None of these has been exercised against the live services from here: this
 container has no egress to them. The shapes come from the providers' documented
 APIs; the Stripe signature verification is tested against vectors computed
-locally, and each ledger adapter against a stub transport that proves its own
-logic — token rotation, matching a customer by email, adopting a duplicate,
-refreshing once on a 401 — and proves nothing about either provider's field
-validation. The Xero adapter is weaker still: `developer.xero.com` is not
-reachable from this container either, so its request shapes were never checked
-against the documentation, let alone the API. Every field name in it is a claim
-to verify against the Xero demo company before it goes near real books.
+locally, and the QuickBooks adapter against a stub transport that proves its
+own logic — token rotation, matching a customer by email, adopting a duplicate,
+refreshing once on a 401 — and proves nothing about Intuit's field validation.
 
-Three details of OAuth are worth knowing before the first connection, and they
-are why tokens live in the database rather than in `.env`:
+Two details of Intuit's OAuth are worth knowing before the first connection,
+and they are why tokens live in the database rather than in `.env`:
 
-- **The refresh token is replaced on every refresh**, on both sides.
-- **It expires from disuse** — a hundred days for Intuit, **sixty for Xero**.
-  A club that ships three times a year would lose a Xero connection between
-  releases, so the daily keep-alive is not an optimisation there; it is the
-  only thing holding the connection open. The desk shows the deadline rather
-  than burying it.
-- **Xero does not say which organisation you authorised.** Intuit returns a
-  `realmId` on the redirect; Xero returns nothing, so the adapter asks
-  `/connections` afterwards and **takes the first tenant**. Right for a winery
-  with one organisation, a coin toss for an account that opens twenty — which
-  is why the desk prints the one it took.
+- **The refresh token is replaced on every refresh**, so a value written into
+  `.env` would be stale an hour after the first sync.
+- **It expires after a hundred days of not being used.** A club that ships
+  three times a year can cross that on its own, so the service refreshes the
+  connection daily and the desk shows the deadline rather than burying it.
 
 ### Where the money lands
 
-Neither adapter invents anywhere to put the money, and neither has a default.
+The adapter will not create anywhere to put the money, and has no default.
 Which income account wine revenue and shipping book against is a bookkeeping
 decision; a default would put real money in a wrong account quietly, and
 quietly is the worst way to be wrong about money.
 
-The two ask for it differently. QuickBooks wants an **item** that already exists
-there — `QBO_WINE_ITEM`, pointed at an income account by the bookkeeper — and a
-push fails with a sentence saying so if it does not. Xero takes the **account
-code** on the invoice line itself: `XERO_WINE_ACCOUNT`, no catalogue to set up
-first. The shipping setting on either side is only reached when a tier charges
-for carriage as its own line, which none do since the entry tier was withdrawn.
-
-Xero adds one requirement QuickBooks does not: a payment needs a bank account
-to land in, so without `XERO_BANK_ACCOUNT` invoices file and payments refuse.
-The desk warns about that on its own rather than waiting for the first release.
+So `QBO_WINE_ITEM` must already exist in QuickBooks, pointed at an income
+account by the bookkeeper, and a push fails with a sentence saying so if it
+does not. `QBO_SHIPPING_ITEM` is only reached when a tier charges for carriage
+as its own line, which none do since the entry tier was withdrawn.
 
 ### The way out that needs no API
 
