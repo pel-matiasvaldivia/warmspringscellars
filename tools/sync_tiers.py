@@ -58,7 +58,6 @@ def card(tier: dict) -> str:
     return f"""      <div class="{classes}">
         <p class="tier-label">{tier['label']}</p>
         <h3 class="tier-name serif">{tier['name']}</h3>
-        <p class="tier-desc">{tier['summary']}</p>
         <ul class="tier-details">
 {benefits}
         </ul>

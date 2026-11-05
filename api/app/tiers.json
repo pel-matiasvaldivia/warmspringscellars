@@ -1,6 +1,12 @@
 {
   "_comment": [
     "The club's commercial offer, and the only place it is written down.",
+    "",
+    "NOTHING RENDERS summary ANY MORE. It said the same thing as the first two",
+    "bullets, so the landing page and the offer page both dropped it in",
+    "November 2026. The field stays because /api/catalogue still serves it and",
+    "it is a fair one-line description of a tier, but nobody is reading it on",
+    "a page: treat it as metadata, not as copy.",
     "The API serves it to the offer page, the invoice uses it for line items,",
     "and tools/sync_tiers.py writes it into the landing page, so these numbers",
     "cannot drift between what a visitor is shown and what they are charged.",
