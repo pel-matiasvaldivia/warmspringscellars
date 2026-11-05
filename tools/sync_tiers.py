@@ -43,7 +43,10 @@ def card(tier: dict) -> str:
     if tier["featured"]:
         classes += " featured"
     price = dollars(tier["price_cents"])
-    shipping = (f"per shipment &middot; +{dollars(tier['shipping_cents'])} shipping"
+    # A tier that bills carriage says so without naming the figure: what a box
+    # costs to send depends on where it goes, and a number on the landing page
+    # is a promise to every state at once.
+    shipping = ("per shipment &middot; plus shipping"
                 if tier["shipping_cents"] else "per shipment &middot; shipping included")
     benefits = "\n".join(f"          <li>{b}</li>" for b in tier["benefits"])
 

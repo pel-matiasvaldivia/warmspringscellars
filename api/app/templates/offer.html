@@ -132,7 +132,7 @@
     <p class="price">
       {{ tier.price }}
       <small>
-        per shipment{% if tier.shipping_cents %} + {{ "$%.2f"|format(tier.shipping_cents / 100) }} shipping{% else %} · shipping included{% endif %}
+        per shipment{% if tier.shipping_cents %} &middot; plus shipping{% else %} · shipping included{% endif %}
       </small>
     </p>
 
