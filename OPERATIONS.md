@@ -498,6 +498,12 @@ Intuit compares the whole string, so these all fail:
 it. It is printed under the Connect button, and it is literally what the
 service will send.
 
+**To see what Intuit actually received**, look at the address bar of the page
+showing the error: it carries the `redirect_uri=` parameter the service sent,
+URL-encoded (`https%3A%2F%2F…`). Compare that against the list under *Keys &
+credentials → Redirect URIs*, remembering that each of Intuit's two sections
+keeps its own list.
+
 ### 7.1b The two items, which have to exist first
 
 **Before the first push, the item `Wine Club Allocation` must already exist in

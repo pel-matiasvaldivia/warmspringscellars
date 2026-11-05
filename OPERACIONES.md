@@ -502,6 +502,12 @@ Intuit compara la cadena entera, así que todas estas fallan:
 Está impresa debajo del botón Connect, y es literalmente lo que el servicio va
 a mandar.
 
+**Para ver qué recibió Intuit de verdad**, mirá la barra de direcciones de la
+página que muestra el error: lleva el parámetro `redirect_uri=` que mandó el
+servicio, codificado (`https%3A%2F%2F…`). Compará eso contra la lista de *Keys
+& credentials → Redirect URIs*, teniendo en cuenta que cada una de las dos
+secciones de Intuit tiene su propia lista.
+
 ### 7.1b Los dos ítems, que tienen que existir antes
 
 **Antes del primer envío, el ítem `Wine Club Allocation` tiene que existir en
