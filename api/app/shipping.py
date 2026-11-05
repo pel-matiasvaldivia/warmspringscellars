@@ -70,6 +70,13 @@ RATES: dict[tuple[str, bool], tuple[int, ...]] = {
     ("West Coast", True): (33, 35, 36, 39, 46, 52, 53, 54, 55, 56, 57, 67),
 }
 
+# Months a release is assumed to need ice packs, and only a default: whether a
+# box needs one is a decision about the week's forecast at the far end, which
+# nobody can read off a calendar months ahead. The desk sets it per release and
+# this is what the box starts ticked or unticked as. Shoulder months are in,
+# because a melted shipment costs more than a $7 ice pack.
+ICE_PACK_MONTHS = frozenset({4, 5, 6, 7, 8, 9, 10})
+
 # Crown's own two documents disagree here. The shipping guide says $5 for 1 to
 # 6 bottles and $7 for 7 to 12; all four rate sheets say $5 for 1 to 4 and $7
 # for 5 to 12. Six bottles — The Founder's Reserve — is the one count where it
@@ -211,9 +218,12 @@ class Estimate:
     carriage_cents: int = 0
     ice_cents: int = 0
     revenue_cents: int = 0
-    # What the members are billed for carriage. Nil for a tier whose price
-    # has the freight inside it, which is what the other two do.
+    # What the members are billed for carriage, which is the carrier's price
+    # for each destination less what that member's tier puts towards it.
     recovered_cents: int = 0
+    # Whether this release is going out with ice packs. They are never billed
+    # to a member, so switching this moves money on the winery's side only.
+    ice_packs: bool = True
 
     @property
     def shipments(self) -> int:
@@ -221,12 +231,18 @@ class Estimate:
 
     @property
     def with_ice_cents(self) -> int:
+        """The bill if every box carries an ice pack, whether or not they will."""
         return self.carriage_cents + self.ice_cents
+
+    @property
+    def payable_cents(self) -> int:
+        """What Crown actually invoices for this release."""
+        return self.carriage_cents + (self.ice_cents if self.ice_packs else 0)
 
     @property
     def absorbed_cents(self) -> int:
         """What the winery pays out of its own side of the price."""
-        return self.with_ice_cents - self.recovered_cents
+        return self.payable_cents - self.recovered_cents
 
     def share(self, with_ice: bool = False) -> float:
         """Carriage as a percentage of what the release charges."""
@@ -235,8 +251,15 @@ class Estimate:
         spent = self.with_ice_cents if with_ice else self.carriage_cents
         return spent * 100 / self.revenue_cents
 
+    def absorbed_share(self) -> float:
+        """And the part of it the winery does not get back."""
+        if not self.revenue_cents:
+            return 0.0
+        return self.absorbed_cents * 100 / self.revenue_cents
 
-def estimate(shipments: list[tuple[str, str, int, int, int]]) -> Estimate:
+
+def estimate(shipments: list[tuple[str, str, int, int, int]],
+             *, ice_packs: bool = True) -> Estimate:
     """Cost a release, one tuple per shipment:
 
         (member name, state, bottles, price in cents, carriage billed in cents)
@@ -250,8 +273,12 @@ def estimate(shipments: list[tuple[str, str, int, int, int]]) -> Estimate:
     not counted as free: they are listed with the reason, because a release
     that cannot be costed in full is a release the desk should look at before
     it charges anybody.
+
+    The ice packs are always worked out, and `ice_packs` only says whether
+    they are part of the bill: the desk is choosing between two figures and
+    wants to see the one it is not choosing.
     """
-    out = Estimate()
+    out = Estimate(ice_packs=ice_packs)
     by_zone: dict[str, ZoneCost] = {}
     for name, state, bottles, price_cents, billed_cents in shipments:
         out.revenue_cents += price_cents

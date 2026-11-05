@@ -122,7 +122,12 @@ CREATE TABLE IF NOT EXISTS "release" (
     created_at TEXT NOT NULL,
     name       TEXT NOT NULL UNIQUE,      -- 'Spring 2026'
     ships_on   TEXT NOT NULL,
-    status     TEXT NOT NULL DEFAULT 'planned'
+    status     TEXT NOT NULL DEFAULT 'planned',
+    -- Whether this one goes out with ice packs. Defaulted from the shipping
+    -- month and then the desk's to change: whether a box needs one is a
+    -- decision about the forecast at the far end, which no calendar knows
+    -- months ahead. The member is never billed for it either way.
+    ice_packs  INTEGER NOT NULL DEFAULT 0
 );
 
 -- The wines, as the club refers to them. Not the winery's whole production
@@ -299,6 +304,7 @@ ADDED_COLUMNS: dict[str, dict[str, str]] = {
         "ship_state": "TEXT", "ship_postcode": "TEXT",
     },
     "membership": {"provider_payment_method": "TEXT"},
+    "release": {"ice_packs": "INTEGER NOT NULL DEFAULT 0"},
     "order": {"charge_error": "TEXT"},
 }
 

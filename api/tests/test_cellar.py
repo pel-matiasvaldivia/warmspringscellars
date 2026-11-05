@@ -97,8 +97,8 @@ def received(client, wine_id: int, bottles: int) -> None:
     assert res.status_code == 303, unquote(res.headers.get("location", ""))
 
 
-def release(client, name: str = "Spring 2026") -> int:
-    client.post("/admin/releases", data={"name": name, "ships_on": "2026-04-15"},
+def release(client, name: str = "Spring 2026", ships_on: str = "2026-04-15") -> int:
+    client.post("/admin/releases", data={"name": name, "ships_on": ships_on},
                 auth=ADMIN, follow_redirects=False)
     return int(client.main.db.one('SELECT id FROM "release" ORDER BY id DESC')["id"])
 
@@ -462,3 +462,75 @@ def test_an_older_database_grows_the_cellar(client):
     assert db.one("SELECT COUNT(*) c FROM wine")["c"] == 0
     assert db.one("SELECT COUNT(*) c FROM stock_move")["c"] == 0
     assert db.one("SELECT COUNT(*) c FROM release_item")["c"] == 0
+
+
+# ── ice packs, which the winery pays for and the season decides ──────────
+def test_a_warm_release_starts_with_ice_packs_and_a_winter_one_does_not(client):
+    """Defaulted from the shipping month, because nobody reads a forecast in March."""
+    client.post("/admin/releases", data={"name": "Spring 2026", "ships_on": "2026-04-15"},
+                auth=ADMIN, follow_redirects=False)
+    client.post("/admin/releases", data={"name": "Christmas 2026", "ships_on": "2026-12-05"},
+                auth=ADMIN, follow_redirects=False)
+
+    rows = client.main.db.all('SELECT name, ice_packs FROM "release" ORDER BY id')
+    assert [(r["name"], bool(r["ice_packs"])) for r in rows] == [
+        ("Spring 2026", True), ("Christmas 2026", False)]
+
+
+def test_the_desk_can_overrule_the_calendar(client):
+    cab = wine(client, "EST-CAB-21", "2021 Estate Cabernet")
+    received(client, cab, 12)
+    join(client, "ada@example.com")
+    release_id = release(client, "Christmas 2026", ships_on="2026-12-05")
+    compose(client, release_id, "founders-reserve", {cab: 6})
+
+    # December, so it starts without them and the ice is shown as a what-if
+    page = client.get(f"/admin/releases/{release_id}/plan", auth=ADMIN)
+    assert "goes out without ice packs" in page.text
+    assert "Ship with ice packs" in page.text
+
+    res = client.post(f"/admin/releases/{release_id}/ice", data={"on": "1"},
+                      auth=ADMIN, follow_redirects=False)
+    assert "Ice packs on" in unquote(res.headers["location"])
+    page = client.get(f"/admin/releases/{release_id}/plan", auth=ADMIN)
+    assert "an ice pack in every box" in page.text
+    assert "Ship without ice packs" in page.text
+
+
+def test_turning_ice_packs_off_changes_only_what_the_winery_pays(client):
+    """The member's bill is the carriage less their tier's credit, ice or no ice."""
+    cab = wine(client, "EST-CAB-21", "2021 Estate Cabernet")
+    received(client, cab, 12)
+    join(client, "ada@example.com")
+    release_id = release(client, "Spring 2026")          # April: ice packs on
+    compose(client, release_id, "founders-reserve", {cab: 6})
+    client.post(f"/admin/releases/{release_id}/generate", auth=ADMIN, follow_redirects=False)
+    with_ice = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+
+    client.post(f"/admin/releases/{release_id}/ice", data={"on": "0"},
+                auth=ADMIN, follow_redirects=False)
+    after = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert after["shipping_cents"] == with_ice["shipping_cents"] == 2600
+    assert after["total_cents"] == with_ice["total_cents"]
+
+
+def test_an_older_database_grows_the_ice_pack_column(client):
+    from app.db import Database, SCHEMA
+
+    path = client.tmp / "pre-ice.sqlite3"
+    import sqlite3
+    con = sqlite3.connect(path)
+    con.executescript(SCHEMA)
+    # Rebuilt rather than dropped: SQLite re-parses the stored CREATE TABLE on
+    # DROP COLUMN and will not read the comments in this schema back.
+    con.execute('DROP TABLE "release"')
+    con.execute('CREATE TABLE "release" (id INTEGER PRIMARY KEY, created_at TEXT'
+                " NOT NULL, name TEXT NOT NULL UNIQUE, ships_on TEXT NOT NULL,"
+                " status TEXT NOT NULL DEFAULT 'planned')")
+    con.execute('INSERT INTO "release" (created_at, name, ships_on, status)'
+                " VALUES ('2026-01-01', 'Old', '2026-04-15', 'planned')")
+    con.commit()
+    con.close()
+
+    db = Database(path)
+    assert db.one('SELECT ice_packs FROM "release"')["ice_packs"] == 0

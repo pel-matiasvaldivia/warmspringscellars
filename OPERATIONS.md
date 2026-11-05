@@ -326,6 +326,12 @@ rates. Every tier bills carriage, so part of this comes back from the members
 and the screen says how much; the rest — this is what the winery spends to keep that promise, and the line
 under the table gives it as a percentage of what the release would charge.
 
+**Ice packs** are the winery's cost and never a member's. A release starts
+with them on if it ships between April and October and off otherwise, and the
+button under the table changes it — the calendar cannot know what the forecast
+will be at the far end. Switching it changes only what the winery pays; the
+figure beside each member's name does not move.
+
 It is an estimate, not a quotation. It leaves out Crown's dollar-a-pound
 overweight charge, which an ice pack can itself trigger, and the fees that
 only happen when something goes wrong. A member whose state has no price on

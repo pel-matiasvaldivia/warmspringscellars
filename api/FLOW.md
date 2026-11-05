@@ -87,8 +87,14 @@ amount. A credit larger than the carriage ships the box free; it never refunds.
 questions: what a box costs, and what to bill for it. The release plan prices
 itself against the same table before anybody presses Charge, and it is an
 estimate rather than a quotation — it leaves out the dollar-a-pound overweight
-charge, the ice packs the winery carries, and every fee that only happens when
-something goes wrong. A destination the sheet cannot price falls back to the
+charge and every fee that only happens when something goes wrong.
+
+Ice packs are the winery's, never a member's, and whether a release carries
+them is a flag on the release. It starts set from the shipping month and the
+desk changes it, because whether a box needs one is a decision about the
+forecast at the far end that no calendar knows months ahead. Switching it
+moves money on the winery's side only: the member's bill is the carriage less
+their tier's credit either way. A destination the sheet cannot price falls back to the
 dearest zone, so a box the carrier would not quote is never the one the winery
 subsidises by accident.
 

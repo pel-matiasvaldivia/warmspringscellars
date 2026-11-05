@@ -113,24 +113,40 @@
     <td class="num"><b>{{ freight.shipments }}</b></td>
     <td class="num"></td>
     <td class="num"><b>{{ money(freight.carriage_cents, 'usd') }}</b></td>
-    <td class="num"><b>{{ money(freight.ice_cents, 'usd') }}</b></td>
-    <td class="num"><b>{{ money(freight.with_ice_cents, 'usd') }}</b></td>
+    <td class="num">{{ money(freight.ice_cents, 'usd') }}{{ '' if freight.ice_packs else '*' }}</td>
+    <td class="num"><b>{{ money(freight.payable_cents, 'usd') }}</b></td>
   </tr>
 </table>
-<p class="log" style="margin-top:.6rem">
+
+<div class="row" style="margin-top:.9rem;align-items:center">
+  <form method="post" action="/admin/releases/{{ release.id }}/ice">
+    <input type="hidden" name="on" value="{{ 0 if release.ice_packs else 1 }}">
+    <button class="btn ghost small" type="submit">
+      {{ 'Ship without ice packs' if release.ice_packs else 'Ship with ice packs' }}</button>
+  </form>
+  <span class="log" style="flex:1;min-width:16rem">
+    {% if release.ice_packs %}
+      This release goes out with an ice pack in every box, which is where the
+      {{ money(freight.ice_cents, 'usd') }} above comes from.
+    {% else %}
+      This release goes out without ice packs, so the
+      {{ money(freight.ice_cents, 'usd') }} marked * is not in the total — it is
+      what they would cost if the forecast changed your mind.
+    {% endif %}
+    Ships {{ release.ships_on }}.
+  </span>
+</div>
+
+<p class="log" style="margin-top:.8rem">
   UPS Ground, residential, from Crown's 2026 sheet. Carriage alone is
   <b>{{ '%.1f' % freight.share() }}%</b> of the
-  {{ money(freight.revenue_cents, 'usd') }} this release would charge, or
-  <b>{{ '%.1f' % freight.share(with_ice=True) }}%</b> with an ice pack in every
-  box.
-  {% if freight.recovered_cents %}
-  Members on a tier that bills carriage separately pay
-  {{ money(freight.recovered_cents, 'usd') }} of it, so the winery absorbs
-  <b>{{ money(freight.absorbed_cents, 'usd') }}</b>.
-  {% else %}
-  Every tier here includes shipping, so none of this reaches a member's
-  invoice — it is what the winery spends to keep that promise.
-  {% endif %}
+  {{ money(freight.revenue_cents, 'usd') }} this release would charge.
+  Members pay {{ money(freight.recovered_cents, 'usd') }} of the freight —
+  the carrier's price for their own address, less what their tier puts towards
+  it — so the winery is left with
+  <b>{{ money(freight.absorbed_cents, 'usd') }}</b>, or
+  <b>{{ '%.1f' % freight.absorbed_share() }}%</b> of the release.
+  Ice packs are never billed to a member.
 </p>
 <p class="log">
   An estimate against the rate sheet, not a quotation. It leaves out Crown's

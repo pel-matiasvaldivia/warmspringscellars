@@ -329,6 +329,12 @@ residencial. Todos los niveles cobran flete, así que una parte vuelve de los
 socios y la pantalla dice cuánto; el resto: es lo que gasta la bodega para sostener esa promesa, y el
 renglón de abajo lo da como porcentaje de lo que cobraría el despacho.
 
+**Los ice packs los paga la bodega**, nunca el socio. Un despacho arranca con
+ellos prendidos si sale entre abril y octubre, y apagados si no; el botón
+debajo de la tabla lo cambia, porque el calendario no puede saber qué pronóstico
+va a haber del otro lado. Cambiarlo mueve solo lo que paga la bodega: lo que
+paga cada socio queda igual.
+
 Es una estimación, no una cotización. Deja afuera el recargo de un dólar por
 libra de sobrepeso —que el propio ice pack puede disparar— y las tarifas que
 solo aparecen cuando algo sale mal. Un socio cuyo estado no tiene precio en la

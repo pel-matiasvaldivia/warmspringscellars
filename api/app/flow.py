@@ -24,6 +24,7 @@ from .catalogue import Tier, catalogue
 from .config import SHIPPABLE_STATES, US_STATES, Settings
 from .db import Database, log, next_in_sequence, now
 from .payments import CardSaved, PaymentProvider, as_metadata
+from .shipping import ICE_PACK_MONTHS
 from .shipping import billed as carriage_billed
 from .stock import Line, Member, Plan, Wine
 from .stock import plan_release as compute_plan
@@ -775,14 +776,36 @@ class Flow:
 
     # ── releases ─────────────────────────────────────────────────────────
     def create_release(self, name: str, ships_on: str) -> int:
+        """Plan a release. Ice packs start on if it ships in a warm month."""
+        try:
+            month = int(str(ships_on)[5:7])
+        except ValueError:
+            month = 0
+        ice = month in ICE_PACK_MONTHS
         with self.db.transaction() as con:
             cur = con.execute(
-                "INSERT INTO \"release\" (created_at, name, ships_on, status)"
-                " VALUES (?, ?, ?, 'planned')", (now(), name, ships_on),
+                "INSERT INTO \"release\" (created_at, name, ships_on, status, ice_packs)"
+                " VALUES (?, ?, ?, 'planned', ?)", (now(), name, ships_on, int(ice)),
             )
             release_id = int(cur.lastrowid)
-            log(con, "release", release_id, "created", name=name, ships_on=ships_on)
+            log(con, "release", release_id, "created", name=name, ships_on=ships_on,
+                ice_packs=ice)
             return release_id
+
+    def set_release_ice(self, release_id: int, on: bool, actor: str) -> None:
+        """Say whether this release goes out with ice packs.
+
+        Nothing about the member's bill changes: the winery carries the cost
+        of keeping wine cool either way. What changes is what the desk is
+        looking at when it decides whether the release can be afforded.
+        """
+        with self.db.transaction() as con:
+            release = _require(con, "release", release_id)
+            if release["status"] not in {"planned", "open"}:
+                raise FlowError(f"that release is {release['status']}")
+            con.execute('UPDATE "release" SET ice_packs = ? WHERE id = ?',
+                        (int(on), release_id))
+            log(con, "release", release_id, "ice_packs", actor=actor, on=on)
 
     def generate_release_orders(self, release_id: int, actor: str) -> list[int]:
         """Raise the orders this release can actually fill. Safe to run twice.

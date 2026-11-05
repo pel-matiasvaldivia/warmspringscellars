@@ -901,7 +901,7 @@ def admin_release_plan(request: Request, release_id: int,
          shipping.billed(f.state, tiers[f.tier_key].bottles,
                          tiers[f.tier_key].shipping_credit_cents))
         for f in plan.filled if f.tier_key in tiers
-    ])
+    ], ice_packs=bool(release["ice_packs"]))
 
     return admin_page(
         request, "plan.html", "releases", release=release, plan=plan,
@@ -909,6 +909,21 @@ def admin_release_plan(request: Request, release_id: int,
         wines=[w for w in flow.cellar() if w["status"] == "active"],
         tiers=catalogue().tiers,
     )
+
+
+@app.post("/admin/releases/{release_id}/ice")
+async def admin_release_ice(request: Request, release_id: int,
+                            actor: str = Depends(require_admin)) -> RedirectResponse:
+    form = await request.form()
+    back = f"/admin/releases/{release_id}/plan"
+    try:
+        flow.set_release_ice(release_id, str(form.get("on")) == "1", actor)
+    except FlowError as exc:
+        return RedirectResponse(f"{back}?done=Not done: {exc}", status_code=303)
+    done = ("Ice packs on: the estimate below now includes them."
+            if str(form.get("on")) == "1" else
+            "Ice packs off. Nothing a member pays changes either way.")
+    return RedirectResponse(f"{back}?done={done}", status_code=303)
 
 
 @app.post("/admin/releases/{release_id}/compose")
