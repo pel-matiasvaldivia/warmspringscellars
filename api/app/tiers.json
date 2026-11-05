@@ -5,6 +5,15 @@
     "and tools/sync_tiers.py writes it into the landing page, so these numbers",
     "cannot drift between what a visitor is shown and what they are charged.",
     "",
+    "THE THREE-BOTTLE TIER IS NOT SIGNED OFF. The name and the price are both",
+    "placeholders: $137.50 is three bottles at $45.83, which is exactly what",
+    "the other two tiers charge per bottle, so it is the consistent reading",
+    "and not a decision. Carriage is the reason it needs a decision — a",
+    "three-bottle box costs $40 to send to the East Coast against $55 for six,",
+    "so freight takes 29% of this tier's price where it takes 20% of the six.",
+    "Either the price goes up, or this is the one tier whose shipping is not",
+    "included (set shipping_cents and the order raises a second line for it).",
+    "",
     "NUMBERS NEED THE WINERY'S SIGN-OFF, and these are Cecilia's, given in",
     "October 2026: $275.00 for six bottles and $550.00 for twelve, both with",
     "shipping included and neither carrying a standing discount — that was",
@@ -31,6 +40,24 @@
   "shipment_months": [4, 10, 12],
 
   "tiers": [
+    {
+      "key": "tasting-case",
+      "name": "The Tasting Case",
+      "label": "Three Bottles",
+      "bottles": 3,
+      "discount_pct": 0,
+      "price_cents": 13750,
+      "shipping_cents": 0,
+      "invite_only": false,
+      "featured": false,
+      "summary": "Three bottles three times a year. The smallest allocation we send.",
+      "benefits": [
+        "3 bottles per shipment, from the current release",
+        "Three shipments a year (Spring, Fall &amp; Christmas)",
+        "2 complimentary tastings per visit, three visits a year",
+        "Complimentary shipping on all orders"
+      ]
+    },
     {
       "key": "founders-reserve",
       "name": "The Founder's Reserve",

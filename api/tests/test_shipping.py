@@ -220,6 +220,43 @@ def test_the_zones_come_back_in_sheet_order():
         "East and Midwest", "Mountain and Northwest", "West Coast"]
 
 
+def test_every_tier_the_club_sells_has_a_price_on_the_sheet():
+    """A tier the rate sheet cannot cost is a tier nobody can budget for.
+
+    The sheet prices 1 to 12 bottles and then jumps to 15. A tier invented
+    outside that range would reach the plan screen and have no freight, so
+    the catalogue is walked here rather than trusted.
+    """
+    from app.catalogue import catalogue
+
+    for tier in catalogue().tiers:
+        for state in ("New York", "California"):
+            assert quote(state, tier.bottles).carriage_cents > 0, tier.key
+
+
+def test_the_three_bottle_case_is_the_worst_box_to_send():
+    """Freight does not fall as fast as the bottle count.
+
+    Three bottles to the East Coast costs $40 against $55 for six and $79 for
+    twelve — so per bottle it is $13.33, $9.17 and $6.58. This is the number
+    behind the note in tiers.json saying the three-bottle price is not signed
+    off.
+    """
+    per_bottle = {
+        n: quote("New York", n).carriage_cents / n for n in (3, 6, 12)
+    }
+    assert round(per_bottle[3]) == 1333
+    assert round(per_bottle[6]) == 917
+    assert round(per_bottle[12]) == 658
+    assert per_bottle[3] > per_bottle[6] > per_bottle[12]
+
+
+def test_a_three_bottle_box_takes_the_small_ice_pack():
+    """Three is inside the 1-to-4 band, so $5 rather than $7."""
+    assert quote("New York", 3, ice_pack=True).ice_cents == 500
+    assert quote("New York", 6, ice_pack=True).ice_cents == 700
+
+
 def test_zone_for_names_the_zone_a_state_sits_in():
     assert zone_for("Mississippi") == "East and Midwest"
     assert zone_for("Wyoming") == "Plains"

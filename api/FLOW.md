@@ -181,7 +181,10 @@ quietly is the worst way to be wrong about money.
 So `QBO_WINE_ITEM` must already exist in QuickBooks, pointed at an income
 account by the bookkeeper, and a push fails with a sentence saying so if it
 does not. `QBO_SHIPPING_ITEM` is only reached when a tier charges for carriage
-as its own line, which none do since the entry tier was withdrawn.
+as its own line, which none of the three do: every tier quotes one figure
+with the freight inside it. The three-bottle tier is the one where that
+hurts — $40 of carriage against $137.50 of price — so it is also the one
+most likely to be the first to charge for carriage separately.
 
 ### The way out that needs no API
 

@@ -168,7 +168,8 @@ En **"The invitation"** se tildan los niveles que esa persona va a poder elegir.
 Se listan todos los niveles del catálogo, y vienen tildados los que el socio
 puede elegir por su cuenta. **Un nivel por invitación viene destildado** —
 tildalo solo si de verdad querés ofrecerlo. Hoy no hay ninguno: el catálogo
-tiene The Founder's Reserve y The Full Case, los dos abiertos.
+tiene The Tasting Case, The Founder's Reserve y The Full Case, los tres
+abiertos.
 
 **"Approve & send the invitation"** hace cuatro cosas en un paso: aprueba la
 solicitud, crea la oferta con los niveles tildados, le manda el mail al socio y
@@ -315,7 +316,7 @@ La página tiene tres partes.
 
 **Qué lleva el envío.** Una casilla por vino y por nivel. Vacío o cero quiere
 decir que ese vino no va en ese envío. Si las botellas no dan el número que el
-nivel promete —doce para The Full Case— la página lo dice, y lo sigue diciendo
+nivel promete —tres, seis o doce— la página lo dice, y lo sigue diciendo
 hasta que den. El socio lee esa cantidad en su factura.
 
 **El vino.** Una fila por vino: cuántas botellas lleva un envío de cada nivel,

@@ -867,7 +867,9 @@ def test_health_says_what_is_still_a_stub(client):
 def test_the_catalogue_is_served_for_the_landing_page(client):
     body = client.get("/api/catalogue").json()
     keys = [t["key"] for t in body["tiers"]]
-    assert keys == ["founders-reserve", "full-case"]
+    assert keys == ["tasting-case", "founders-reserve", "full-case"]
+    # Smallest first, which is the order the landing page lays them out in.
+    assert [t["bottles"] for t in body["tiers"]] == [3, 6, 12]
     # Both are chooseable today. The field is still read and still honoured —
     # see test_a_tier_that_was_not_offered_is_refused — so a
     # by-invitation tier can come back without touching the code.

@@ -167,7 +167,7 @@ Under **"The invitation"**, tick the tiers that person will be able to choose
 from. Every tier in the catalogue is listed, and the ones a member may choose
 for themselves come ticked. **A by-invitation tier comes unticked** — tick it
 only if you really mean to offer it. There is none today: the catalogue holds
-The Founder's Reserve and The Full Case, both open.
+The Tasting Case, The Founder's Reserve and The Full Case, all three open.
 
 **"Approve & send the invitation"** does four things at once: approves the
 application, creates the offer with the ticked tiers, emails the member, and
@@ -313,7 +313,7 @@ has three parts.
 
 **What a shipment holds.** A box per wine, per tier. Blank or zero means that
 wine is not in that shipment. If the bottles do not add up to what the tier
-promises — twelve for The Full Case — the page says so and keeps saying so
+promises — three, six or twelve — the page says so and keeps saying so
 until they do. The member reads the bottle count on their invoice.
 
 **The wine.** One row per wine: how many bottles one shipment of each tier
