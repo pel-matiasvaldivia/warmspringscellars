@@ -322,6 +322,18 @@ hasta que den. El socio lee esa cantidad en su factura.
 cuántas necesita el club entero, cuántas hay, y cuántas faltan. *On hand* ya
 descuenta lo que se llevaron los despachos anteriores.
 
+**Lo que cuesta mandarlo.** El flete de los envíos que el plan puede cumplir,
+por zona de Crown y en total, contra la planilla UPS Ground 2026 a tarifa
+residencial. Todos los niveles incluyen el envío, así que nada de esto llega a
+la factura del socio: es lo que gasta la bodega para sostener esa promesa, y el
+renglón de abajo lo da como porcentaje de lo que cobraría el despacho.
+
+Es una estimación, no una cotización. Deja afuera el recargo de un dólar por
+libra de sobrepeso —que el propio ice pack puede disparar— y las tarifas que
+solo aparecen cuando algo sale mal. Un socio cuyo estado no tiene precio en la
+planilla terrestre —Alaska y Hawái son los dos que el club igual aceptaría—
+aparece en rojo en vez de contarse como gratis.
+
 **Quién no se puede cumplir.** Los nombres, y el motivo al lado de cada uno.
 Cuatro motivos, y son conversaciones distintas:
 

@@ -62,6 +62,10 @@ class Filled:
     membership_id: int
     name: str
     tier_key: str
+    # Where it goes. Carried here because the walk has it in hand and the
+    # carriage is priced per state: looking it up again would mean asking the
+    # database the same question twice for every member in the release.
+    state: str = ""
     # A card that is not on file is not a reason to withhold wine — the member
     # has a letter and a link, and the order waits at `failed` until they use
     # it. But a bottle allocated to a card that will decline is a bottle taken
@@ -230,7 +234,7 @@ def plan_release(
             allocated[wine_id] = allocated.get(wine_id, 0) + need
         filled_per_tier[member.tier_key] = filled_per_tier.get(member.tier_key, 0) + 1
         plan.filled.append(Filled(
-            member.id, member.name, member.tier_key,
+            member.id, member.name, member.tier_key, member.state,
             "" if member.has_card else "no card on file"))
 
     demanded: dict[int, int] = {}

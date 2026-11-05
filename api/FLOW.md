@@ -76,6 +76,15 @@ Seniority is per bottle rather than one queue: somebody who joined later is
 still filled if their tier's wines held out, because holding their shipment
 back would not put a bottle in the earlier member's hands.
 
+**Shipping is included in the price and still costs money.** Both tiers quote
+one figure with carriage inside it, so nothing reaches the member's invoice —
+but a six-bottle box to the East Coast takes about a fifth of its own price in
+freight, and a full case about a seventh. `shipping.py` is Crown's 2026 UPS
+Ground sheet transcribed, and the release plan prices itself against it before
+anybody presses Charge. It is an estimate and says so: it leaves out the
+dollar-a-pound overweight charge and every fee that only happens when
+something goes wrong.
+
 **Invoices are immutable.** Once issued an invoice is never edited — a
 correction is a credit note plus a new invoice. The number comes from a
 sequence that no code path can reuse, because an accountant will one day ask

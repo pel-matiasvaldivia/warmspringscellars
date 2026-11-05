@@ -45,6 +45,7 @@ from .notify import (
 )
 from .payments import WebhookError, build_provider
 from .payments.fake import FakeProvider, unb64
+from . import shipping
 
 TEMPLATES = Path(__file__).resolve().parent / "templates"
 
@@ -888,9 +889,19 @@ def admin_release_plan(request: Request, release_id: int,
         composition.setdefault(row["tier_key"], {})[int(row["wine_id"])] = int(row["bottles"])
     raised = db.one(
         'SELECT COUNT(*) AS n FROM "order" WHERE release_id = ?', (release_id,))
+
+    # What the carrier would charge for what the plan says it can fill. An
+    # estimate against the rate sheet, not a quotation: see shipping.py for
+    # what it deliberately does not compute.
+    tiers = {t.key: t for t in catalogue().tiers}
+    freight = shipping.estimate([
+        (f.name, f.state, tiers[f.tier_key].bottles, tiers[f.tier_key].price_cents)
+        for f in plan.filled if f.tier_key in tiers
+    ])
+
     return admin_page(
         request, "plan.html", "releases", release=release, plan=plan,
-        composition=composition, raised=int(raised["n"]),
+        composition=composition, raised=int(raised["n"]), freight=freight,
         wines=[w for w in flow.cellar() if w["status"] == "active"],
         tiers=catalogue().tiers,
     )

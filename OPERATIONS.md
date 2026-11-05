@@ -320,6 +320,18 @@ until they do. The member reads the bottle count on their invoice.
 holds, how many the whole club needs, how many are on hand, and how short
 that leaves you. *On hand* already nets out what earlier releases took.
 
+**What it costs to send.** The freight for the shipments the plan can fill,
+by Crown zone and in total, against the 2026 UPS Ground sheet at residential
+rates. Every tier includes shipping, so none of it reaches the member's
+invoice — this is what the winery spends to keep that promise, and the line
+under the table gives it as a percentage of what the release would charge.
+
+It is an estimate, not a quotation. It leaves out Crown's dollar-a-pound
+overweight charge, which an ice pack can itself trigger, and the fees that
+only happen when something goes wrong. A member whose state has no price on
+the ground sheet — Alaska and Hawaii are the two the club would otherwise
+accept — is named in red rather than counted as free.
+
 **Who cannot be filled.** The names, and the reason against each. Four
 reasons, and they are different conversations:
 

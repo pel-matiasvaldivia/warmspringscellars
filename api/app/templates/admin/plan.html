@@ -93,6 +93,54 @@
 </p>
 {% endif %}
 
+{% if plan.filled %}
+<h2 style="margin:1.6rem 0 .6rem">What it costs to send</h2>
+<table>
+  <tr><th>Zone</th><th class="num">Shipments</th><th class="num">Bottles</th>
+      <th class="num">Carriage</th><th class="num">Ice packs</th><th class="num">Total</th></tr>
+  {% for z in freight.zones %}
+  <tr>
+    <td>{{ z.zone }}</td>
+    <td class="num">{{ z.shipments }}</td>
+    <td class="num">{{ z.bottles }}</td>
+    <td class="num">{{ money(z.carriage_cents, 'usd') }}</td>
+    <td class="num">{{ money(z.ice_cents, 'usd') }}</td>
+    <td class="num">{{ money(z.with_ice_cents, 'usd') }}</td>
+  </tr>
+  {% endfor %}
+  <tr>
+    <td><b>All of it</b></td>
+    <td class="num"><b>{{ freight.shipments }}</b></td>
+    <td class="num"></td>
+    <td class="num"><b>{{ money(freight.carriage_cents, 'usd') }}</b></td>
+    <td class="num"><b>{{ money(freight.ice_cents, 'usd') }}</b></td>
+    <td class="num"><b>{{ money(freight.with_ice_cents, 'usd') }}</b></td>
+  </tr>
+</table>
+<p class="log" style="margin-top:.6rem">
+  UPS Ground, residential, from Crown's 2026 sheet. Carriage alone is
+  <b>{{ '%.1f' % freight.share() }}%</b> of the
+  {{ money(freight.revenue_cents, 'usd') }} this release would charge, or
+  <b>{{ '%.1f' % freight.share(with_ice=True) }}%</b> with an ice pack in every
+  box. Every tier includes shipping, so none of this reaches the member's
+  invoice — it is what the winery spends to keep that promise.
+</p>
+<p class="log">
+  An estimate against the rate sheet, not a quotation. It leaves out Crown's
+  $1-a-pound overweight charge, which an ice pack can itself trigger, and every
+  fee that only happens when something goes wrong — $23 to correct an address,
+  the carriage charged twice on a package that comes back.
+</p>
+
+{% if freight.unpriced %}
+<p class="warn" style="margin-top:1rem">
+  <b>{{ freight.unpriced | length }} shipment(s) have no price on the sheet</b>
+  and are not in the totals above, so the real cost is higher than it says:
+  {% for name, why in freight.unpriced %}{{ name }} — {{ why }} {% endfor %}
+</p>
+{% endif %}
+{% endif %}
+
 <h2 style="margin:1.6rem 0 .6rem">What a shipment holds</h2>
 {% if not wines %}
 <p class="empty">

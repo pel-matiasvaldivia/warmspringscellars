@@ -364,6 +364,50 @@ def test_the_plan_flags_a_member_with_no_card_without_holding_their_wine(client)
     assert on_hand(client, cab) == 6
 
 
+def test_the_plan_costs_the_release_against_crowns_rate_sheet(client):
+    """Two members, two zones, and the share of revenue the carrier takes."""
+    cab = wine(client, "EST-CAB-21", "2021 Estate Cabernet")
+    received(client, cab, 24)
+    join(client, "ada@example.com")                                  # California
+    join(client, "alan@example.com", state="New York", ship_state="New York",
+         ship_city="Brooklyn", ship_postcode="11201")
+
+    release_id = release(client)
+    compose(client, release_id, "founders-reserve", {cab: 6})
+    page = client.get(f"/admin/releases/{release_id}/plan", auth=ADMIN)
+
+    assert page.status_code == 200
+    assert "West Coast" in page.text
+    assert "East and Midwest" in page.text
+    # $46 to California plus $55 to New York, and $7 of ice in each
+    assert "$101.00" in page.text
+    assert "$115.00" in page.text
+    # carriage against $550 of revenue
+    assert "18.4%" in page.text
+
+
+def test_a_member_the_rate_sheet_cannot_price_is_named_on_the_plan(client):
+    """Hawaii: a state the club will accept and Crown's ground sheet will not.
+
+    The licensed-state list and the carrier's zones are two different lists,
+    and this is where they disagree. Alaska and Hawaii pass the address check,
+    reach the plan, and then have no ground price — so they are named rather
+    than quietly costed at zero.
+    """
+    cab = wine(client, "EST-CAB-21", "2021 Estate Cabernet")
+    received(client, cab, 12)
+    join(client, "ada@example.com")
+    join(client, "mallory@example.com", state="Hawaii", ship_state="Hawaii",
+         ship_city="Honolulu", ship_postcode="96815")
+
+    release_id = release(client)
+    compose(client, release_id, "founders-reserve", {cab: 6})
+    page = client.get(f"/admin/releases/{release_id}/plan", auth=ADMIN)
+
+    assert "no price on the sheet" in page.text
+    assert "Hawaii" in page.text
+
+
 def test_a_paused_member_is_not_owed_a_shipment_and_gets_no_bottles(client):
     cab = wine(client, "EST-CAB-21", "2021 Estate Cabernet")
     received(client, cab, 12)
