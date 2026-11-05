@@ -67,7 +67,7 @@ def apply_(client, **overrides) -> int:
 
 
 def approve(client, app_id: int | None = None,
-            tiers=("founders-reserve", "full-case")) -> str:
+            tiers=("tasting-case", "founders-reserve", "full-case")) -> str:
     if app_id is None:
         app_id = int(client.main.db.one(
             "SELECT id FROM application WHERE status = 'pending' ORDER BY id DESC")["id"])
@@ -613,34 +613,46 @@ def test_an_offer_cannot_be_used_twice(client):
     assert "already been accepted" in res.text
 
 
-def test_a_tier_that_charges_for_carriage_bills_it_as_its_own_line(client):
-    """No tier charges for shipping today, and the code still has to.
+def test_the_tier_that_charges_for_carriage_bills_it_as_its_own_line(client):
+    """The Tasting Case: $120 of wine and $40 of carriage, charged as two lines.
 
-    The entry tier that did was withdrawn in October 2026, so this exercises
-    `_create_order` directly rather than through the catalogue. Carriage stays
-    its own line because wine and shipping book to different accounts, and a
-    tier that charges for it again must not fold it into the wine.
+    Carriage stays its own line because wine and shipping book to different
+    accounts in the books, and a tier that charges for it must not fold it
+    into the wine. This is the whole path, not `_create_order` alone — the
+    member picks the tier, a release charges them, and the invoice carries
+    the total of both lines.
     """
-    from app.catalogue import Tier
+    apply_(client)
+    pay(client, approve(client), "tasting-case")
 
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["subtotal_cents"] == 12000
+    assert order["shipping_cents"] == 4000
+    assert order["total_cents"] == 16000
+    assert order["status"] == "paid"
+
+    lines = client.main.db.all("SELECT * FROM order_line WHERE order_id = ? ORDER BY id",
+                               (order["id"],))
+    assert len(lines) == 2
+    assert lines[0]["total_cents"] == 12000
+    assert "3 bottles" in lines[0]["description"]
+    assert "shipping" in lines[1]["description"].lower()
+    assert lines[1]["total_cents"] == 4000
+
+    invoice = client.main.db.one("SELECT * FROM invoice WHERE order_id = ?", (order["id"],))
+    assert invoice["total_cents"] == 16000
+
+
+def test_the_other_two_tiers_raise_a_single_line(client):
+    """Their price has the carriage inside it, so there is nothing to split."""
     apply_(client)
     pay(client, approve(client), "founders-reserve")
-    membership_id = int(client.main.db.one("SELECT id FROM membership")["id"])
 
-    carriage = Tier(key="carriage", name="Carriage", label="Test", bottles=4,
-                    discount_pct=15, price_cents=18000, shipping_cents=2500,
-                    invite_only=False, featured=False, summary="", benefits=())
-    with client.main.db.transaction() as con:
-        order_id = client.main.flow._create_order(con, membership_id, carriage, None)
-
-    order = client.main.db.one('SELECT * FROM "order" WHERE id = ?', (order_id,))
-    assert order["subtotal_cents"] == 18000
-    assert order["shipping_cents"] == 2500
-    assert order["total_cents"] == 20500
-    lines = client.main.db.all("SELECT * FROM order_line WHERE order_id = ? ORDER BY id",
-                               (order_id,))
-    assert len(lines) == 2
-    assert "shipping" in lines[1]["description"].lower()
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["shipping_cents"] == 0
+    assert order["total_cents"] == 27500
+    assert client.main.db.one(
+        "SELECT COUNT(*) c FROM order_line WHERE order_id = ?", (order["id"],))["c"] == 1
 
 
 # ── the webhook ──────────────────────────────────────────────────────────

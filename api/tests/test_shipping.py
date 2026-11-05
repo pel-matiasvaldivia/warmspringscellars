@@ -160,14 +160,16 @@ def test_an_ice_pack_is_added_to_the_carriage_not_folded_into_it():
 
 
 # ── costing a whole release ──────────────────────────────────────────────
+# wine, and the carriage the member is billed for it
 FOUNDERS, FULL_CASE = 27500, 55000
+TASTING, TASTING_SHIP = 12000, 4000
 
 
 def test_a_release_is_costed_by_zone_and_in_total():
     out = estimate([
-        ("Ada", "California", 6, FOUNDERS),
-        ("Grace", "Oregon", 12, FULL_CASE),
-        ("Alan", "New York", 6, FOUNDERS),
+        ("Ada", "California", 6, FOUNDERS, 0),
+        ("Grace", "Oregon", 12, FULL_CASE, 0),
+        ("Alan", "New York", 6, FOUNDERS, 0),
     ])
 
     assert out.shipments == 3
@@ -183,7 +185,7 @@ def test_a_release_is_costed_by_zone_and_in_total():
 
 
 def test_the_share_of_revenue_is_what_the_desk_is_looking_for():
-    out = estimate([("Alan", "New York", 6, FOUNDERS)])
+    out = estimate([("Alan", "New York", 6, FOUNDERS, 0)])
 
     assert round(out.share(), 1) == 20.0            # $55 of $275
     assert round(out.share(with_ice=True), 1) == 22.5  # $62 of $275
@@ -191,8 +193,8 @@ def test_the_share_of_revenue_is_what_the_desk_is_looking_for():
 
 def test_a_member_the_sheet_cannot_price_is_listed_not_counted_as_free():
     out = estimate([
-        ("Ada", "California", 6, FOUNDERS),
-        ("Mallory", "Utah", 6, FOUNDERS),
+        ("Ada", "California", 6, FOUNDERS, 0),
+        ("Mallory", "Utah", 6, FOUNDERS, 0),
     ])
 
     assert out.shipments == 1
@@ -212,9 +214,9 @@ def test_costing_nothing_is_zero_and_not_a_division_by_zero():
 
 def test_the_zones_come_back_in_sheet_order():
     out = estimate([
-        ("Ada", "California", 6, FOUNDERS),
-        ("Alan", "New York", 6, FOUNDERS),
-        ("Grace", "Colorado", 6, FOUNDERS),
+        ("Ada", "California", 6, FOUNDERS, 0),
+        ("Alan", "New York", 6, FOUNDERS, 0),
+        ("Grace", "Colorado", 6, FOUNDERS, 0),
     ])
     assert [z.zone for z in out.zones] == [
         "East and Midwest", "Mountain and Northwest", "West Coast"]
@@ -262,3 +264,27 @@ def test_zone_for_names_the_zone_a_state_sits_in():
     assert zone_for("Wyoming") == "Plains"
     assert zone_for("Washington") == "Mountain and Northwest"
     assert zone_for("Nevada") == "West Coast"
+
+
+def test_what_the_winery_absorbs_is_the_gap_between_cost_and_what_is_billed():
+    """The Tasting Case bills $40; Crown charges $40 plus $5 of ice to the East Coast.
+
+    So the member covers the carriage and the winery still carries the ice
+    pack. That gap is the number the desk is looking at.
+    """
+    out = estimate([
+        ("Ada", "New York", 3, TASTING, TASTING_SHIP),
+        ("Grace", "New York", 6, FOUNDERS, 0),
+    ])
+
+    assert out.carriage_cents == 4000 + 5500
+    assert out.ice_cents == 500 + 700
+    assert out.recovered_cents == 4000
+    assert out.absorbed_cents == 4000 + 5500 + 500 + 700 - 4000
+
+
+def test_a_release_of_tiers_that_include_shipping_recovers_nothing():
+    out = estimate([("Ada", "California", 12, FULL_CASE, 0)])
+
+    assert out.recovered_cents == 0
+    assert out.absorbed_cents == out.with_ice_cents

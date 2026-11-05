@@ -322,8 +322,8 @@ that leaves you. *On hand* already nets out what earlier releases took.
 
 **What it costs to send.** The freight for the shipments the plan can fill,
 by Crown zone and in total, against the 2026 UPS Ground sheet at residential
-rates. Every tier includes shipping, so none of it reaches the member's
-invoice — this is what the winery spends to keep that promise, and the line
+rates. Two of the three tiers include shipping, so most of this never reaches
+a member's invoice — this is what the winery spends to keep that promise, and the line
 under the table gives it as a percentage of what the release would charge.
 
 It is an estimate, not a quotation. It leaves out Crown's dollar-a-pound
@@ -463,10 +463,12 @@ The service **will not create it**. Which income account each dollar lands in
 is the bookkeeper's decision, and a default would put real money in the wrong
 account quietly. If it is missing, the push fails saying so.
 
-A second item, `Shipping`, is **not needed today**: every tier on offer includes
-carriage, so an order raises a single line. It is needed again the day a tier
-charges for carriage separately — wine and shipping book to different accounts,
-which is why they are different lines.
+A second item, `Shipping`, **is needed as well**, and this changed in November
+2026. The Tasting Case bills $40 of carriage as its own line, so every order on
+that tier raises two. Wine and shipping book to different accounts, which is
+why they are separate lines — and a push fails saying so if the item is
+missing. The other two tiers include carriage in their price and still raise a
+single line.
 
 ### 7.2 Day to day
 

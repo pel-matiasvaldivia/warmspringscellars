@@ -190,6 +190,9 @@ class Estimate:
     carriage_cents: int = 0
     ice_cents: int = 0
     revenue_cents: int = 0
+    # What the members are billed for carriage. Nil for a tier whose price
+    # has the freight inside it, which is what the other two do.
+    recovered_cents: int = 0
 
     @property
     def shipments(self) -> int:
@@ -199,6 +202,11 @@ class Estimate:
     def with_ice_cents(self) -> int:
         return self.carriage_cents + self.ice_cents
 
+    @property
+    def absorbed_cents(self) -> int:
+        """What the winery pays out of its own side of the price."""
+        return self.with_ice_cents - self.recovered_cents
+
     def share(self, with_ice: bool = False) -> float:
         """Carriage as a percentage of what the release charges."""
         if not self.revenue_cents:
@@ -207,8 +215,15 @@ class Estimate:
         return spent * 100 / self.revenue_cents
 
 
-def estimate(shipments: list[tuple[str, str, int, int]]) -> Estimate:
-    """Cost a release, from (member name, state, bottles, price in cents).
+def estimate(shipments: list[tuple[str, str, int, int, int]]) -> Estimate:
+    """Cost a release, one tuple per shipment:
+
+        (member name, state, bottles, price in cents, carriage billed in cents)
+
+    The last of those is what the member is charged for shipping — nil when
+    the tier's price already has the freight inside it. The difference
+    between what Crown charges and what the members are billed is what the
+    winery absorbs, which is the number this whole module exists to show.
 
     A member whose state the sheet cannot price is not silently dropped and
     not counted as free: they are listed with the reason, because a release
@@ -217,8 +232,9 @@ def estimate(shipments: list[tuple[str, str, int, int]]) -> Estimate:
     """
     out = Estimate()
     by_zone: dict[str, ZoneCost] = {}
-    for name, state, bottles, price_cents in shipments:
+    for name, state, bottles, price_cents, billed_cents in shipments:
         out.revenue_cents += price_cents
+        out.recovered_cents += billed_cents
         try:
             priced = quote(state, bottles, residential=True, ice_pack=True)
         except NoRate as exc:

@@ -180,11 +180,12 @@ quietly is the worst way to be wrong about money.
 
 So `QBO_WINE_ITEM` must already exist in QuickBooks, pointed at an income
 account by the bookkeeper, and a push fails with a sentence saying so if it
-does not. `QBO_SHIPPING_ITEM` is only reached when a tier charges for carriage
-as its own line, which none of the three do: every tier quotes one figure
-with the freight inside it. The three-bottle tier is the one where that
-hurts — $40 of carriage against $137.50 of price — so it is also the one
-most likely to be the first to charge for carriage separately.
+does not. `QBO_SHIPPING_ITEM` **must exist too**, and that is new: The Tasting Case
+charges $40 for carriage as its own line, because freight does not fall as
+fast as the bottle count and the winery decided not to absorb it on a
+three-bottle box. Wine and shipping book to different accounts, so they are
+different lines, and a push fails if the item is missing. The other two tiers
+quote one figure with the freight inside it and raise a single line.
 
 ### The way out that needs no API
 

@@ -895,7 +895,8 @@ def admin_release_plan(request: Request, release_id: int,
     # what it deliberately does not compute.
     tiers = {t.key: t for t in catalogue().tiers}
     freight = shipping.estimate([
-        (f.name, f.state, tiers[f.tier_key].bottles, tiers[f.tier_key].price_cents)
+        (f.name, f.state, tiers[f.tier_key].bottles,
+         tiers[f.tier_key].price_cents, tiers[f.tier_key].shipping_cents)
         for f in plan.filled if f.tier_key in tiers
     ])
 

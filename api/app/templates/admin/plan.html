@@ -122,8 +122,15 @@
   <b>{{ '%.1f' % freight.share() }}%</b> of the
   {{ money(freight.revenue_cents, 'usd') }} this release would charge, or
   <b>{{ '%.1f' % freight.share(with_ice=True) }}%</b> with an ice pack in every
-  box. Every tier includes shipping, so none of this reaches the member's
+  box.
+  {% if freight.recovered_cents %}
+  Members on a tier that bills carriage separately pay
+  {{ money(freight.recovered_cents, 'usd') }} of it, so the winery absorbs
+  <b>{{ money(freight.absorbed_cents, 'usd') }}</b>.
+  {% else %}
+  Every tier here includes shipping, so none of this reaches a member's
   invoice — it is what the winery spends to keep that promise.
+  {% endif %}
 </p>
 <p class="log">
   An estimate against the rate sheet, not a quotation. It leaves out Crown's
