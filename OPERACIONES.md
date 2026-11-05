@@ -497,10 +497,15 @@ Intuit compara la cadena entera, así que todas estas fallan:
 | El casillero equivocado en Intuit | Registrada en Development y conectando con claves de producción |
 | El dominio | `warmspringscellar.com` contra `warmspringscellars.com` — el nombre de la bodega es singular |
 | Una IP o un puerto | Intuit rechaza una IP, y tiene que ser el dominio real |
+| La nuestra no está en la lista | Una app nueva viene con la URI del OAuth Playground de Intuit ya cargada, lo que hace parecer que la lista está completa |
 
 **Leé la cadena exacta de la pantalla Books y pegá esa**, en vez de escribirla.
 Está impresa debajo del botón Connect, y es literalmente lo que el servicio va
 a mandar.
+
+Una app nueva viene con `https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl`
+ya cargada: es la herramienta de prueba de Intuit. Puede quedarse; la URI de la
+bodega se **agrega** al lado con *Add URI*. Se admiten hasta 25.
 
 **Para ver qué recibió Intuit de verdad**, mirá la barra de direcciones de la
 página que muestra el error: lleva el parámetro `redirect_uri=` que mandó el

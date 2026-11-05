@@ -493,10 +493,15 @@ Intuit compares the whole string, so these all fail:
 | The wrong box at Intuit | Registered under Development, connecting with production keys |
 | The domain | `warmspringscellar.com` against `warmspringscellars.com` — the winery's name is singular |
 | An IP address or a port | Intuit refuses an IP, and the address must be the real domain |
+| Ours is not on the list at all | A new app arrives with only Intuit's OAuth Playground URI registered, which looks like a filled-in list |
 
 **Read the exact string off the Books page and paste that**, rather than typing
 it. It is printed under the Connect button, and it is literally what the
 service will send.
+
+A new app comes with `https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl`
+already in the list — Intuit's own testing tool. It can stay; the winery's URI
+is **added** beside it with *Add URI*. Up to 25 are allowed.
 
 **To see what Intuit actually received**, look at the address bar of the page
 showing the error: it carries the `redirect_uri=` parameter the service sent,
