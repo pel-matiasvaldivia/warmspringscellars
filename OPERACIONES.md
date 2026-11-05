@@ -325,8 +325,8 @@ descuenta lo que se llevaron los despachos anteriores.
 
 **Lo que cuesta mandarlo.** El flete de los envíos que el plan puede cumplir,
 por zona de Crown y en total, contra la planilla UPS Ground 2026 a tarifa
-residencial. Dos de los tres niveles incluyen el envío, así que casi nada de
-esto llega a la factura del socio: es lo que gasta la bodega para sostener esa promesa, y el
+residencial. Todos los niveles cobran flete, así que una parte vuelve de los
+socios y la pantalla dice cuánto; el resto: es lo que gasta la bodega para sostener esa promesa, y el
 renglón de abajo lo da como porcentaje de lo que cobraría el despacho.
 
 Es una estimación, no una cotización. Deja afuera el recargo de un dólar por
@@ -468,11 +468,15 @@ del contador, y un valor por defecto pondría dinero real en la cuenta
 equivocada y en silencio. Si falta, el envío falla diciendo cuál falta.
 
 Hay un segundo ítem, `Shipping`, que **ahora sí hace falta**, y esto cambió en
-noviembre de 2026. The Tasting Case cobra $40 de flete como renglón propio, así
-que toda orden de ese nivel sale con dos. El vino y el flete van a cuentas
-distintas, y por eso son renglones distintos: si el ítem falta, el envío a los
-libros falla diciéndolo. Los otros dos niveles llevan el flete adentro del
-precio y siguen saliendo con un solo renglón.
+noviembre de 2026. Todos los niveles cobran el flete como renglón propio, así
+que toda orden sale con dos y toda factura los lleva a los dos. El vino y el
+flete van a cuentas distintas, y por eso son renglones distintos: si el ítem
+falta, el envío a los libros falla diciéndolo.
+
+Lo que el socio paga de envío es la tarifa del transportista para su propia
+dirección, menos lo que pone su nivel: nada en The Tasting Case, $20 en The
+Founder's Reserve, $40 en The Full Case. Así que dos socios del mismo nivel
+pagan envíos distintos, y la bodega le pone lo mismo a cada uno.
 
 ### 7.2 El día a día
 

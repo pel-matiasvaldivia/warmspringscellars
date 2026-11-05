@@ -147,6 +147,27 @@ def ice_pack_cents(bottles: int) -> int:
     return ICE_PACK_SMALL if bottles <= ICE_PACK_SMALL_MAX else ICE_PACK_LARGE
 
 
+def dearest(bottles: int) -> int:
+    """The most any zone charges to send this many bottles, residential."""
+    index = _column(bottles)
+    return max(RATES[(zone, True)][index] for zone in ZONES) * 100
+
+
+def billed(state: str, bottles: int, credit_cents: int) -> int:
+    """What the member pays for carriage: the sheet's price, less the tier's credit.
+
+    A destination the sheet cannot price falls back to the dearest zone, so a
+    box the carrier would not quote is never the one the winery subsidises by
+    accident. The floor is nil: a credit larger than the carriage makes the
+    shipping free, not a refund.
+    """
+    try:
+        quoted = quote(state, bottles).carriage_cents
+    except NoRate:
+        quoted = dearest(bottles)
+    return max(0, quoted - credit_cents)
+
+
 def quote(state: str, bottles: int, *, residential: bool = True,
           ice_pack: bool = False) -> Quote:
     """What Crown charges to send this many bottles to this state.

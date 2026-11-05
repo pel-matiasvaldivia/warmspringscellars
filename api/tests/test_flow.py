@@ -167,7 +167,8 @@ def test_request_to_shipment(client):
 
     order = client.main.db.one('SELECT * FROM "order" WHERE membership_id = ?', (membership["id"],))
     assert order["status"] == "paid"
-    assert order["total_cents"] == 27500              # Founder's Reserve includes shipping
+    # $275 of wine, and $46 of carriage to Glen Ellen less the tier's $20 credit
+    assert order["total_cents"] == 30100
     assert order["reference"].startswith("WSC-")
 
     invoice = client.main.db.one("SELECT * FROM invoice WHERE order_id = ?", (order["id"],))
@@ -627,8 +628,10 @@ def test_the_tier_that_charges_for_carriage_bills_it_as_its_own_line(client):
 
     order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
     assert order["subtotal_cents"] == 12000
-    assert order["shipping_cents"] == 4000
-    assert order["total_cents"] == 16000
+    # three bottles to California is $36 on the sheet, and this tier has no
+    # credit, so the member pays all of it
+    assert order["shipping_cents"] == 3600
+    assert order["total_cents"] == 15600
     assert order["status"] == "paid"
 
     lines = client.main.db.all("SELECT * FROM order_line WHERE order_id = ? ORDER BY id",
@@ -637,22 +640,39 @@ def test_the_tier_that_charges_for_carriage_bills_it_as_its_own_line(client):
     assert lines[0]["total_cents"] == 12000
     assert "3 bottles" in lines[0]["description"]
     assert "shipping" in lines[1]["description"].lower()
-    assert lines[1]["total_cents"] == 4000
+    assert lines[1]["total_cents"] == 3600
 
     invoice = client.main.db.one("SELECT * FROM invoice WHERE order_id = ?", (order["id"],))
-    assert invoice["total_cents"] == 16000
+    assert invoice["total_cents"] == 15600
 
 
-def test_the_other_two_tiers_raise_a_single_line(client):
-    """Their price has the carriage inside it, so there is nothing to split."""
+def test_the_tier_credit_comes_off_the_carriage_the_member_pays(client):
+    """The Full Case puts $40 towards a box that costs $57 to Glen Ellen."""
     apply_(client)
-    pay(client, approve(client), "founders-reserve")
+    pay(client, approve(client), "full-case")
 
     order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
-    assert order["shipping_cents"] == 0
-    assert order["total_cents"] == 27500
-    assert client.main.db.one(
-        "SELECT COUNT(*) c FROM order_line WHERE order_id = ?", (order["id"],))["c"] == 1
+    assert order["subtotal_cents"] == 55000
+    assert order["shipping_cents"] == 1700
+    assert order["total_cents"] == 56700
+
+
+def test_two_members_on_one_tier_pay_different_carriage(client):
+    """Same wine, same credit, different distance.
+
+    This is the whole reason carriage is priced at order time rather than
+    written into the catalogue: the winery gives each of them the same $20
+    and they pay what their own box costs.
+    """
+    apply_(client, email="west@example.com")
+    join(client, approve(client), "founders-reserve")
+    apply_(client, email="east@example.com")
+    join(client, approve(client), "founders-reserve",
+         ship_state="New York", ship_city="Brooklyn", ship_postcode="11201")
+    plan_release(client)
+
+    orders = client.main.db.all('SELECT * FROM "order" ORDER BY id')
+    assert [o["shipping_cents"] for o in orders] == [2600, 3500]   # $46 and $55, less $20
 
 
 # ── the webhook ──────────────────────────────────────────────────────────

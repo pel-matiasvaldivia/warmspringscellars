@@ -22,7 +22,10 @@ class Tier:
     bottles: int
     discount_pct: int
     price_cents: int
-    shipping_cents: int
+    # What the winery puts towards the carriage, not what the member pays.
+    # The member pays the carrier's price for their own destination less
+    # this, so the figure a tier advertises is exactly what it gives away.
+    shipping_credit_cents: int
     invite_only: bool
     featured: bool
     summary: str
@@ -35,11 +38,6 @@ class Tier:
     @property
     def price_per_bottle_cents(self) -> int:
         return round(self.price_cents / self.bottles)
-
-    @property
-    def total_cents(self) -> int:
-        """What a shipment actually costs the member, before tax."""
-        return self.price_cents + self.shipping_cents
 
 
 @dataclass(frozen=True)
@@ -69,7 +67,7 @@ def catalogue() -> Catalogue:
             bottles=int(t["bottles"]),
             discount_pct=int(t["discount_pct"]),
             price_cents=int(t["price_cents"]),
-            shipping_cents=int(t["shipping_cents"]),
+            shipping_credit_cents=int(t["shipping_credit_cents"]),
             invite_only=bool(t["invite_only"]),
             featured=bool(t["featured"]),
             summary=t["summary"],

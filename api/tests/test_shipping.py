@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from app.shipping import (  # noqa: E402
-    COLUMNS, RATES, ZONES, Estimate, NoRate, estimate, ice_pack_cents, quote,
+    COLUMNS, RATES, ZONES, Estimate, NoRate, billed, dearest, estimate,
+    ice_pack_cents, quote,
     zone_for,
 )
 
@@ -288,3 +289,40 @@ def test_a_release_of_tiers_that_include_shipping_recovers_nothing():
 
     assert out.recovered_cents == 0
     assert out.absorbed_cents == out.with_ice_cents
+
+
+# ── what the member is billed, once the tier's credit comes off ──────────
+def test_the_credit_comes_off_the_carriage_for_that_destination():
+    """The Founder's Reserve puts $20 towards whatever the box costs."""
+    assert billed("New York", 6, 2000) == 5500 - 2000
+    assert billed("California", 6, 2000) == 4600 - 2000
+    # the winery gives both members the same $20; they pay different totals
+    assert billed("New York", 6, 2000) - billed("California", 6, 2000) == 900
+
+
+def test_no_credit_means_the_member_pays_the_sheet():
+    assert billed("New York", 3, 0) == 4000
+    assert billed("California", 3, 0) == 3600
+
+
+def test_a_credit_larger_than_the_carriage_ships_free_and_refunds_nothing():
+    assert billed("California", 3, 3600) == 0
+    assert billed("California", 3, 99999) == 0
+
+
+def test_a_destination_the_sheet_cannot_price_falls_back_to_the_dearest_zone():
+    """Alaska has no ground price, so the winery does not guess downwards."""
+    assert dearest(6) == 5500
+    assert billed("Alaska", 6, 0) == 5500
+    assert billed("Alaska", 6, 2000) == 3500
+    # and something that is not a state at all behaves the same way
+    assert billed("", 6, 0) == 5500
+
+
+def test_the_credits_the_club_actually_offers():
+    """Glen Ellen is the usual case, so these are the figures the desk sees."""
+    from app.catalogue import catalogue
+
+    paid = {t.key: billed("California", t.bottles, t.shipping_credit_cents)
+            for t in catalogue().tiers}
+    assert paid == {"tasting-case": 3600, "founders-reserve": 2600, "full-case": 1700}

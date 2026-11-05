@@ -172,7 +172,8 @@ def api_catalogue() -> dict:
         "tiers": [
             {"key": t.key, "name": t.name, "label": t.label, "bottles": t.bottles,
              "discount_pct": t.discount_pct, "price_cents": t.price_cents,
-             "shipping_cents": t.shipping_cents, "invite_only": t.invite_only,
+             "shipping_credit_cents": t.shipping_credit_cents,
+             "invite_only": t.invite_only,
              "featured": t.featured, "summary": t.summary, "benefits": list(t.benefits)}
             for t in cat.tiers
         ],
@@ -896,7 +897,9 @@ def admin_release_plan(request: Request, release_id: int,
     tiers = {t.key: t for t in catalogue().tiers}
     freight = shipping.estimate([
         (f.name, f.state, tiers[f.tier_key].bottles,
-         tiers[f.tier_key].price_cents, tiers[f.tier_key].shipping_cents)
+         tiers[f.tier_key].price_cents,
+         shipping.billed(f.state, tiers[f.tier_key].bottles,
+                         tiers[f.tier_key].shipping_credit_cents))
         for f in plan.filled if f.tier_key in tiers
     ])
 

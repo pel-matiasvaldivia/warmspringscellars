@@ -24,6 +24,7 @@ from .catalogue import Tier, catalogue
 from .config import SHIPPABLE_STATES, US_STATES, Settings
 from .db import Database, log, next_in_sequence, now
 from .payments import CardSaved, PaymentProvider, as_metadata
+from .shipping import billed as carriage_billed
 from .stock import Line, Member, Plan, Wine
 from .stock import plan_release as compute_plan
 
@@ -637,7 +638,12 @@ class Flow:
         reference = f"WSC-{year}-{number:04d}"
 
         subtotal = tier.price_cents
-        shipping = tier.shipping_cents
+        # Carriage is priced per destination and then the tier's credit comes
+        # off it, so two members on the same tier pay different shipping and
+        # the winery gives away the same amount to each.
+        member = _require(con, "membership", membership_id)
+        shipping = carriage_billed(
+            member["ship_state"] or "", tier.bottles, tier.shipping_credit_cents)
         # Tax is not computed. DTC wine tax depends on the destination and is
         # not something to guess at — see FLOW.md.
         tax = 0

@@ -87,12 +87,12 @@ def test_draining_files_the_invoice_and_then_its_payment(client):
     # The document carries what an accountant needs: who, how much, and the
     # split between wine and the shipping it travelled on.
     assert invoice.customer.email == "matias@example.com"
-    assert invoice.total_cents == 27500
-    # Every tier on offer now includes carriage, so there is one line. The
-    # split is still exercised, in the adapter tests below.
-    assert [line.kind for line in invoice.lines] == ["wine"]
-    assert sum(line.total_cents for line in invoice.lines) == 27500
-    assert fake.payments[number].amount_cents == 27500
+    assert invoice.total_cents == 30100   # $275 of wine, $26 of carriage
+    # Every tier bills carriage now, so an invoice is two lines, and the two
+    # book to different accounts — which is why the kind travels with them.
+    assert [line.kind for line in invoice.lines] == ["wine", "shipping"]
+    assert sum(line.total_cents for line in invoice.lines) == 30100
+    assert fake.payments[number].amount_cents == 30100
 
 
 def test_a_payment_waits_for_the_invoice_it_links_to(client):
@@ -197,10 +197,12 @@ def test_the_export_carries_every_line_of_every_invoice(client):
     assert "attachment" in res.headers["content-disposition"]
 
     rows = list(csv.DictReader(io.StringIO(res.text)))
-    assert len(rows) == 1                          # the allocation, carriage included
+    assert len(rows) == 2                          # the allocation, then the carriage
     assert rows[0]["InvoiceNo"].startswith("WSC-INV-")
     assert rows[0]["Email"] == "matias@example.com"
     assert rows[0]["Item"] == "Wine Club Allocation"
+    assert rows[1]["Item"] == "Shipping"
+    assert rows[1]["InvoiceNo"] == rows[0]["InvoiceNo"]   # one invoice, two rows
     assert rows[0]["Paid"] == "Yes"
     assert float(rows[0]["ItemAmount"]) == 275.00
 
@@ -211,7 +213,7 @@ def test_the_export_can_be_narrowed_to_what_is_not_filed_yet(client):
 
     everything = client.get("/admin/accounting/export.csv", auth=ADMIN).text
     unfiled = client.get("/admin/accounting/export.csv?unsynced=1", auth=ADMIN).text
-    assert len(everything.splitlines()) == 2
+    assert len(everything.splitlines()) == 3       # the header and two lines
     assert len(unfiled.splitlines()) == 1          # the header, and nothing owed
 
 

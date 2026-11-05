@@ -76,14 +76,21 @@ Seniority is per bottle rather than one queue: somebody who joined later is
 still filled if their tier's wines held out, because holding their shipment
 back would not put a bottle in the earlier member's hands.
 
-**Shipping is included in the price and still costs money.** Both tiers quote
-one figure with carriage inside it, so nothing reaches the member's invoice —
-but a six-bottle box to the East Coast takes about a fifth of its own price in
-freight, and a full case about a seventh. `shipping.py` is Crown's 2026 UPS
-Ground sheet transcribed, and the release plan prices itself against it before
-anybody presses Charge. It is an estimate and says so: it leaves out the
-dollar-a-pound overweight charge and every fee that only happens when
-something goes wrong.
+**Carriage is priced per destination, not written into the catalogue.** Every
+tier bills shipping as its own line, and what the tier carries is a *credit* —
+nothing on the three-bottle case, $20 on the six, $40 on the twelve. The member
+pays the carrier's price for their own address less that credit, so two members
+on one tier pay different shipping and the winery gives each of them the same
+amount. A credit larger than the carriage ships the box free; it never refunds.
+
+`shipping.py` is Crown's 2026 UPS Ground sheet transcribed, and it answers both
+questions: what a box costs, and what to bill for it. The release plan prices
+itself against the same table before anybody presses Charge, and it is an
+estimate rather than a quotation — it leaves out the dollar-a-pound overweight
+charge, the ice packs the winery carries, and every fee that only happens when
+something goes wrong. A destination the sheet cannot price falls back to the
+dearest zone, so a box the carrier would not quote is never the one the winery
+subsidises by accident.
 
 **Invoices are immutable.** Once issued an invoice is never edited — a
 correction is a credit note plus a new invoice. The number comes from a
@@ -180,12 +187,10 @@ quietly is the worst way to be wrong about money.
 
 So `QBO_WINE_ITEM` must already exist in QuickBooks, pointed at an income
 account by the bookkeeper, and a push fails with a sentence saying so if it
-does not. `QBO_SHIPPING_ITEM` **must exist too**, and that is new: The Tasting Case
-charges $40 for carriage as its own line, because freight does not fall as
-fast as the bottle count and the winery decided not to absorb it on a
-three-bottle box. Wine and shipping book to different accounts, so they are
-different lines, and a push fails if the item is missing. The other two tiers
-quote one figure with the freight inside it and raise a single line.
+does not. `QBO_SHIPPING_ITEM` **must exist too**, and that is new: every tier
+bills carriage as its own line now, so every invoice is two. Wine and shipping
+book to different accounts, which is why they are separate, and a push fails
+naming the item if it is missing.
 
 ### The way out that needs no API
 
