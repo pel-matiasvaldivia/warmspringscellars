@@ -575,7 +575,8 @@ def test_the_keep_alive_refreshes_only_near_the_lapse(monkeypatch, tmp_path):
 def settings_with(monkeypatch, **env):
     from app.config import Settings
 
-    for key in ("QBO_CLIENT_ID", "QBO_CLIENT_SECRET"):
+    for key in ("QBO_CLIENT_ID", "QBO_CLIENT_SECRET",
+                "PUBLIC_BASE_URL", "QBO_REDIRECT_URI"):
         monkeypatch.delenv(key, raising=False)
     for key, value in env.items():
         monkeypatch.setenv(key, value)
@@ -631,3 +632,24 @@ def test_the_tokens_survive_a_restart_and_can_be_cleared(tmp_path):
 
     TokenStore(db, "quickbooks").clear()
     assert not TokenStore(db, "quickbooks").read().connected
+
+
+def test_a_trailing_slash_on_the_public_url_does_not_double_up(monkeypatch):
+    """Intuit refuses a redirect URI that differs by one character.
+
+    The failure it returns talks about the redirect_uri parameter being
+    invalid and says nothing about a slash, so this is worth not having.
+    """
+    for typed in ("https://warmspringscellar.com",
+                  "https://warmspringscellar.com/",
+                  "https://warmspringscellar.com///"):
+        s = settings_with(monkeypatch, PUBLIC_BASE_URL=typed)
+        assert s.public_base_url == "https://warmspringscellar.com"
+        assert s.qbo_redirect_uri == \
+            "https://warmspringscellar.com/admin/accounting/callback"
+
+
+def test_an_explicit_redirect_uri_wins_over_the_derived_one(monkeypatch):
+    s = settings_with(monkeypatch, PUBLIC_BASE_URL="https://warmspringscellar.com",
+                      QBO_REDIRECT_URI="https://books.example.com/cb")
+    assert s.qbo_redirect_uri == "https://books.example.com/cb"

@@ -451,16 +451,54 @@ things follow:
 
 ### 7.1 Connecting the first time
 
+Do the items in §7.1b **first**. Without them the connection works and the
+first push fails.
+
 1. At [developer.intuit.com](https://developer.intuit.com) → *My Apps* → create
    an app with the **Accounting** scope.
 2. Register **exactly** this redirect URI on the Intuit side:
    `https://<your domain>/admin/accounting/callback` — the Books page prints it
-   for you to copy.
+   for you to copy. Intuit has **two separate boxes**, one under Development
+   and one under Production; register it in the one whose keys you are about
+   to use, and in both if you will use both.
 3. Put `QBO_CLIENT_ID` and `QBO_CLIENT_SECRET` in `.env`, with
    `QBO_ENVIRONMENT=sandbox` to practise or `production` for the real books.
    `docker compose up -d` to pick them up.
 4. On **Books** → **"Connect to QuickBooks"**. Intuit asks for consent, you
    choose the company, and it comes back. That is all: the company is stored.
+
+**Two sets of keys that do not cross over.** Intuit issues Development keys and
+Production keys separately. Development keys only reach a sandbox company,
+production keys only reach the real one, and `QBO_ENVIRONMENT` has to say which
+pair you pasted. Mixing them gives an authentication failure that reads like a
+wrong password and is not one.
+
+**Production keys are not just there for the taking.** Intuit asks for an app
+assessment questionnaire and approves the app before releasing them — for a
+private app used by one winery as much as for a published one. Start that early
+if there is a date to hit.
+
+### 7.1a When Intuit says the redirect_uri is invalid
+
+> *The redirect_uri query parameter value is invalid. Make sure it is listed in
+> the Redirect URIs section on your app's keys tab and matches it exactly.*
+
+The address the service sent is not character-for-character the one registered.
+Intuit compares the whole string, so these all fail:
+
+| What differs | What it looks like |
+| --- | --- |
+| A trailing slash on `PUBLIC_BASE_URL` | `https://site.com//admin/accounting/callback`, with two slashes |
+| `http` against `https` | Production **must** be `https` |
+| The wrong box at Intuit | Registered under Development, connecting with production keys |
+| The domain | `warmspringscellar.com` against `warmspringscellars.com` — the winery's name is singular |
+| An IP address or a port | Intuit refuses an IP, and the address must be the real domain |
+
+**Read the exact string off the Books page and paste that**, rather than typing
+it. It is printed under the Connect button, and it is literally what the
+service will send.
+
+### 7.1b The two items, which have to exist first
 
 **Before the first push, the item `Wine Club Allocation` must already exist in
 QuickBooks** (Sales → Products and services), under exactly that name.

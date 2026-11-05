@@ -455,16 +455,54 @@ cosas que conviene saber:
 
 ### 7.1 Conectar la primera vez
 
+Hacer primero lo de §7.1b. Sin esos ítems la conexión funciona y **el primer
+envío falla**.
+
 1. En [developer.intuit.com](https://developer.intuit.com) → *My Apps* → crear
    una app con el scope **Accounting**.
 2. Registrar en Intuit **exactamente** esta URI de retorno:
-   `https://<dominio>/admin/accounting/callback` — la pantalla de Books la
-   muestra escrita, para copiar y pegar.
-3. Poner `QBO_CLIENT_ID` y `QBO_CLIENT_SECRET` en `.env`, y
+   `https://<tu dominio>/admin/accounting/callback` — la pantalla Books la
+   imprime para copiar. Intuit tiene **dos casilleros separados**, uno en
+   Development y otro en Production: registrala en el que corresponde a las
+   claves que vas a usar, y en los dos si vas a usar los dos.
+3. Poner `QBO_CLIENT_ID` y `QBO_CLIENT_SECRET` en `.env`, con
    `QBO_ENVIRONMENT=sandbox` para practicar o `production` para los libros
-   reales. `docker compose up -d` para que los tome.
+   reales. `docker compose up -d` para que las tome.
 4. En **Books** → **"Connect to QuickBooks"**. Intuit pide permiso, elegís la
    empresa y vuelve. Eso es todo: la empresa queda guardada.
+
+**Dos juegos de claves que no se cruzan.** Intuit entrega claves de Development
+y de Production por separado. Las de desarrollo solo llegan a una empresa
+sandbox, las de producción solo a la real, y `QBO_ENVIRONMENT` tiene que decir
+cuál de las dos pegaste. Mezclarlas da un error de autenticación que parece una
+contraseña mal puesta y no lo es.
+
+**Las claves de producción no están ahí para agarrarlas.** Intuit pide un
+cuestionario de evaluación y aprueba la app antes de entregarlas, tanto para
+una app privada de una sola bodega como para una publicada. Conviene empezar
+ese trámite temprano si hay una fecha que cumplir.
+
+### 7.1a Cuando Intuit dice que la redirect_uri es inválida
+
+> *The redirect_uri query parameter value is invalid. Make sure it is listed in
+> the Redirect URIs section on your app's keys tab and matches it exactly.*
+
+La dirección que mandó el servicio no es carácter por carácter la registrada.
+Intuit compara la cadena entera, así que todas estas fallan:
+
+| Qué difiere | Cómo se ve |
+| --- | --- |
+| Una barra final en `PUBLIC_BASE_URL` | `https://sitio.com//admin/accounting/callback`, con dos barras |
+| `http` contra `https` | En producción **tiene que ser** `https` |
+| El casillero equivocado en Intuit | Registrada en Development y conectando con claves de producción |
+| El dominio | `warmspringscellar.com` contra `warmspringscellars.com` — el nombre de la bodega es singular |
+| Una IP o un puerto | Intuit rechaza una IP, y tiene que ser el dominio real |
+
+**Leé la cadena exacta de la pantalla Books y pegá esa**, en vez de escribirla.
+Está impresa debajo del botón Connect, y es literalmente lo que el servicio va
+a mandar.
+
+### 7.1b Los dos ítems, que tienen que existir antes
 
 **Antes del primer envío, el ítem `Wine Club Allocation` tiene que existir en
 QuickBooks** (Sales → Products and services), con ese nombre exacto.

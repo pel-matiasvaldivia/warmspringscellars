@@ -31,7 +31,13 @@ def _bool(name: str, default: bool = False) -> bool:
 @dataclass(frozen=True)
 class Settings:
     # Where the member-facing pages live, used to build absolute links in email.
-    public_base_url: str = field(default_factory=lambda: _env("PUBLIC_BASE_URL", "http://localhost:8086"))
+    # Trailing slashes come off: every use of this glues a path starting with
+    # "/" onto it, so one typed slash makes every link a double slash. Most of
+    # them a browser forgives. Intuit does not — it matches the redirect URI
+    # character for character and refuses the connection with a message about
+    # the redirect_uri parameter that says nothing about a slash.
+    public_base_url: str = field(
+        default_factory=lambda: _env("PUBLIC_BASE_URL", "http://localhost:8086").rstrip("/"))
 
     # Signs offer links. Generated per process if unset, which means links do
     # not survive a restart — fine in development, fatal in production, so
