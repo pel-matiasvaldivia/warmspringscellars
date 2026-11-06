@@ -57,6 +57,16 @@ DIALECTS = {
         "email": "*|EMAIL|*",
         "unsubscribe_url": "*|UNSUB|*",
     },
+    # Sequenzy reads attributes off the subscriber and has one tag for the
+    # unsubscribe URL. No fallback on the name: every contact in this list
+    # has a first name — checked, all 983 — and Sequenzy's own pre-send check
+    # flags a name tag without one, so if that ever stops being true the
+    # check will say so before a send rather than after.
+    "sequenzy": {
+        "first_name": "{{subscriber.firstName}}",
+        "email": "{{subscriber.email}}",
+        "unsubscribe_url": "{{unsubscribeUrl}}",
+    },
 }
 
 FIELD = re.compile(r"\{\{([a-z_]+)\}\}")
