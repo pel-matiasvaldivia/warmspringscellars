@@ -1,0 +1,298 @@
+<!-- "The New Kid on the Block" — the announcement letter, from Cecilia's draft
+     of November 2026 (WSC_email_final_draft.docx). It goes to the Deerfield
+     list through tools/send_campaign.py, which renders this file and the
+     plain-text twin beside it.
+
+     Merge fields are in {{ }}. The sender fills all five:
+       {{first_name}}       the greeting; "Wine Lover" when the row has no name
+       {{email}}            the address this copy went to, named in the footer
+       {{link}}             the personalised form link from plan_invitations.py
+       {{unsubscribe_url}}  signed, per recipient, and it never expires
+       {{postal_address}}   the winery's real postal address — CAN-SPAM
+     Any field left unfilled is a refused send, not a blank: see the sender.
+
+     Tables and inline styles only, and no image, for the same reasons as
+     auto-reply.html and invitation.html: Outlook on Windows renders mail
+     through Word, and blocks remote images until the reader allows them.
+
+     TWO THINGS CHANGED from the draft, and both need Cecilia's eye:
+
+     1. SHIPPING. The draft said "wine club shipping is complimentary". It is
+        not, and has not been since 19 October: every tier is billed the
+        carrier's rate for its own destination, and the winery puts $20 on the
+        six-bottle allocation and $40 on the twelve. Saying "complimentary" in
+        the first letter and then charging carriage at checkout is the kind of
+        thing a member remembers. The sentence below says what the website and
+        api/app/tiers.json actually do.
+
+     2. THE NAME. The draft says "Warm Springs Cellars". Every other asset the
+        winery has — the domain, the labels, the signatures, the site — says
+        "Warm Springs Cellar", singular. This letter uses the singular so it
+        does not disagree with itself in its own header. If the plural is the
+        real name, it is one find-and-replace here and a much larger one
+        everywhere else.
+
+     NO PRICES ARE WRITTEN IN THIS LETTER, on purpose. tiers.json is the only
+     place the numbers live; a letter that quotes them is a letter that goes
+     stale in a drawer. The reader gets them from the site, one click away. -->
+<table cellpadding="0" cellspacing="0" border="0" role="presentation"
+       style="border-collapse:collapse;width:100%;max-width:560px;
+              font-family:Arial, Helvetica, sans-serif;color:#2c1e24;">
+  <tr>
+    <td style="padding:0 0 22px;">
+      <div style="font-family:Georgia, 'Times New Roman', Times, serif;font-size:17px;
+                  line-height:22px;color:#5c0037;letter-spacing:1.6px;">
+        WARM SPRINGS <span style="font-style:italic;letter-spacing:0.2px;">Cellar</span>
+      </div>
+      <div style="font-size:11px;line-height:16px;letter-spacing:1.4px;
+                  text-transform:uppercase;color:#9a8890;padding-top:4px;">
+        Glen Ellen &middot; Sonoma Valley &middot; Est. 1982
+      </div>
+    </td>
+  </tr>
+  <tr><td style="border-top:1px solid #e2d8d0;padding:22px 0 0;"></td></tr>
+
+  <tr>
+    <td style="font-family:Georgia,'Times New Roman',Times,serif;font-size:21px;
+               line-height:27px;color:#2c1e24;padding:0 0 18px;">
+      The New Kid on the Block
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Dear {{first_name}},
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      You&rsquo;ve received an announcement from Cecilia Valdivia about the launch
+      of Warm Springs Cellar &mdash; a return to the tiny winery where PJ and
+      Robert began their winemaking journey over 40 years ago. Cecilia and
+      Robert have been collaborating on winemaking for nearly two decades. As
+      Robert prepares for retirement from Deerfield Ranch Winery, Cecilia is
+      stepping into the next chapter of her winemaking career. Until Robert&rsquo;s
+      departure he is serving as consulting winemaker for Warm Springs Cellar,
+      bringing decades of experience to this exciting new venture.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      We&rsquo;re thrilled about this inaugural release. Our first bottling features
+      seven distinct varietals, each sourced from vineyards we&rsquo;ve cultivated
+      deep relationships with over the years &mdash; vineyards that have
+      consistently produced wines we love. All are located in Sonoma County,
+      showcasing that distinctive Sonoma character you&rsquo;ve come to appreciate:
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:0 0 18px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-collapse:collapse;width:100%;border:1px solid #e2d8d0;">
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2026
+            Sauvignon Blanc</span><br>
+            <span style="color:#5c4650;">Peterson Vineyard, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2026
+            Ros&eacute; of Syrah</span><br>
+            <span style="color:#5c4650;">Deerfield Vineyard, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2024
+            Zinfandel</span><br>
+            <span style="color:#5c4650;">Los Chamizal Vineyard, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2023
+            Pinot Noir</span><br>
+            <span style="color:#5c4650;">Four Palms Vineyard, Russian River Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2023
+            Malbec</span><br>
+            <span style="color:#5c4650;">Running Rabbit Ranch, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2023
+            Sangiovese</span><br>
+            <span style="color:#5c4650;">Alpicella Vineyard, Fountain Grove District, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2021
+            Cabernet Sauvignon</span><br>
+            <span style="color:#5c4650;">Wolf Run Vineyard, Sonoma Valley</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ↓↓ THE SHIPPING SENTENCE — rewritten from the draft; see the note at the
+       top of this file. It says what tiers.json does. ↓↓ -->
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Our inaugural release is intentionally limited to just 850 cases total
+      &mdash; truly small-lot production. These wines are allocated exclusively
+      to Warm Springs Cellar wine club members. Our pricing is accessible;
+      shipping is billed at the carrier&rsquo;s rate for your own address, and on
+      the larger allocations we carry part of it ourselves. For detailed
+      information about each wine, what each allocation costs and to enroll in
+      the club, visit
+      <a href="{{link}}" style="color:#5c0037;">warmspringscellar.com</a>.
+    </td>
+  </tr>
+  <!-- ↑↑ THE SHIPPING SENTENCE ↑↑ -->
+
+  <tr>
+    <td style="padding:6px 0 24px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-collapse:collapse;">
+        <tr>
+          <td style="background:#5c0037;padding:13px 26px;">
+            <a href="{{link}}"
+               style="color:#ffffff;text-decoration:none;font-family:Arial, Helvetica, sans-serif;
+                      font-size:12px;letter-spacing:2px;text-transform:uppercase;display:inline-block;">
+              See the wines &amp; join
+            </a>
+          </td>
+        </tr>
+      </table>
+      <div style="font-size:12px;line-height:18px;color:#5c4650;padding-top:10px;">
+        Your details are already in the form &mdash; it should take a minute. We
+        can only ship where direct wine shipping is permitted, and the form will
+        say straight away if your state is not one of them.
+      </div>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-family:Georgia,'Times New Roman',Times,serif;font-size:18px;
+               line-height:24px;color:#2c1e24;border-top:1px solid #e2d8d0;
+               padding:24px 0 14px;">
+      And Coffee!
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      This may seem an unexpected pairing, but wine and coffee are natural
+      companions &mdash; and wine lovers appreciate exceptional coffee.
+      Robert&rsquo;s journey began in the 1970s, making wine in his Berkeley garage
+      in what was then &mdash; and still is &mdash; known as the Gourmet Ghetto.
+      This North Berkeley enclave birthed California Cuisine, a movement that
+      transformed American food culture. Chez Panisse became the nation&rsquo;s first
+      true farm-to-table gourmet restaurant. The Cheese Board revolutionized
+      artisanal cheese retail. Au Chocolate pioneered the American chocolate
+      truffle. And Peet&rsquo;s Coffee introduced Americans to single-source, richly
+      dark-roasted coffee. It was a cultural happening that rippled across the
+      country &mdash; you can credit Peet&rsquo;s for inspiring the coffee culture that
+      Starbucks later popularized, since the founder of Starbucks trained under
+      Alfred Peet himself. Mr. Peet was a friend and mentor to Robert; a stern
+      Dutchman with an unparalleled gift for selecting and roasting coffee.
+      Robert and his family have been devoted to his craft since he opened his
+      roastery in 1966.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Gifted with an exceptional palate, Robert created his own blend &mdash; the
+      Rex Blend. Coffee blending mirrors winemaking for good reason: just as
+      grapes from different regions and varietals express distinct
+      characteristics, so too does coffee from different plantations and regions
+      around the world. A thoughtfully crafted blend can be far superior to any
+      single-source coffee. Then comes the roasting &mdash; a deceptively complex
+      art. Time, temperature and movement all play critical roles in achieving
+      the perfect cup.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Recently, Cecilia and Robert found themselves in the lab, working on wine
+      blends over cups of exceptional coffee. She&rsquo;s developed her own signature
+      blend &mdash; Ceci&rsquo;s Blend. As we collaborated, we asked ourselves: why keep
+      these discoveries to ourselves? Together, we&rsquo;ve decided to honor both
+      our passions and share them with you.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Wine club members will receive samples of both blends &mdash; Rex Blend and
+      Ceci&rsquo;s Blend &mdash; with their wine allocation shipments. Both will be
+      whole bean; there&rsquo;s simply no other way to experience coffee properly. If
+      you don&rsquo;t already own a grinder, I urge you to invest in one &mdash; freshly
+      ground coffee makes an incomparable difference. I store my beans in the
+      freezer between refilling my grinder to maintain optimal freshness.
+      We&rsquo;re still adding the coffee offerings to the website, so stay tuned.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Consider this our initial foray into coffee. We&rsquo;re excited to see where
+      this goes.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 22px;">
+      Thank you for your continued support.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e2d8d0;padding:18px 0 0;
+               font-size:12px;line-height:19px;color:#5c4650;">
+      Sant&eacute;,<br>
+      <strong style="font-weight:normal;color:#2c1e24;">Robert and Cecilia</strong><br>
+      Warm Springs Cellar<br>
+      <a href="https://warmspringscellar.com" style="color:#5c0037;text-decoration:none;">warmspringscellar.com</a>
+      &nbsp;&middot;&nbsp;
+      <a href="mailto:club@warmspringscellar.com" style="color:#5c4650;text-decoration:none;">club@warmspringscellar.com</a>
+    </td>
+  </tr>
+
+  <!-- Required, not decoration. CAN-SPAM wants a real postal address and a
+       working opt-out; Gmail and Yahoo want one-click unsubscribe on bulk mail
+       and will junk a sender who does not have it. Unlike every other platform
+       the winery might have used, HVE fills in NONE of this — the sender in
+       tools/send_campaign.py does, and it refuses to send a message with any
+       of these three fields still unfilled. -->
+  <tr>
+    <td style="padding:16px 0 0;font-size:11px;line-height:17px;color:#9a8890;">
+      You are receiving this at {{email}} because you are a member of the
+      Deerfield Ranch Winery wine club.
+      <a href="{{unsubscribe_url}}" style="color:#9a8890;">Unsubscribe</a>
+      and we will not write again.<br><br>
+      Warm Springs Cellar &middot; {{postal_address}}<br>
+      You must be 21 or older to purchase wine in the United States.
+      An adult signature is required on delivery.
+    </td>
+  </tr>
+</table>

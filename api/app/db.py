@@ -277,6 +277,55 @@ CREATE TABLE IF NOT EXISTS ledger_task (
 );
 CREATE INDEX IF NOT EXISTS ledger_task_status ON ledger_task(status, id);
 
+-- Addresses that must not be written to again. One row per address, and the
+-- address is the key: a person who unsubscribes has unsubscribed from the
+-- winery, not from one letter, and the next campaign has no business asking
+-- the question again.
+--
+-- This table exists because High Volume Email does not have it. A mailing
+-- platform keeps a suppression list that actually suppresses, and refuses the
+-- send itself; HVE is an SMTP relay that will deliver whatever it is handed,
+-- as many times as it is handed it. So the list lives here and
+-- tools/send_campaign.py checks it before every message.
+--
+-- `source` records how the address got here, because the reasons are not
+-- equal: 'unsubscribe' is someone's decision and is permanent, 'bounce' is a
+-- dead mailbox and could be revived if the person gives a new one, 'complaint'
+-- is a spam report and is the most permanent of the three.
+CREATE TABLE IF NOT EXISTS email_suppression (
+    email       TEXT PRIMARY KEY,         -- lower-cased on the way in
+    created_at  TEXT NOT NULL,
+    source      TEXT NOT NULL,            -- unsubscribe | bounce | complaint | hand
+    campaign    TEXT,                     -- the send it came from, when known
+    detail      TEXT
+);
+CREATE INDEX IF NOT EXISTS email_suppression_when
+    ON email_suppression(created_at DESC);
+
+-- One row per address per campaign, written the moment a message is accepted
+-- by the relay. Two jobs, and the second is the one that matters at three in
+-- the afternoon on day four:
+--
+--   * a send that dies half way through can be run again and will skip what
+--     already went out, because this table is the record of what went out;
+--   * the per-wave numbers nobody gets from HVE — how many were accepted, how
+--     many were refused and what the relay said when it refused them.
+--
+-- status is 'sent' when the relay took it and 'failed' when it did not; a
+-- failed row carries the server's own sentence, which is the only text that
+-- ever explains a Microsoft rejection.
+CREATE TABLE IF NOT EXISTS campaign_send (
+    id         INTEGER PRIMARY KEY,
+    campaign   TEXT NOT NULL,
+    email      TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    status     TEXT NOT NULL,             -- sent | failed
+    detail     TEXT,
+    UNIQUE (campaign, email)
+);
+CREATE INDEX IF NOT EXISTS campaign_send_campaign
+    ON campaign_send(campaign, status);
+
 -- OAuth tokens for the accounting system. In the database rather than the
 -- environment because Intuit rotates the refresh token on every refresh: a
 -- value baked into .env would be stale an hour after the first sync.

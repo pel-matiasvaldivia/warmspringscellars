@@ -1,0 +1,89 @@
+{% extends "admin/layout.html" %}
+{% block body %}
+<h1>Campaigns</h1>
+<p class="sub">
+  What the sender did, and who has asked not to be written to again.
+</p>
+
+{# Said once, here, because the absence is the thing somebody will look for on
+   this page and not find. HVE is a relay: it has no idea who opened
+   anything. Guessing would be worse than the blank. #}
+<div class="warn">
+  <b>No opens, no clicks.</b> The mailing goes out through Microsoft&rsquo;s High
+  Volume Email, which is an SMTP relay and reports nothing back. What is below
+  is what the relay accepted and what it refused &mdash; the only two facts it
+  gives. What a wave actually produced is counted in
+  <a href="/admin">Applications</a>, filtered by referral: each wave&rsquo;s link
+  carries its own <code>src</code>.
+</div>
+
+<div class="card">
+  <h2>Sends</h2>
+  {% if tally %}
+  <table>
+    <tr>
+      <th>Campaign</th><th class="num">Accepted</th><th class="num">Refused</th>
+      <th class="num">Unsubscribed</th><th>Started</th><th>Last message</th>
+    </tr>
+    {% for row in tally %}
+    <tr>
+      <td><code>{{ row["campaign"] }}</code></td>
+      <td class="num">{{ row["sent"] }}</td>
+      <td class="num">
+        {% if row["failed"] %}<span class="pill failed">{{ row["failed"] }}</span>
+        {% else %}0{% endif %}
+      </td>
+      <td class="num">{{ row["unsubscribed"] }}</td>
+      <td class="log"><time>{{ row["started_at"] }}</time></td>
+      <td class="log"><time>{{ row["finished_at"] }}</time></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="sub" style="margin:.75rem 0 0">
+    Refused is not lost. Run the same wave again and the sender writes only to
+    the addresses it has no accepted row for &mdash; that is what this table is
+    for.
+  </p>
+  {% else %}
+  <p class="empty">Nothing has been sent yet.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Do not write to these</h2>
+  <p class="sub">
+    {{ suppressed | length }} address{{ '' if suppressed | length == 1 else 'es' }}.
+    The sender checks this list before every message, and an address here is
+    never written to by a campaign again. Club mail is separate: a member who
+    unsubscribes from the letters still gets their invoices and shipping
+    notices, which is the whole difference between a campaign and a receipt.
+  </p>
+
+  <form method="post" action="/admin/campaigns/suppress" class="row">
+    <div style="flex:1 1 20rem">
+      <label for="email">Somebody asked to come off, by reply or telephone</label>
+      <input id="email" name="email" type="email" required
+             placeholder="name@example.com">
+    </div>
+    <button class="btn" type="submit">Add</button>
+    <a class="btn ghost" href="/admin/campaigns/suppressions.csv">Download as CSV</a>
+  </form>
+
+  {% if suppressed %}
+  <table style="margin-top:1.25rem">
+    <tr><th>Address</th><th>Why</th><th>From</th><th>When</th></tr>
+    {% for row in suppressed %}
+    <tr>
+      <td><code>{{ row["email"] }}</code></td>
+      <td>
+        <span class="pill {{ 'bad' if row['source'] == 'complaint' else 'warn' }}">{{ row["source"] }}</span>
+        {% if row["detail"] %}<div class="log">{{ row["detail"] }}</div>{% endif %}
+      </td>
+      <td class="log">{% if row["campaign"] %}<code>{{ row["campaign"] }}</code>{% else %}&mdash;{% endif %}</td>
+      <td class="log"><time>{{ row["created_at"] }}</time></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

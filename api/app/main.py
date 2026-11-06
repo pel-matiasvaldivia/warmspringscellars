@@ -29,6 +29,7 @@ from itsdangerous import BadSignature, URLSafeTimedSerializer
 from .accounting import AccountingError, build_ledger
 from .accounting import queue as ledger_queue
 from .accounting.quickbooks import new_state
+from . import campaign
 from .catalogue import catalogue
 from .config import SHIPPABLE_STATES, UNLICENSED_STATES, settings
 from .db import Database, log
@@ -236,6 +237,68 @@ async def join_waiting_list(request: Request) -> JSONResponse:
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
 
     return JSONResponse({"ok": True, "waiting_id": waiting_id}, status_code=201)
+
+
+# ── unsubscribing ────────────────────────────────────────────────────────
+# Open to the world, deliberately: whoever is pressing this has no account
+# and no session, is quite possibly annoyed, and must not be asked to prove
+# anything. The token in the link is the proof.
+#
+# This exists because the campaign goes out through Microsoft's High Volume
+# Email, which is a relay and keeps no suppression list of its own. See
+# campaign.py and mail-templates/HVE.md.
+@app.get("/unsubscribe", response_class=HTMLResponse)
+def unsubscribe_page(request: Request, t: str = "") -> HTMLResponse:
+    """Ask. Changes nothing — mail scanners fetch this URL unbidden."""
+    try:
+        who = campaign.read(t, settings.secret_key)
+    except campaign.BadToken as exc:
+        return templates.TemplateResponse(
+            request, "message.html",
+            {"eyebrow": "Unsubscribe", "heading": "This link is not one of ours",
+             "body": f"{exc}. If you want us to stop writing, send a line to "
+                     "club@warmspringscellar.com and we will take the address off "
+                     "by hand — you should not have to work at this.",
+             "cta_url": "/", "cta_label": "Back to the cellar"},
+            status_code=400,
+        )
+    return templates.TemplateResponse(
+        request, "unsubscribe.html", {"email": who.email, "token": t})
+
+
+@app.post("/unsubscribe")
+async def unsubscribe(request: Request) -> Response:
+    """Act. Reached from the page's one button and from the one-click header.
+
+    RFC 8058, which is what Gmail and Yahoo check for, requires that the POST
+    named by List-Unsubscribe-Post works with no confirmation, no sign-in and
+    no further request — so this returns plain text rather than a page: the
+    mail client that sends it is not a browser and shows nobody the body.
+
+    Pressing it twice is not an error. A retry, a double click and Gmail
+    acting on the header all arrive here, and all of them mean the same thing
+    as pressing it once.
+    """
+    form = await request.form()
+    token = str(form.get("t") or request.query_params.get("t") or "")
+    try:
+        who = campaign.read(token, settings.secret_key)
+    except campaign.BadToken as exc:
+        return PlainTextResponse(f"{exc}\n", status_code=400)
+
+    with db.transaction() as con:
+        campaign.suppress(con, who.email, "unsubscribe", who.campaign)
+
+    if "text/html" in (request.headers.get("accept") or ""):
+        return templates.TemplateResponse(
+            request, "message.html",
+            {"eyebrow": "Unsubscribe", "heading": "Done — we will not write again",
+             "body": f"{who.email} is off our list. Nothing else of ours is "
+                     "affected: if you are a club member, your allocation and "
+                     "its shipping notices carry on as before.",
+             "cta_url": "/", "cta_label": "Back to the cellar"},
+        )
+    return PlainTextResponse("Unsubscribed.\n")
 
 
 # ── the member's offer ───────────────────────────────────────────────────
@@ -1184,6 +1247,53 @@ def admin_mail(request: Request, verify: int = 0,
         port=settings.smtp_port,
         suggested=settings.mail_reply_to,
     )
+
+
+# ── campaigns ────────────────────────────────────────────────────────────
+# What the sender did, and who has asked not to be written to. This screen is
+# the reporting half of a mailing platform, which HVE does not have: it cannot
+# say anything about opens or clicks, and does not pretend to.
+@app.get("/admin/campaigns", response_class=HTMLResponse)
+def admin_campaigns(request: Request,
+                    actor: str = Depends(require_admin)) -> HTMLResponse:
+    with db.connect() as con:
+        return admin_page(request, "campaigns.html", "campaigns",
+                          tally=campaign.tally(con),
+                          suppressed=campaign.suppressed(con))
+
+
+@app.get("/admin/campaigns/suppressions.csv")
+def admin_suppressions_csv(actor: str = Depends(require_admin)) -> PlainTextResponse:
+    """The suppression list as a file, for a sender run away from the server.
+
+    tools/send_campaign.py reads the database directly when it can see it. On
+    a laptop that cannot, this is the same list in a form the sender accepts,
+    and skipping this step is how somebody writes to a person who asked them
+    not to.
+    """
+    with db.connect() as con:
+        rows = campaign.suppressed(con)
+    lines = ["email,created_at,source,campaign"]
+    lines += [f'{r["email"]},{r["created_at"]},{r["source"]},{r["campaign"] or ""}'
+              for r in rows]
+    return PlainTextResponse(
+        "\n".join(lines) + "\n", media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="suppressions.csv"'})
+
+
+@app.post("/admin/campaigns/suppress")
+def admin_suppress(email: str = Form(...),
+                   actor: str = Depends(require_admin)) -> RedirectResponse:
+    """Take an address off by hand — somebody who replied, or telephoned."""
+    address = campaign.tidy(email)
+    if "@" not in address or " " in address:
+        return RedirectResponse(
+            f"/admin/campaigns?done=That is not an address: {email}", status_code=303)
+    with db.transaction() as con:
+        added = campaign.suppress(con, address, "hand", detail=f"added by {actor}")
+    said = (f"{address} will not be written to again." if added
+            else f"{address} was already on the list.")
+    return RedirectResponse(f"/admin/campaigns?done={said}", status_code=303)
 
 
 @app.post("/admin/mail/test")

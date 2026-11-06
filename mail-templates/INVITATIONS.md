@@ -45,11 +45,19 @@ the shipping notices** go out from. The club cannot pay that bill.
    similar, with its own DKIM key. If the mailing goes badly, the club's own
    mail from the root domain is not dragged down with it. This is the single
    most important line in this file.
-2. **Send it from a real email platform**, not from Microsoft 365. The club
-   mailbox is for letters between people. A platform gives list-unsubscribe
-   headers, a suppression list that actually suppresses, bounce handling and
-   per-wave numbers — and M365 was never meant for this; the tenant's sending
-   limits are a throttle, not a feature.
+2. **Not from the club mailbox.** That mailbox is for letters between people.
+   A mailing needs list-unsubscribe headers, a suppression list that actually
+   suppresses, bounce handling and per-wave numbers, and ordinary Microsoft
+   365 submission gives none of the four — the tenant's sending limits are a
+   throttle, not a feature.
+
+   **What was decided, November 2026:** Microsoft **High Volume Email**, which
+   lifts the throttle and still gives none of the other four, with all four
+   built into the club instead — `email_suppression`, the headers minted by
+   `tools/send_campaign.py`, bounces to their own mailbox, and the
+   **Campaigns** tab. Opens and clicks are the one thing not replaced, and
+   nothing pretends otherwise. The procedure, the trade and the question that
+   comes before all of it are in **`HVE.md`**.
 3. **Authenticate before the first send**: SPF, DKIM and DMARC on the
    subdomain, all three passing. Send one message to a seed address and read
    the headers.

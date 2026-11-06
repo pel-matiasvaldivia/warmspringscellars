@@ -67,7 +67,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 
 ---
 
-## 2. Las ocho pestañas
+## 2. Las diez pestañas
 
 | Pestaña | Para qué |
 | --- | --- |
@@ -80,6 +80,7 @@ docker compose exec api cat /srv/var/outbox/<archivo>.eml
 | **Cellar** | Las botellas de las que el club puede disponer, y adónde fueron |
 | **Books** | QuickBooks: qué facturas ya están en los libros y qué falta |
 | **Mail** | Cómo está configurado el correo saliente, y un botón para probarlo |
+| **Campaigns** | Qué envió el mailing, y quién pidió que no se le escriba más |
 
 Las solicitudes pendientes y los envíos sin entregar suben solos al principio de
 sus listas. Lo que requiere atención queda arriba.
@@ -738,6 +739,49 @@ rechazado— y qué significa cada uno.
 
 Si algo no cierra: `docker compose logs api | grep -i smtp`. El adaptador
 registra el rechazo tal como lo dijo el servidor, con el código incluido.
+
+### 8.7 La campaña, que no es esto
+
+Todo lo anterior es el correo propio del club: un mensaje, a una persona,
+porque algo pasó con su orden. **La campaña es otra cosa** — la misma carta a
+varios cientos de personas que todavía no son socias — y no sale por nada de
+eso. Sale por Microsoft **High Volume Email**, desde un comando en una
+notebook, y tiene su propia pestaña.
+
+El procedimiento completo está en **`mail-templates/HVE.md`** y no se repite
+acá. En el escritorio importan cinco cosas:
+
+1. **Hay una pregunta que va antes que todas las demás.** HVE está pensado
+   para correo *dentro* del inquilino, y toda la lista de Deerfield está
+   afuera. Las cifras del preview de Microsoft ponían el límite externo en
+   2.000 por día y las notas publicadas se contradicen entre sí sobre si
+   funciona siquiera. Así que el primer paso es una sola carta a un Gmail
+   personal: si no llega, este camino no sirve y nada más vale la pena.
+
+2. **HVE es un relay, no una plataforma de mailing.** No lleva lista de
+   supresión, no agrega encabezado de baja, no maneja rebotes y no informa
+   nada de vuelta. Las tres primeras quedaron construidas dentro del club, y
+   el enviador se niega a correr sin ellas. La cuarta —aperturas y clics— no
+   existe y punto.
+
+3. **La pestaña Campaigns** es la mitad que informa. Muestra qué aceptó el
+   relay, qué rechazó y quién pidió que no se le escriba más. No muestra
+   aperturas, y lo dice en vez de inventarlas. Lo que realmente produjo una
+   tanda se cuenta en **Applications**, filtrando por referral: el link de
+   cada tanda lleva su propio `src`.
+
+4. **Alguien va a contestar, o llamar, y pedir que lo saquen.** Se hace en la
+   pestaña Campaigns, en la cajita. Una dirección agregada ahí no vuelve a
+   recibir una campaña nunca más.
+
+5. **Darse de baja del mailing no es darse de baja del club.** Un socio que
+   sale de las cartas sigue recibiendo sus facturas y sus avisos de envío:
+   esos son comprobantes, no publicidad, y la lista de supresión no los toca.
+   El socio que quiere *irse del club* es una baja en la pestaña **Members**,
+   que es otra pantalla y otra conversación.
+
+El resto —el subdominio, la cuenta HVE, SPF y DKIM, una tanda por día y qué
+mirar entre una y otra— está en `HVE.md` y en `mail-templates/INVITATIONS.md`.
 
 ---
 

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Unsubscribe — Warm Springs Cellar{% endblock %}
+{% block body %}
+{# One button, and it POSTs.
+
+   The link in the letter is a GET, and a GET must not change anything here,
+   for a reason that is not pedantry: corporate mail scanners and link
+   previewers fetch every URL in an incoming message before the reader sees
+   it. If the GET unsubscribed, a share of this list would be unsubscribed by
+   software they have never met, and nobody would ever know why the second
+   letter reached fewer people.
+
+   So the GET asks, and the POST acts. The one-click requirement that Gmail
+   and Yahoo enforce is met by the List-Unsubscribe-Post header on the message
+   itself, which points at the same POST and skips this page entirely — so a
+   reader who presses their mail client's own unsubscribe button never sees
+   this, and a reader who clicks the link in the letter presses one button. #}
+<div class="center">
+  {# Not the winery's name: the masthead directly above already says it, and
+     a reader who has arrived here annoyed does not need it twice. #}
+  <p class="eyebrow">Mailing list</p>
+  <h1>Stop writing to you?</h1>
+  <p class="lede">
+    We will take <strong>{{ email }}</strong> off our list and not write to it
+    again. This takes effect at once and needs no reply.
+  </p>
+  <form method="post" action="/unsubscribe" style="margin-top:2rem">
+    <input type="hidden" name="t" value="{{ token }}">
+    <button class="btn" type="submit">Unsubscribe me</button>
+  </form>
+  <p class="lede" style="margin-top:2rem;font-size:.85rem">
+    Pressed this by mistake? Close the page and nothing happens. If you have
+    already unsubscribed and want to hear from us again, write to
+    <a href="mailto:club@warmspringscellar.com">club@warmspringscellar.com</a> —
+    we cannot put an address back ourselves without being asked.
+  </p>
+</div>
+{% endblock %}

@@ -64,7 +64,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 
 ---
 
-## 2. The eight tabs
+## 2. The ten tabs
 
 | Tab | What it is for |
 | --- | --- |
@@ -77,6 +77,7 @@ docker compose exec api cat /srv/var/outbox/<file>.eml
 | **Cellar** | The bottles the club may draw on, and where they went |
 | **Books** | QuickBooks: what is filed, and what is still owed |
 | **Mail** | How outgoing mail is configured, and a button to test it |
+| **Campaigns** | What the mailing sent, and who has asked not to be written to |
 
 Pending applications and undelivered shipments float to the top of their lists
 on their own. What needs attention is where you look first.
@@ -734,6 +735,48 @@ send refused — and what each one means.
 
 If something still does not add up: `docker compose logs api | grep -i smtp`.
 The adapter logs the refusal as the server worded it, code included.
+
+### 8.7 The campaign, which is not this
+
+Everything above is the club's own mail: one message, to one person, because
+something happened to their order. **The campaign is a different thing** — the
+same letter to several hundred people who are not members yet — and it does
+not go out through any of it. It goes out through Microsoft **High Volume
+Email**, from a command on a laptop, and it has its own tab.
+
+The full procedure is in **`mail-templates/HVE.md`** and is not repeated here.
+What matters at the desk is five things:
+
+1. **One question comes before all the others.** HVE is built for mail
+   *inside* the tenant, and every address on the Deerfield list is outside it.
+   Microsoft's preview figures put external recipients at 2,000 a day and the
+   public write-ups contradict each other about whether it works at all.
+   So the very first step is one letter to a personal Gmail address — if that
+   does not arrive, this route does not work and nothing else is worth doing.
+
+2. **HVE is a relay, not a mailing platform.** It keeps no suppression list,
+   adds no unsubscribe header, handles no bounces and reports nothing back.
+   The first three are built into the club instead, and the sender refuses to
+   run without them. The fourth — opens and clicks — is simply gone.
+
+3. **The Campaigns tab** is the reporting half. It shows what the relay
+   accepted, what it refused, and who has asked not to be written to again. It
+   does not show opens, and it says so rather than guessing. What a wave
+   actually produced is counted in **Applications**, filtered by referral:
+   every wave's link carries its own `src`.
+
+4. **Somebody will reply, or telephone, and ask to be taken off.** Do it on
+   the Campaigns tab, in the box. An address added there is never written to
+   by a campaign again.
+
+5. **Unsubscribing is not cancelling.** A member who comes off the letters
+   still gets their invoices and their shipping notices — those are receipts,
+   not marketing, and nothing about the suppression list touches them. A
+   member who wants to *leave the club* is a cancellation on the **Members**
+   tab, which is a different screen and a different conversation.
+
+The rest — the subdomain, the HVE account, SPF and DKIM, one wave a day and
+what to watch between them — is in `HVE.md` and in `mail-templates/INVITATIONS.md`.
 
 ---
 

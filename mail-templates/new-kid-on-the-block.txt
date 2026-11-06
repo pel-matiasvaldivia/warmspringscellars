@@ -1,0 +1,133 @@
+The plain-text twin of new-kid-on-the-block.html, and not an afterthought:
+a bulk message that carries only an HTML part is one of the cheapest spam
+signals there is, and some of this list will be reading on a phone client
+that shows this and nothing else. The same five merge fields, filled by
+tools/send_campaign.py, which refuses to send if any is still unfilled.
+
+Everything above this line is stripped by the sender. The letter starts at
+the row of dashes.
+
+------------------------------------------------------------------------
+
+WARM SPRINGS CELLAR
+Glen Ellen - Sonoma Valley - Est. 1982
+
+
+THE NEW KID ON THE BLOCK
+
+Dear {{first_name}},
+
+You've received an announcement from Cecilia Valdivia about the launch
+of Warm Springs Cellar - a return to the tiny winery where PJ and Robert
+began their winemaking journey over 40 years ago. Cecilia and Robert have
+been collaborating on winemaking for nearly two decades. As Robert
+prepares for retirement from Deerfield Ranch Winery, Cecilia is stepping
+into the next chapter of her winemaking career. Until Robert's departure
+he is serving as consulting winemaker for Warm Springs Cellar, bringing
+decades of experience to this exciting new venture.
+
+We're thrilled about this inaugural release. Our first bottling features
+seven distinct varietals, each sourced from vineyards we've cultivated
+deep relationships with over the years - vineyards that have consistently
+produced wines we love. All are located in Sonoma County, showcasing that
+distinctive Sonoma character you've come to appreciate:
+
+  2026 Sauvignon Blanc
+    Peterson Vineyard, Sonoma Valley
+
+  2026 Rose of Syrah
+    Deerfield Vineyard, Sonoma Valley
+
+  2024 Zinfandel
+    Los Chamizal Vineyard, Sonoma Valley
+
+  2023 Pinot Noir
+    Four Palms Vineyard, Russian River Valley
+
+  2023 Malbec
+    Running Rabbit Ranch, Sonoma Valley
+
+  2023 Sangiovese
+    Alpicella Vineyard, Fountain Grove District, Sonoma Valley
+
+  2021 Cabernet Sauvignon
+    Wolf Run Vineyard, Sonoma Valley
+
+Our inaugural release is intentionally limited to just 850 cases total -
+truly small-lot production. These wines are allocated exclusively to Warm
+Springs Cellar wine club members. Our pricing is accessible; shipping is
+billed at the carrier's rate for your own address, and on the larger
+allocations we carry part of it ourselves. For detailed information about
+each wine, what each allocation costs and to enroll in the club, visit:
+
+  {{link}}
+
+Your details are already in the form - it should take a minute. We can
+only ship where direct wine shipping is permitted, and the form will say
+straight away if your state is not one of them.
+
+
+AND COFFEE!
+
+This may seem an unexpected pairing, but wine and coffee are natural
+companions - and wine lovers appreciate exceptional coffee. Robert's
+journey began in the 1970s, making wine in his Berkeley garage in what
+was then - and still is - known as the Gourmet Ghetto. This North
+Berkeley enclave birthed California Cuisine, a movement that transformed
+American food culture. Chez Panisse became the nation's first true
+farm-to-table gourmet restaurant. The Cheese Board revolutionized
+artisanal cheese retail. Au Chocolate pioneered the American chocolate
+truffle. And Peet's Coffee introduced Americans to single-source, richly
+dark-roasted coffee. It was a cultural happening that rippled across the
+country - you can credit Peet's for inspiring the coffee culture that
+Starbucks later popularized, since the founder of Starbucks trained under
+Alfred Peet himself. Mr. Peet was a friend and mentor to Robert; a stern
+Dutchman with an unparalleled gift for selecting and roasting coffee.
+Robert and his family have been devoted to his craft since he opened his
+roastery in 1966.
+
+Gifted with an exceptional palate, Robert created his own blend - the Rex
+Blend. Coffee blending mirrors winemaking for good reason: just as grapes
+from different regions and varietals express distinct characteristics, so
+too does coffee from different plantations and regions around the world.
+A thoughtfully crafted blend can be far superior to any single-source
+coffee. Then comes the roasting - a deceptively complex art. Time,
+temperature and movement all play critical roles in achieving the perfect
+cup.
+
+Recently, Cecilia and Robert found themselves in the lab, working on wine
+blends over cups of exceptional coffee. She's developed her own signature
+blend - Ceci's Blend. As we collaborated, we asked ourselves: why keep
+these discoveries to ourselves? Together, we've decided to honor both our
+passions and share them with you.
+
+Wine club members will receive samples of both blends - Rex Blend and
+Ceci's Blend - with their wine allocation shipments. Both will be whole
+bean; there's simply no other way to experience coffee properly. If you
+don't already own a grinder, I urge you to invest in one - freshly ground
+coffee makes an incomparable difference. I store my beans in the freezer
+between refilling my grinder to maintain optimal freshness. We're still
+adding the coffee offerings to the website, so stay tuned.
+
+Consider this our initial foray into coffee. We're excited to see where
+this goes.
+
+Thank you for your continued support.
+
+Sante,
+Robert and Cecilia
+Warm Springs Cellar
+warmspringscellar.com - club@warmspringscellar.com
+
+------------------------------------------------------------------------
+
+You are receiving this at {{email}} because you are a member of the
+Deerfield Ranch Winery wine club. To unsubscribe, and we will not write
+again:
+
+  {{unsubscribe_url}}
+
+Warm Springs Cellar - {{postal_address}}
+
+You must be 21 or older to purchase wine in the United States. An adult
+signature is required on delivery.
