@@ -282,11 +282,14 @@ CREATE INDEX IF NOT EXISTS ledger_task_status ON ledger_task(status, id);
 -- winery, not from one letter, and the next campaign has no business asking
 -- the question again.
 --
--- This table exists because High Volume Email does not have it. A mailing
--- platform keeps a suppression list that actually suppresses, and refuses the
--- send itself; HVE is an SMTP relay that will deliver whatever it is handed,
--- as many times as it is handed it. So the list lives here and
--- tools/send_campaign.py checks it before every message.
+-- The campaign is sent from a mailing platform, which keeps a suppression
+-- list of its own. This is not a copy of it kept for the sake of having one:
+-- it is the winery's record rather than the provider's, and it holds the
+-- things the provider's list cannot — people who had already told DEERFIELD
+-- to stop writing, who arrive on the export like everybody else and have to
+-- come out before a single address is uploaded; people who ask off by reply
+-- or by telephone; and every opt-out from the provider the winery used last
+-- year. An opt-out does not stop applying because the subscription moved.
 --
 -- `source` records how the address got here, because the reasons are not
 -- equal: 'unsubscribe' is someone's decision and is permanent, 'bounce' is a
@@ -296,35 +299,11 @@ CREATE TABLE IF NOT EXISTS email_suppression (
     email       TEXT PRIMARY KEY,         -- lower-cased on the way in
     created_at  TEXT NOT NULL,
     source      TEXT NOT NULL,            -- unsubscribe | bounce | complaint | hand
-    campaign    TEXT,                     -- the send it came from, when known
+    campaign    TEXT,                     -- which send or import it came from
     detail      TEXT
 );
 CREATE INDEX IF NOT EXISTS email_suppression_when
     ON email_suppression(created_at DESC);
-
--- One row per address per campaign, written the moment a message is accepted
--- by the relay. Two jobs, and the second is the one that matters at three in
--- the afternoon on day four:
---
---   * a send that dies half way through can be run again and will skip what
---     already went out, because this table is the record of what went out;
---   * the per-wave numbers nobody gets from HVE — how many were accepted, how
---     many were refused and what the relay said when it refused them.
---
--- status is 'sent' when the relay took it and 'failed' when it did not; a
--- failed row carries the server's own sentence, which is the only text that
--- ever explains a Microsoft rejection.
-CREATE TABLE IF NOT EXISTS campaign_send (
-    id         INTEGER PRIMARY KEY,
-    campaign   TEXT NOT NULL,
-    email      TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    status     TEXT NOT NULL,             -- sent | failed
-    detail     TEXT,
-    UNIQUE (campaign, email)
-);
-CREATE INDEX IF NOT EXISTS campaign_send_campaign
-    ON campaign_send(campaign, status);
 
 -- OAuth tokens for the accounting system. In the database rather than the
 -- environment because Intuit rotates the refresh token on every refresh: a

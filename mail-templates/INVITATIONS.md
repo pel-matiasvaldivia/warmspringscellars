@@ -51,13 +51,18 @@ the shipping notices** go out from. The club cannot pay that bill.
    365 submission gives none of the four — the tenant's sending limits are a
    throttle, not a feature.
 
-   **What was decided, November 2026:** Microsoft **High Volume Email**, which
-   lifts the throttle and still gives none of the other four, with all four
-   built into the club instead — `email_suppression`, the headers minted by
-   `tools/send_campaign.py`, bounces to their own mailbox, and the
-   **Campaigns** tab. Opens and clicks are the one thing not replaced, and
-   nothing pretends otherwise. The procedure, the trade and the question that
-   comes before all of it are in **`HVE.md`**.
+   **What was decided, November 2026:** a mailing platform, which supplies
+   all four. Microsoft High Volume Email was considered and dropped: it lifts
+   the throttle and supplies none of them, so everything a platform does for
+   a subscription would have had to be built and maintained here. Which
+   provider, and what has to be declared to them before a single address is
+   uploaded, is in **`CAMPAIGN.md`**.
+
+   One thing stays in the club: the winery's own do-not-contact record, at
+   **/admin/campaigns**. It is subtracted from a wave before the wave is
+   uploaded, and the platform's own opt-outs are brought back into it after
+   each one — because an opt-out has to keep applying after the subscription
+   moves.
 3. **Authenticate before the first send**: SPF, DKIM and DMARC on the
    subdomain, all three passing. Send one message to a seed address and read
    the headers.

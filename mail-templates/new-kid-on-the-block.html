@@ -1,15 +1,21 @@
 <!-- "The New Kid on the Block" — the announcement letter, from Cecilia's draft
      of November 2026 (WSC_email_final_draft.docx). It goes to the Deerfield
-     list through tools/send_campaign.py, which renders this file and the
-     plain-text twin beside it.
+     list from a mailing platform: this file is pasted into a "paste your own
+     code" campaign and the plain-text twin beside it into the text part.
+     CAMPAIGN.md is the plan, and has the table that maps these five fields
+     onto Mailchimp's and Brevo's own merge tags.
 
-     Merge fields are in {{ }}. The sender fills all five:
-       {{first_name}}       the greeting; "Wine Lover" when the row has no name
+     Merge fields are in {{ }}, and all five have to be mapped or the letter
+     goes out with braces in it:
+       {{first_name}}       the greeting; default it to "Wine Lover", because
+                            a good share of the export has no first name and
+                            "Dear ," is worse than no name at all
        {{email}}            the address this copy went to, named in the footer
        {{link}}             the personalised form link from plan_invitations.py
-       {{unsubscribe_url}}  signed, per recipient, and it never expires
+                            — upload that column as a custom field
+       {{unsubscribe_url}}  the platform's own, so that pressing it feeds the
+                            platform's suppression list
        {{postal_address}}   the winery's real postal address — CAN-SPAM
-     Any field left unfilled is a refused send, not a blank: see the sender.
 
      Tables and inline styles only, and no image, for the same reasons as
      auto-reply.html and invitation.html: Outlook on Windows renders mail
@@ -65,42 +71,32 @@
     </td>
   </tr>
 
-  <!-- ↓↓ THE SENTENCE THAT NEEDS SIGNING OFF ↓↓
-       The only line in the letter the reader is really weighing, and the one
-       the draft did not have: it opened "You've received an announcement from
-       Cecilia Valdivia", which assumed Deerfield had already written to them.
-       Under the plan actually chosen nobody has written to them — THIS is the
-       announcement — so a letter that opens by referring to one they never got
-       reads as a mass mailing that does not know who it is talking to.
+  <!-- ↓↓ THE MOST IMPORTANT SENTENCE IN THE LETTER ↓↓
+       It is Robert's own opening and it describes something that really
+       happened: Cecilia posted a printed announcement to everybody on this
+       list. That single fact is what makes the whole mailing work. The reader
+       is not being written to out of nowhere — they have already had a letter
+       from this winery, through their door, with a stamp on it — and this
+       email is the follow-up to it.
 
-       What is here now is what the website itself supports: Robert advises
-       this winery, and the Rosé below is Deerfield fruit. If the real
-       connection is more direct, say the direct thing — it is worth more than
-       every other sentence in the letter put together. Same decision, same
-       wording, as invitation.html. -->
+       Keep it first. It answers "why am I getting this?" before the reader
+       has to ask, and it is also the answer the sending platform will want
+       when it asks how these addresses were obtained. Only "by post" was
+       added to the draft, because "an announcement" alone is vague and the
+       printed letter is the thing the reader will actually remember. -->
   <tr>
     <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
-      You are hearing from us because you are on the Deerfield Ranch Winery
-      club list, and the two names are not strangers to each other: Robert is
-      consulting winemaker here, and one of the wines below is grown on
-      Deerfield Vineyard fruit. We thought you should know we exist before
-      anybody else did.
+      You&rsquo;ve received an announcement by post from Cecilia Valdivia about the
+      launch of Warm Springs Cellar &mdash; a return to the tiny winery where PJ
+      and Robert began their winemaking journey over 40 years ago. Cecilia and
+      Robert have been collaborating on winemaking for nearly two decades. As
+      Robert prepares for retirement from Deerfield Ranch Winery, Cecilia is
+      stepping into the next chapter of her winemaking career. Until Robert&rsquo;s
+      departure he is serving as consulting winemaker for Warm Springs Cellar,
+      bringing decades of experience to this exciting new venture.
     </td>
   </tr>
-  <!-- ↑↑ THE SENTENCE THAT NEEDS SIGNING OFF ↑↑ -->
-
-  <tr>
-    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
-      This is the launch of Warm Springs Cellar &mdash; a return to the tiny
-      winery where PJ and Robert began their winemaking journey over 40 years
-      ago. Cecilia and Robert have been collaborating on winemaking for nearly
-      two decades. As Robert prepares for retirement from Deerfield Ranch
-      Winery, Cecilia is stepping into the next chapter of her winemaking
-      career. Until Robert&rsquo;s departure he is serving as consulting winemaker
-      for Warm Springs Cellar, bringing decades of experience to this exciting
-      new venture.
-    </td>
-  </tr>
+  <!-- ↑↑ THE MOST IMPORTANT SENTENCE IN THE LETTER ↑↑ -->
 
   <tr>
     <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
@@ -303,11 +299,17 @@
   </tr>
 
   <!-- Required, not decoration. CAN-SPAM wants a real postal address and a
-       working opt-out; Gmail and Yahoo want one-click unsubscribe on bulk mail
-       and will junk a sender who does not have it. Unlike every other platform
-       the winery might have used, HVE fills in NONE of this — the sender in
-       tools/send_campaign.py does, and it refuses to send a message with any
-       of these three fields still unfilled. -->
+       working opt-out; Gmail and Yahoo want one-click unsubscribe on bulk
+       mail and will junk a sender who does not have it. The platform
+       supplies both — it injects its own footer and sets the one-click
+       header — so this is belt and braces, and it is kept because the
+       letter gets previewed, forwarded and pasted into other tools, and in
+       none of those does the platform's footer come along. -->
+  <!-- CHECK THE SEND PREVIEW for two footers. Some providers suppress their
+       own when the message already has an unsubscribe link; others do not,
+       and two of them look careless. If both appear, delete this block
+       rather than the platform's: the platform's is the one wired to its
+       suppression list. -->
   <tr>
     <td style="padding:16px 0 0;font-size:11px;line-height:17px;color:#9a8890;">
       You are receiving this at {{email}} because you are a member of the

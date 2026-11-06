@@ -741,42 +741,40 @@ The adapter logs the refusal as the server worded it, code included.
 Everything above is the club's own mail: one message, to one person, because
 something happened to their order. **The campaign is a different thing** — the
 same letter to several hundred people who are not members yet — and it does
-not go out through any of it. It goes out through Microsoft **High Volume
-Email**, from a command on a laptop, and it has its own tab.
+not go out through any of it, or through this service at all. It goes out
+from a **mailing platform**, which holds the list, sends the letter and
+reports what happened.
 
-The full procedure is in **`mail-templates/HVE.md`** and is not repeated here.
-What matters at the desk is five things:
+The plan, the provider and the reasons are in **`mail-templates/CAMPAIGN.md`**
+and are not repeated here. What matters at the desk is four things:
 
-1. **One question comes before all the others.** HVE is built for mail
-   *inside* the tenant, and every address on the Deerfield list is outside it.
-   Microsoft's preview figures put external recipients at 2,000 a day and the
-   public write-ups contradict each other about whether it works at all.
-   So the very first step is one letter to a personal Gmail address — if that
-   does not arrive, this route does not work and nothing else is worth doing.
+1. **The Campaigns tab does not send and does not count.** Delivered, opened,
+   unsubscribed — that is the platform's screen. What a wave actually
+   *produced* is counted here, in **Applications**, filtered by referral:
+   every wave's link carries its own `src`, and that is the only number that
+   says whether the letter worked.
 
-2. **HVE is a relay, not a mailing platform.** It keeps no suppression list,
-   adds no unsubscribe header, handles no bounces and reports nothing back.
-   The first three are built into the club instead, and the sender refuses to
-   run without them. The fourth — opens and clicks — is simply gone.
+2. **Before a wave is uploaded, subtract the list.** Download the CSV from
+   the Campaigns tab and remove those addresses from the file first. The
+   platform cannot do this: it does not know who told Deerfield to stop
+   writing years ago, and it does not know about the person who telephoned
+   last week.
 
-3. **The Campaigns tab** is the reporting half. It shows what the relay
-   accepted, what it refused, and who has asked not to be written to again. It
-   does not show opens, and it says so rather than guessing. What a wave
-   actually produced is counted in **Applications**, filtered by referral:
-   every wave's link carries its own `src`.
+3. **After a wave, bring the opt-outs back.** Export the platform's
+   unsubscribes and hard bounces and paste them into the Campaigns tab. If
+   nobody does, those opt-outs live only inside a subscription, and the day
+   the winery changes provider they are gone — while the obligation to honour
+   them is not.
 
-4. **Somebody will reply, or telephone, and ask to be taken off.** Do it on
-   the Campaigns tab, in the box. An address added there is never written to
-   by a campaign again.
-
-5. **Unsubscribing is not cancelling.** A member who comes off the letters
+4. **Unsubscribing is not cancelling.** A member who comes off the letters
    still gets their invoices and their shipping notices — those are receipts,
    not marketing, and nothing about the suppression list touches them. A
    member who wants to *leave the club* is a cancellation on the **Members**
    tab, which is a different screen and a different conversation.
 
-The rest — the subdomain, the HVE account, SPF and DKIM, one wave a day and
-what to watch between them — is in `HVE.md` and in `mail-templates/INVITATIONS.md`.
+The rest — which provider, what to tell them before uploading anything, the
+waves and what to watch between them — is in `CAMPAIGN.md` and in
+`mail-templates/INVITATIONS.md`.
 
 ---
 

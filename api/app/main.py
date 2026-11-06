@@ -239,68 +239,6 @@ async def join_waiting_list(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "waiting_id": waiting_id}, status_code=201)
 
 
-# ── unsubscribing ────────────────────────────────────────────────────────
-# Open to the world, deliberately: whoever is pressing this has no account
-# and no session, is quite possibly annoyed, and must not be asked to prove
-# anything. The token in the link is the proof.
-#
-# This exists because the campaign goes out through Microsoft's High Volume
-# Email, which is a relay and keeps no suppression list of its own. See
-# campaign.py and mail-templates/HVE.md.
-@app.get("/unsubscribe", response_class=HTMLResponse)
-def unsubscribe_page(request: Request, t: str = "") -> HTMLResponse:
-    """Ask. Changes nothing — mail scanners fetch this URL unbidden."""
-    try:
-        who = campaign.read(t, settings.secret_key)
-    except campaign.BadToken as exc:
-        return templates.TemplateResponse(
-            request, "message.html",
-            {"eyebrow": "Unsubscribe", "heading": "This link is not one of ours",
-             "body": f"{exc}. If you want us to stop writing, send a line to "
-                     "club@warmspringscellar.com and we will take the address off "
-                     "by hand — you should not have to work at this.",
-             "cta_url": "/", "cta_label": "Back to the cellar"},
-            status_code=400,
-        )
-    return templates.TemplateResponse(
-        request, "unsubscribe.html", {"email": who.email, "token": t})
-
-
-@app.post("/unsubscribe")
-async def unsubscribe(request: Request) -> Response:
-    """Act. Reached from the page's one button and from the one-click header.
-
-    RFC 8058, which is what Gmail and Yahoo check for, requires that the POST
-    named by List-Unsubscribe-Post works with no confirmation, no sign-in and
-    no further request — so this returns plain text rather than a page: the
-    mail client that sends it is not a browser and shows nobody the body.
-
-    Pressing it twice is not an error. A retry, a double click and Gmail
-    acting on the header all arrive here, and all of them mean the same thing
-    as pressing it once.
-    """
-    form = await request.form()
-    token = str(form.get("t") or request.query_params.get("t") or "")
-    try:
-        who = campaign.read(token, settings.secret_key)
-    except campaign.BadToken as exc:
-        return PlainTextResponse(f"{exc}\n", status_code=400)
-
-    with db.transaction() as con:
-        campaign.suppress(con, who.email, "unsubscribe", who.campaign)
-
-    if "text/html" in (request.headers.get("accept") or ""):
-        return templates.TemplateResponse(
-            request, "message.html",
-            {"eyebrow": "Unsubscribe", "heading": "Done — we will not write again",
-             "body": f"{who.email} is off our list. Nothing else of ours is "
-                     "affected: if you are a club member, your allocation and "
-                     "its shipping notices carry on as before.",
-             "cta_url": "/", "cta_label": "Back to the cellar"},
-        )
-    return PlainTextResponse("Unsubscribed.\n")
-
-
 # ── the member's offer ───────────────────────────────────────────────────
 def offer_problem(request: Request, message: str) -> HTMLResponse:
     return templates.TemplateResponse(
@@ -1249,27 +1187,29 @@ def admin_mail(request: Request, verify: int = 0,
     )
 
 
-# ── campaigns ────────────────────────────────────────────────────────────
-# What the sender did, and who has asked not to be written to. This screen is
-# the reporting half of a mailing platform, which HVE does not have: it cannot
-# say anything about opens or clicks, and does not pretend to.
+# ── do not write to these ────────────────────────────────────────────────
+# The campaign is sent from a mailing platform (mail-templates/CAMPAIGN.md).
+# Nothing here sends anything. This screen holds the one thing the platform
+# cannot hold for the winery: who must not be written to, in a record that
+# survives changing provider.
 @app.get("/admin/campaigns", response_class=HTMLResponse)
 def admin_campaigns(request: Request,
                     actor: str = Depends(require_admin)) -> HTMLResponse:
     with db.connect() as con:
         return admin_page(request, "campaigns.html", "campaigns",
-                          tally=campaign.tally(con),
-                          suppressed=campaign.suppressed(con))
+                          suppressed=campaign.suppressed(con),
+                          by_source=campaign.by_source(con))
 
 
 @app.get("/admin/campaigns/suppressions.csv")
 def admin_suppressions_csv(actor: str = Depends(require_admin)) -> PlainTextResponse:
-    """The suppression list as a file, for a sender run away from the server.
+    """The list as a file, to subtract from a wave before uploading it.
 
-    tools/send_campaign.py reads the database directly when it can see it. On
-    a laptop that cannot, this is the same list in a form the sender accepts,
-    and skipping this step is how somebody writes to a person who asked them
-    not to.
+    This is the step between the planner and the mailing platform, and the
+    one that is easy to skip: the platform does not know who told Deerfield
+    to stop writing years ago, and it cannot know about the person who
+    telephoned last week. Download this, remove these addresses from the
+    wave, then upload.
     """
     with db.connect() as con:
         rows = campaign.suppressed(con)
@@ -1293,6 +1233,31 @@ def admin_suppress(email: str = Form(...),
         added = campaign.suppress(con, address, "hand", detail=f"added by {actor}")
     said = (f"{address} will not be written to again." if added
             else f"{address} was already on the list.")
+    return RedirectResponse(f"/admin/campaigns?done={said}", status_code=303)
+
+
+@app.post("/admin/campaigns/import")
+def admin_suppress_import(addresses: str = Form(...), source: str = Form("unsubscribe"),
+                          note: str = Form(""),
+                          actor: str = Depends(require_admin)) -> RedirectResponse:
+    """Bring a platform's unsubscribes and bounces across after a wave.
+
+    The provider knows who opted out of the letter it sent. The winery needs
+    to know too, or the opt-out is lost the day the subscription moves. Paste
+    the export here — one address a line, or a column copied out of a
+    spreadsheet; anything that is not an address is skipped rather than
+    stored.
+    """
+    if source not in campaign.SOURCES:
+        return RedirectResponse("/admin/campaigns?done=Unknown reason, nothing "
+                                "was imported.", status_code=303)
+    rows = [part for line in addresses.splitlines() for part in line.split(",")]
+    with db.transaction() as con:
+        added, seen = campaign.suppress_many(
+            con, rows, source, campaign=note.strip(),
+            detail=f"imported by {actor}")
+    said = (f"{added} added, {seen} already on the list." if added or seen
+            else "No addresses found in that — nothing was imported.")
     return RedirectResponse(f"/admin/campaigns?done={said}", status_code=303)
 
 
