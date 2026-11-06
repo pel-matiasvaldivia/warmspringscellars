@@ -40,6 +40,8 @@ from .notify import (
     send_charge_failed,
     send_decline,
     send_invitation,
+    send_application_received,
+    send_declines_alert,
     send_receipt,
     send_release_notice,
     send_shipment_notice,
@@ -190,6 +192,28 @@ def api_states() -> dict:
 
 
 # ── the landing page form ────────────────────────────────────────────────
+def acknowledge(data: dict, subject_id: int, kind: str, waiting_for: str = "") -> None:
+    """Write back to whoever just filled the form in.
+
+    Never lets a mail failure fail the request: the row is already saved and
+    the browser is owed its answer. A silence here is recorded against the
+    row instead, where somebody can see it and write by hand.
+    """
+    first = str(data.get("first_name") or "").strip() or "there"
+    email = str(data.get("email") or "").strip()
+    if not email:
+        return
+    try:
+        send_application_received(mailer, first, email, waiting_for,
+                                  settings.mail_reply_to)
+    except Exception as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, kind, subject_id, "acknowledgement_failed", error=str(exc))
+    else:
+        with db.transaction() as con:
+            log(con, kind, subject_id, "acknowledged")
+
+
 @app.post("/api/applications")
 async def create_application(request: Request) -> JSONResponse:
     if rate_limited(client_key(request)):
@@ -209,6 +233,7 @@ async def create_application(request: Request) -> JSONResponse:
     except FlowError as exc:
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
 
+    acknowledge(data, app_id, "application")
     return JSONResponse({"ok": True, "application_id": app_id}, status_code=201)
 
 
@@ -237,6 +262,8 @@ async def join_waiting_list(request: Request) -> JSONResponse:
     except FlowError as exc:
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
 
+    acknowledge(data, waiting_id, "waiting",
+                waiting_for=str(data.get("state") or "").strip())
     return JSONResponse({"ok": True, "waiting_id": waiting_id}, status_code=201)
 
 
@@ -1008,6 +1035,38 @@ def tell_them_the_card_failed(result: dict) -> None:
             log(con, "order", int(order["id"]), "decline_notice_failed", error=str(exc))
 
 
+def tell_the_winery_about_declines(failures: list[dict]) -> None:
+    """One message to the desk for a whole release, not one per card.
+
+    The member already knows. This is the half that was missing: an order
+    that failed goes quiet, the wine is out of the cellar, and nothing says
+    so unless somebody opens Orders. Twenty separate alerts on a despatch
+    morning is a mailbox nobody reads by the eleventh, so they arrive
+    together.
+    """
+    if not failures:
+        return
+    detailed = []
+    for result in failures:
+        member = db.one("SELECT * FROM membership WHERE id = ?",
+                        (result["membership_id"],))
+        order = db.one('SELECT * FROM "order" WHERE id = ?', (result["order_id"],))
+        detailed.append({
+            "reference": order["reference"] if order else "?",
+            "name": f"{member['first_name']} {member['last_name']}" if member else "",
+            "total_cents": order["total_cents"] if order else 0,
+            "error": result.get("error", ""),
+        })
+    try:
+        send_declines_alert(mailer, detailed, settings.alerts_to,
+                            settings.mail_reply_to)
+    except Exception as exc:                                   # noqa: BLE001
+        for result in failures:
+            with db.transaction() as con:
+                log(con, "order", int(result["order_id"]), "decline_alert_failed",
+                    error=str(exc))
+
+
 @app.post("/admin/releases/{release_id}/notify")
 def admin_notify_release(release_id: int,
                          actor: str = Depends(require_admin)) -> RedirectResponse:
@@ -1069,11 +1128,14 @@ def admin_charge_release(release_id: int, background: BackgroundTasks,
     except FlowError as exc:
         return RedirectResponse(f"/admin/releases?done=Not done: {exc}", status_code=303)
 
+    failures = []
     for result in results:
         if result["paid"]:
             settle(result, background)
         else:
             tell_them_the_card_failed(result)
+            failures.append(result)
+    tell_the_winery_about_declines(failures)
 
     paid = sum(1 for r in results if r["paid"])
     failed = len(results) - paid
@@ -1096,6 +1158,7 @@ def admin_charge_order(order_id: int, background: BackgroundTasks,
         return RedirectResponse(f"/admin/orders?done={result['reference']} is paid.",
                                 status_code=303)
     tell_them_the_card_failed(result)
+    tell_the_winery_about_declines([result])
     return RedirectResponse(
         f"/admin/orders?done=Declined again: {result['error']} They have been written to.",
         status_code=303)

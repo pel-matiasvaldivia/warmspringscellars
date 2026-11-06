@@ -318,3 +318,111 @@ message.</p>""")
     return mailer.send(Message(to=member["email"],
                                subject=f"Your card was declined — {order['reference']}",
                                text=text, html=html, reply_to=reply_to))
+
+
+def send_application_received(mailer: Mailer, first_name: str, email: str,
+                              waiting_for: str, reply_to: str) -> str:
+    """Acknowledge the form, because silence is the worst answer to a request.
+
+    Nothing sent this before. Somebody filled the form in, the browser said
+    thank you, and then nothing arrived — no record in their inbox, no name
+    to reply to, no way to tell a request that was received from one that was
+    lost. For however long approval takes, that silence is the whole of their
+    relationship with this winery.
+
+    It promises no date. Approval is a person reading a request, and a
+    promised "within 48 hours" that slips is worse than no promise at all.
+
+    `waiting_for` is the state when the applicant is in one the winery cannot
+    ship to: the form has already told them so on screen, and repeating it
+    here is kinder than an acknowledgement that reads as though the request
+    is going through.
+    """
+    if waiting_for:
+        body = (f"""We cannot ship wine to {waiting_for} yet, so we have put your name
+down instead of your request through. Direct wine shipping is licensed state
+by state, and {waiting_for} is not one of ours this year.
+
+The day that changes you will hear from us. If you have an address somewhere
+we can already reach — an office, a second home, family you visit — reply to
+this message and we can make you a member this week instead.""")
+        subject = f"We have your name — {waiting_for}"
+    else:
+        body = ("""We have your request for an allocation, and it is in the queue.
+
+Every one is read by hand, so this takes a few days rather than a few
+minutes. You will hear back either way — we do not keep a list that people
+never hear from again.""")
+        subject = "We have your request"
+
+    text = f"""Dear {first_name},
+
+{body}
+
+{SIGNOFF}"""
+
+    paragraphs = "".join(
+        f'<p style="margin:0 0 16px">{line}</p>'
+        for line in body.replace("\n", " ").split("  ") if line.strip())
+    html = _html(f'<p style="margin:0 0 14px">Dear {first_name},</p>{paragraphs}')
+
+    return mailer.send(Message(to=email, subject=subject, text=text, html=html,
+                               reply_to=reply_to))
+
+
+def send_declines_alert(mailer: Mailer, failures: list[dict], to: str,
+                        reply_to: str) -> str:
+    """Tell the winery that cards were refused. Nobody was telling it.
+
+    The member heard; the winery did not. A declined card is the one failure
+    here that costs money and then goes quiet: the order sits unpaid in
+    Orders, the wine is already out of the cellar, and unless somebody
+    happens to look nothing says so. The member cannot be relied on to chase
+    it — half the time it is an expired card they will replace next month, on
+    their own schedule, for some other merchant.
+
+    One message for a whole release rather than one per card. Twenty separate
+    alerts on the morning of a despatch is a mailbox nobody reads by the
+    eleventh.
+    """
+    lines, total = [], 0
+    for f in failures:
+        total += int(f.get("total_cents") or 0)
+        money = f"${int(f.get('total_cents') or 0) / 100:,.2f}"
+        lines.append(f"  {f.get('reference', '?')}  {f.get('name', '')} — {money}\n"
+                     f"      {f.get('error', 'no reason given')}")
+    count = len(failures)
+    noun = "card was" if count == 1 else "cards were"
+    held = f"${total / 100:,.2f}"
+
+    text = f"""{count} {noun} refused when this release was charged, holding {held}.
+
+""" + "\n".join(lines) + f"""
+
+Each of them has been written to with a link to put in another card, so the
+usual next step is to wait a day. What nobody else will do is notice if they
+do not: these orders sit in Orders as failed, and the wine has already left
+the cellar.
+
+Retry a card from Orders once the member says they have replaced it.
+"""
+
+    rows = "".join(
+        f'<tr><td style="padding:6px 0;border-bottom:1px solid #e2d8d0">'
+        f'<strong>{f.get("reference", "?")}</strong> {f.get("name", "")}'
+        f'<div style="color:#9a8890;font-size:12px">{f.get("error", "")}</div></td>'
+        f'<td align="right" style="padding:6px 0;border-bottom:1px solid #e2d8d0">'
+        f'${int(f.get("total_cents") or 0) / 100:,.2f}</td></tr>'
+        for f in failures)
+    html = _html(f"""
+<p style="margin:0 0 18px"><strong>{count} {noun} refused</strong> when this release was
+charged, holding {held}.</p>
+<table role="presentation" style="font:13px/1.6 system-ui,sans-serif;color:#2c1e24;width:100%">
+{rows}</table>
+<p style="margin:18px 0 0;font-size:13px;color:#5c4650">Each of them has been written to
+with a link to put in another card, so the usual next step is to wait a day. What nobody
+else will do is notice if they do not: these orders sit in Orders as failed, and the wine
+has already left the cellar.</p>""")
+
+    return mailer.send(Message(to=to, subject=f"{count} {noun} refused — {held} unpaid",
+                               text=text, html=html, reply_to=reply_to))

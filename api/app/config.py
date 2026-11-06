@@ -76,6 +76,12 @@ class Settings:
     mail_from: str = field(default_factory=lambda: _env("MAIL_FROM", "wineclub@warmspringscellar.com"))
     mail_reply_to: str = field(default_factory=lambda: _env("MAIL_REPLY_TO", "wineclub@warmspringscellar.com"))
 
+    # Where the club writes to ITSELF. Declined cards, and anything else the
+    # desk has to act on that nobody outside would ever see. Defaults to the
+    # club mailbox, which is already read; point it at a person when the
+    # volume makes that worth doing.
+    alert_to: str = field(default_factory=lambda: _env("ALERT_TO"))
+
     offer_days: int = field(default_factory=lambda: int(_env("OFFER_DAYS", "14")))
     currency: str = field(default_factory=lambda: _env("CURRENCY", "usd"))
 
@@ -109,6 +115,11 @@ class Settings:
         adapters any more, because there is nothing to choose between.
         """
         return "quickbooks" if self.quickbooks_configured else "none"
+
+    @property
+    def alerts_to(self) -> str:
+        """Resolved at use, so changing MAIL_REPLY_TO moves alerts with it."""
+        return self.alert_to or self.mail_reply_to
 
     @property
     def db_path(self) -> Path:

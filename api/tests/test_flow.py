@@ -24,6 +24,32 @@ sys.path.insert(0, str(ROOT))
 ADMIN = ("cellar", "test-password")
 
 
+def letters(client, containing: str = "") -> list[str]:
+    """The outbox, oldest first, decoded; optionally only the ones that say something.
+
+    Counting messages was how these tests used to check who was written to,
+    and every new notification broke them all at once without any of them
+    being wrong. What they each meant was "this person got this letter".
+
+    Decoded, and with the line breaks flattened, because a .eml is
+    quoted-printable: a sentence worth asserting on is exactly the length
+    that gets split across a soft line break, and the failure looks like the
+    sentence is missing.
+    """
+    import email
+    import email.policy
+
+    out = []
+    for path in sorted((client.tmp / "outbox").glob("*.eml")):
+        msg = email.message_from_bytes(path.read_bytes(), policy=email.policy.default)
+        parts = [f"To: {msg['To']}", f"Subject: {msg['Subject']}"]
+        for part in msg.walk():
+            if part.get_content_maintype() == "text":
+                parts.append(part.get_content())
+        out.append(" ".join(" ".join(parts).split()))
+    return [t for t in out if containing in t] if containing else out
+
+
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
     """A fresh service with its own database, keys and outbox."""
@@ -150,9 +176,7 @@ def test_request_to_shipment(client):
         "SELECT status FROM application WHERE id = ?", (app_id,))["status"] == "approved"
 
     # the invitation reached the outbox, and carries the link
-    outbox = sorted((client.tmp / "outbox").glob("*.eml"))
-    assert len(outbox) == 1
-    assert "/club/offer/" in outbox[0].read_text()
+    assert len(letters(client, "/club/offer/")) == 1
 
     offer_page = client.get(f"/club/offer/{token}")
     assert offer_page.status_code == 200
@@ -178,8 +202,12 @@ def test_request_to_shipment(client):
     shipment = client.main.db.one("SELECT * FROM shipment WHERE order_id = ?", (order["id"],))
     assert shipment["status"] == "ready"
 
-    # the welcome went out when the card was saved, the receipt when it was charged
-    assert len(list((client.tmp / "outbox").glob("*.eml"))) == 3
+    # acknowledged on the form, invited on approval, welcomed when the card
+    # was saved, receipted when it was charged
+    assert len(letters(client, "We have your request")) == 1
+    assert len(letters(client, "/club/offer/")) == 1
+    assert len(letters(client, "Nothing has been charged")) == 1
+    assert len(letters(client, "Invoice")) == 1
 
     # pack it, ship it, deliver it
     sid = int(shipment["id"])
@@ -303,11 +331,12 @@ def test_a_declined_card_holds_the_order_and_writes_to_the_member(client):
     # no invoice for money that never arrived
     assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == 0
 
-    letters = sorted((client.tmp / "outbox").glob("*.eml"))
-    assert len(letters) == before + 1
-    told = letters[-1].read_text()
-    assert "declined" in told
-    assert "/club/card/" in told              # with a way to fix it themselves
+    # two letters now: the member, and the winery that would not otherwise know
+    assert len(letters(client)) == before + 2
+    told = letters(client, "/club/card/")[-1]
+    assert "declined" in told                 # with a way to fix it themselves
+    desk = letters(client, "refused")[-1]
+    assert "1 card was refused" in desk
 
 
 def test_a_member_can_put_in_another_card_and_the_order_then_charges(client):
@@ -447,7 +476,7 @@ def test_when_the_state_opens_they_join_the_ordinary_queue(client, monkeypatch):
     assert application["status"] == "pending"          # nothing is approved, nothing is sent
     assert application["state"] == "Arkansas"
     assert "waiting list" in application["referral"]
-    assert len(list((client.tmp / "outbox").glob("*.eml"))) == 0
+    assert letters(client, "/club/offer/") == [], "nothing is approved, nothing is offered"
 
     # And a second attempt does not raise a second application.
     client.post(f"/admin/waiting/{waiting_id}/invite", auth=ADMIN, follow_redirects=False)
@@ -725,7 +754,11 @@ def test_declining_tells_the_applicant(client):
     row = client.main.db.one("SELECT * FROM application WHERE id = ?", (app_id,))
     assert row["status"] == "declined"
     assert row["decline_reason"] == "Full for the season"
-    assert len(list((client.tmp / "outbox").glob("*.eml"))) == 1
+    # The reason is the desk's record, not the applicant's letter: "the list
+    # is full" is kinder than quoting an internal note back at somebody.
+    told = letters(client, "cannot offer you an allocation")
+    assert len(told) == 1
+    assert "Full for the season" not in told[0]
 
 
 def test_an_application_is_decided_once(client):
@@ -1006,3 +1039,88 @@ def test_a_three_bottle_case_pays_its_own_carriage_in_the_notice(client):
     body = notices(client)[0]
     assert f"{order['shipping_cents'] / 100:,.2f}" in body
     assert "included" not in body
+
+
+# ── the two silences ─────────────────────────────────────────────────────
+def test_the_form_writes_back(client):
+    """Somebody filled it in and heard nothing. For days, that was the winery."""
+    apply_(client)
+    told = letters(client, "We have your request")
+    assert len(told) == 1
+    assert "read by hand" in told[0]
+    # No deadline is promised. Approval is a person reading a request, and a
+    # "within 48 hours" that slips is worse than no promise at all.
+    for promise in ("hours", "business day", "tomorrow", "immediately"):
+        assert promise not in told[0].lower(), f"the letter promises {promise!r}"
+
+
+def test_the_form_says_the_harder_thing_to_a_state_we_cannot_reach(client):
+    res = client.post("/api/waiting", json={
+        "first_name": "Ada", "last_name": "Lovelace", "email": "ada@example.com",
+        "state": "Arkansas"})
+    assert res.status_code == 201
+    told = letters(client, "Arkansas")
+    assert len(told) == 1
+    assert "cannot ship wine to Arkansas" in told[0]
+    # And the one route that makes them a member this week.
+    assert "address somewhere" in told[0]
+
+
+def test_an_acknowledgement_that_fails_does_not_fail_the_request(client, monkeypatch):
+    """The row is saved and the browser is owed its answer."""
+    def boom(*a, **k):
+        raise RuntimeError("smtp fell over")
+    monkeypatch.setattr(client.main, "send_application_received", boom)
+    app_id = apply_(client)
+    assert app_id
+    events = client.main.db.all(
+        "SELECT action FROM event WHERE subject = 'application' AND subject_id = ?",
+        (app_id,))
+    assert "acknowledgement_failed" in [e["action"] for e in events]
+
+
+def test_the_winery_hears_about_a_declined_card(client):
+    """The member was told. Nobody was telling the winery, and it costs money."""
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    from app.payments.base import Charge
+    client.main.payments.charge = lambda **kw: Charge(
+        id="pi_x", paid=False, error="Your card has expired.", needs_member=False)
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                follow_redirects=False)
+
+    desk = letters(client, "refused")
+    assert len(desk) == 1
+    assert "1 card was refused" in desk[0]
+    assert "Your card has expired." in desk[0]
+    assert "wine has already left the cellar" in desk[0]
+
+
+def test_many_declines_are_one_message_not_twenty(client):
+    """Twenty alerts on a despatch morning is a mailbox nobody reads."""
+    for n in range(3):
+        pay(client, approve(client, apply_(client, email=f"m{n}@example.com")),
+            "tasting-case", )
+    release_id = plan_release(client)
+    from app.payments.base import Charge
+    client.main.payments.charge = lambda **kw: Charge(
+        id="pi_x", paid=False, error="Declined.", needs_member=False)
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                follow_redirects=False)
+
+    desk = letters(client, "cards were refused")
+    assert len(desk) == 1, "one digest for the release, not one per card"
+    assert "3 cards were refused" in desk[0]
+
+
+def test_the_declines_alert_goes_to_the_winery_not_the_member(client):
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    from app.payments.base import Charge
+    client.main.payments.charge = lambda **kw: Charge(
+        id="pi_x", paid=False, error="Declined.", needs_member=False)
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                follow_redirects=False)
+    desk = letters(client, "refused")[0]
+    assert client.main.settings.alerts_to in desk
+    assert "ada@example.com" not in desk.split("Subject:")[0]
