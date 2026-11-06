@@ -16,6 +16,11 @@ from .mail import Mailer, Message
 SIGNOFF = "Cecilia Valdivia, Owner & Winemaker\nWarm Springs Cellar, Glen Ellen, Sonoma Valley"
 
 
+def _plain(name: str) -> str:
+    """A tier name after a possessive. "Your The Tasting Case" is nobody's English."""
+    return name[4:] if name.lower().startswith("the ") else name
+
+
 def _html(body: str) -> str:
     return f"""<!doctype html><html><body style="margin:0;background:#faf8f5;padding:28px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
@@ -122,6 +127,78 @@ on a bed of wood wool, with a card from whoever made it.</p>""")
     # The PDF is linked from the admin desk and kept on disk; attaching it is a
     # one-line change here once the winery decides it wants it in the mail.
     return mailer.send(message)
+
+
+def send_release_notice(mailer: Mailer, member: sqlite3.Row, order: sqlite3.Row,
+                        tier: Tier, when: str, reply_to: str) -> str:
+    """Two weeks before a release is charged: what it will cost, and how to stop it.
+
+    The club has promised this one in writing since the beginning — the
+    welcome mail, the receipt and the offer page all say "we write two weeks
+    before every release so you can change quantities or skip the season" —
+    and until now nothing sent it. Without it the first a member hears of a
+    charge is the charge.
+
+    It is sent AFTER the orders are raised and BEFORE anything is charged,
+    which is why it can give real figures rather than a reminder that a
+    season is coming. The member sees their own wine, their own carriage for
+    their own address, and the total that will leave their card.
+
+    There is no self-service skip, so this does not pretend there is one: it
+    asks them to reply, and the reply reaches a mailbox a person reads. For a
+    club of this size that is not a workaround, it is the right size of
+    machinery — and a member who replies gets a person, which is most of what
+    they are paying for.
+    """
+    wine = f"${int(order['subtotal_cents']) / 100:,.2f}"
+    total = f"${int(order['total_cents']) / 100:,.2f}"
+    carriage = int(order["shipping_cents"])
+    # Carriage is a line only when there is one to pay. On a box cheaper than
+    # the tier's credit it comes to nothing, and "Shipping $0.00" invites a
+    # question that has no interesting answer.
+    freight = f"${carriage / 100:,.2f}" if carriage else "included"
+
+    rows = [(f"Wine ({tier.bottles} bottles)", wine),
+            ("Shipping", freight),
+            ("Total", total)]
+    width = max(len(label) for label, _ in rows)
+    table = "\n".join(f"  {label.ljust(width)}   {value}" for label, value in rows)
+
+    text = f"""Dear {member['first_name']},
+
+Your {_plain(tier.name)} for {when} is ready, and we will charge your card in
+about two weeks.
+
+{table}
+
+It goes to {member['ship_city']}, {member['ship_state']}.
+
+If you would like more or fewer bottles this time, or would rather skip the
+season altogether, reply to this message and we will sort it out. No reason
+needed. If everything is right, there is nothing to do.
+
+{SIGNOFF}"""
+
+    html = _html(f"""
+<p style="margin:0 0 14px">Dear {member['first_name']},</p>
+<p style="margin:0 0 18px">Your <strong>{_plain(tier.name)}</strong> for {when} is ready,
+and we will charge your card in about two weeks.</p>
+<table role="presentation" style="font:13px/1.8 system-ui,sans-serif;color:#5c4650;
+ border-top:1px solid #e2d8d0;border-bottom:1px solid #e2d8d0;padding:10px 0;width:100%">
+<tr><td style="color:#9a8890">Wine ({tier.bottles} bottles)</td><td align="right">{wine}</td></tr>
+<tr><td style="color:#9a8890">Shipping</td><td align="right">{freight}</td></tr>
+<tr><td style="color:#9a8890">Total</td><td align="right"><strong>{total}</strong></td></tr>
+</table>
+<p style="margin:14px 0 18px;font-size:13px;color:#5c4650">It goes to
+{member['ship_city']}, {member['ship_state']}.</p>
+<p style="margin:0">If you would like more or fewer bottles this time, or would rather
+skip the season altogether, <strong>reply to this message</strong> and we will sort it
+out. No reason needed. If everything is right, there is nothing to do.</p>""")
+
+    return mailer.send(Message(to=member["email"],
+                               subject=f"Your {_plain(tier.name)} ships "
+                                       f"{when} - {total}",
+                               text=text, html=html, reply_to=reply_to))
 
 
 def send_shipment_notice(mailer: Mailer, member: sqlite3.Row, order: sqlite3.Row,

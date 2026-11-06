@@ -2,11 +2,21 @@
 {% block body %}
 <h1>Releases</h1>
 <p class="sub">
-  Compose a release, raise its orders, then charge them. Three presses, not one:
-  the composition says what each tier's shipment holds, raising it takes those
-  bottles out of <a href="/admin/cellar">the cellar</a> and raises orders only for
-  the members there is wine for, and nothing is charged until somebody has looked
-  at what was raised. Running any of them twice is safe.
+  Compose a release, raise its orders, tell the members, then charge them. Four
+  presses, not one: the composition says what each tier's shipment holds, raising
+  it takes those bottles out of <a href="/admin/cellar">the cellar</a> and raises
+  orders only for the members there is wine for, and nothing is charged until
+  somebody has looked at what was raised. Running any of them twice is safe.
+</p>
+<p class="sub">
+  <strong>Tell them</strong> is the one the club has promised in writing since the
+  beginning &mdash; the welcome letter, every receipt and the offer page all say we
+  write two weeks before a release so a member can change quantities or skip the
+  season. Press it after raising the orders and give them those two weeks. It
+  quotes each member their own wine, their own carriage and their own total, and
+  asks them to reply; replies reach the club mailbox. It writes only to members
+  who have not been charged yet, so pressing it twice cannot warn somebody about
+  money that has already gone.
 </p>
 
 <div class="card">
@@ -47,6 +57,12 @@
           <button class="btn ghost small" type="submit">Raise orders</button>
         </form>
         {% if r.unpaid_count %}
+        {# Between raising and charging, because only here are there real
+           figures to quote and still time to act on them. #}
+        <form method="post" action="/admin/releases/{{ r.id }}/notify">
+          <button class="btn ghost small" type="submit"
+                  title="Tell each member what is coming and what it will cost">Tell them</button>
+        </form>
         <form method="post" action="/admin/releases/{{ r.id }}/charge">
           <button class="btn small" type="submit">Charge {{ r.unpaid_count }}</button>
         </form>

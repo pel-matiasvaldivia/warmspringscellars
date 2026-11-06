@@ -41,6 +41,7 @@ from .notify import (
     send_decline,
     send_invitation,
     send_receipt,
+    send_release_notice,
     send_shipment_notice,
     send_welcome,
 )
@@ -1005,6 +1006,59 @@ def tell_them_the_card_failed(result: dict) -> None:
     except Exception as exc:                                   # noqa: BLE001
         with db.transaction() as con:
             log(con, "order", int(order["id"]), "decline_notice_failed", error=str(exc))
+
+
+@app.post("/admin/releases/{release_id}/notify")
+def admin_notify_release(release_id: int,
+                         actor: str = Depends(require_admin)) -> RedirectResponse:
+    """Tell everybody in this release what is coming, two weeks before it does.
+
+    Between Generate and Charge, and only there: before Generate there are no
+    orders and so no figures, and after Charge the warning is an apology.
+
+    Only unpaid orders are written to, so pressing it twice does not tell a
+    member who has already been charged that a charge is coming. Writing to
+    somebody twice is a nuisance; writing to them after the money has gone is
+    worse.
+    """
+    rows = db.all(
+        'SELECT o.*, m.email, m.first_name, m.ship_city, m.ship_state '
+        'FROM "order" o JOIN membership m ON m.id = o.membership_id '
+        'WHERE o.release_id = ? AND o.paid_at IS NULL ORDER BY o.id',
+        (release_id,))
+    if not rows:
+        return RedirectResponse(
+            "/admin/releases?done=Nothing to tell anybody: this release has no "
+            "unpaid orders. Raise them with Generate first.", status_code=303)
+
+    release = db.one('SELECT * FROM "release" WHERE id = ?', (release_id,))
+    when = (release["name"] if release and release["name"] else "the coming release")
+    tiers = {t.key: t for t in catalogue().tiers}
+
+    sent = failed = 0
+    for row in rows:
+        tier = tiers.get(row["tier_key"])
+        if tier is None:          # a tier retired since the order was raised
+            failed += 1
+            continue
+        try:
+            send_release_notice(mailer, row, row, tier, when, settings.mail_reply_to)
+        except Exception as exc:                               # noqa: BLE001
+            failed += 1
+            log_line = f"{type(exc).__name__}: {exc}"
+            with db.transaction() as con:
+                log(con, "order", int(row["id"]), "release_notice_failed",
+                    actor=actor, error=log_line)
+        else:
+            sent += 1
+            with db.transaction() as con:
+                log(con, "order", int(row["id"]), "release_notice_sent", actor=actor)
+
+    done = f"{sent} member(s) told what is coming and what it will cost."
+    if failed:
+        done += (f" {failed} could not be written to — the reason is against each "
+                 "order in its history.")
+    return RedirectResponse(f"/admin/releases?done={done}", status_code=303)
 
 
 @app.post("/admin/releases/{release_id}/charge")

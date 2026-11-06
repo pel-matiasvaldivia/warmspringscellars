@@ -912,3 +912,97 @@ def test_states_are_the_ones_we_can_ship_to(client):
     states = client.get("/api/states").json()["states"]
     assert "California" in states
     assert "Utah" not in states
+
+
+# ── telling members before the money moves ───────────────────────────────
+# The club has promised this in writing since the beginning: the welcome
+# letter, every receipt and the offer page all say we write two weeks before
+# a release so a member can change quantities or skip. Nothing sent it until
+# now, which made the first word of a charge the charge itself.
+def notices(client) -> list[str]:
+    """The release notices sitting in the outbox, newest last."""
+    return [p.read_text() for p in sorted((client.tmp / "outbox").glob("*.eml"))
+            if "in about two weeks" in p.read_text()]
+
+
+def test_a_member_is_told_what_is_coming_and_what_it_costs(client):
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client, "Spring 2027")
+
+    res = client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                      follow_redirects=False)
+    assert res.status_code == 303
+    assert "1 member(s) told" in unquote(res.headers["location"])
+
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    sent = notices(client)
+    assert len(sent) == 1
+    body = sent[0]
+    # The figures are the order's own, not a reminder that a season is coming.
+    assert f"{order['total_cents'] / 100:,.2f}" in body
+    assert "Spring 2027" in body
+    assert "reply to this message" in body.lower()
+
+
+def test_telling_them_charges_nobody(client):
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    before = client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"]
+
+    client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                follow_redirects=False)
+
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["paid_at"] is None
+    assert order["status"] == "pending_payment"
+    # Counted either side rather than against zero: joining already raised
+    # one, and what matters is that warning somebody raises none.
+    assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == before
+
+
+def test_nobody_is_warned_about_money_that_has_already_gone(client):
+    """Pressing it after Charge must not tell a paid member a charge is coming."""
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                follow_redirects=False)
+
+    res = client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                      follow_redirects=False)
+    assert "no unpaid orders" in unquote(res.headers["location"])
+    assert notices(client) == []
+
+
+def test_telling_them_twice_writes_twice_and_breaks_nothing(client):
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    for _ in range(2):
+        client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                    follow_redirects=False)
+    assert len(notices(client)) == 2, "a nuisance, not a failure"
+    assert client.main.db.one('SELECT paid_at FROM "order" ORDER BY id DESC')["paid_at"] is None
+
+
+def test_the_notice_is_recorded_against_the_order(client):
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                follow_redirects=False)
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    events = client.main.db.all(
+        "SELECT action FROM event WHERE subject = 'order' AND subject_id = ?",
+        (order["id"],))
+    assert "release_notice_sent" in [e["action"] for e in events]
+
+
+def test_a_three_bottle_case_pays_its_own_carriage_in_the_notice(client):
+    """The Tasting Case carries no shipping credit, so the line is money."""
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                follow_redirects=False)
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["shipping_cents"] > 0, "nothing is credited on three bottles"
+    body = notices(client)[0]
+    assert f"{order['shipping_cents'] / 100:,.2f}" in body
+    assert "included" not in body
