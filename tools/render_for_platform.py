@@ -58,12 +58,18 @@ DIALECTS = {
         "unsubscribe_url": "*|UNSUB|*",
     },
     # Sequenzy reads attributes off the subscriber and has one tag for the
-    # unsubscribe URL. No fallback on the name: every contact in this list
-    # has a first name — checked, all 983 — and Sequenzy's own pre-send check
-    # flags a name tag without one, so if that ever stops being true the
-    # check will say so before a send rather than after.
+    # unsubscribe URL.
+    #
+    # SPELL `firstName` RIGHT. Sequenzy's own documentation warns about this
+    # and it is the nastiest failure here: `{{ subscriber.frstName | default:
+    # "there" }}` greets EVERY recipient as "there", including the 983 whose
+    # first name is stored, and the rendered email looks perfectly
+    # personalized. Nothing about the preview gives it away. The only honest
+    # test is the render endpoint's `unresolvedMergeTags` coming back empty —
+    # a tag with a fallback is still reported there when its name is
+    # unrecognized. Check that, not the greeting.
     "sequenzy": {
-        "first_name": "{{subscriber.firstName}}",
+        "first_name": '{{ subscriber.firstName | default: "Wine Lover" }}',
         "email": "{{subscriber.email}}",
         "unsubscribe_url": "{{unsubscribeUrl}}",
     },
