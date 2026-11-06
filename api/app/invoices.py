@@ -15,13 +15,15 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas as pdfcanvas
 
+from .config import POSTAL_ADDRESS
+
 WINE_RED = (0.447, 0.184, 0.227)      # #5c0037
 INK = (0.173, 0.118, 0.141)
 MUTED = (0.52, 0.47, 0.49)
 
 SELLER = [
     "Warm Springs Cellar",
-    "Glen Ellen, Sonoma Valley, California",
+    POSTAL_ADDRESS,
     "club@warmspringscellar.com · 707.318-0167",
 ]
 

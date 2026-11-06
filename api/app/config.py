@@ -183,6 +183,15 @@ class Settings:
         return out
 
 
+# The winery's street address. Not a setting: it is the same in every
+# deployment and it is a fact about the business rather than about the
+# machine. Two things need it and both are the kind that go wrong quietly —
+# the invoice, where a US business has to name itself, and the footer of any
+# bulk email, where CAN-SPAM requires a real physical address and a message
+# without one is unlawful rather than merely untidy.
+POSTAL_ADDRESS = "1310 Warm Springs Rd, Glen Ellen, CA 95442"
+
+
 US_STATES = {
     "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
     "Delaware", "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois",
