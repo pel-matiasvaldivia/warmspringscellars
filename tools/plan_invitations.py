@@ -23,11 +23,15 @@ a person decides what happens to them.
 
 A wave file is uploaded to a mailing platform, which makes every column in
 it a decision about what a third party gets to hold permanently. So a wave
-file carries three: the address, the first name and the link. The export it
-came from carries dates of birth, home addresses and telephone numbers —
-953, 904 and 929 of them in the October list — and none of those reach a
-platform from here. They survive in held-back.csv alone, which nobody
-uploads and which exists so a person can ring somebody and recover a
+file carries three: the address, the first name and the surname. Nothing
+else — not the old club's name, and no per-person link, because with a
+platform the link belongs once in the campaign's template rather than in
+every row.
+
+The export it came from carries dates of birth, home addresses and telephone
+numbers — 953, 904 and 929 of them in the October list — and none of those
+reach a platform from here. They survive in held-back.csv alone, which
+nobody uploads and which exists so a person can ring somebody and recover a
 missing state.
 
 The export and everything written from it are personal data, and consumer
@@ -43,10 +47,8 @@ import sys
 import unicodedata
 from collections import Counter
 from pathlib import Path
-from urllib.parse import quote
 
 REPO = Path(__file__).resolve().parent.parent
-SITE = "https://warmspringscellar.com"
 
 # The states the winery is licensed for, read from the service itself rather
 # than copied, so this file cannot disagree with what the form will accept.
@@ -101,31 +103,6 @@ def tidy_name(raw: str) -> str:
     if name.isupper() or name.islower():
         name = name.title()
     return name
-
-
-def link_for(row: dict, source: str) -> str:
-    """The form, with the name filled in and the wave recorded.
-
-    The name and the address, and deliberately NOT the city or the state.
-
-    Two reasons, and the first is the one that matters. **The address in the
-    export may be years old, and the wine is going to a door.** Prefilling a
-    city somebody moved out of in 2019 does not save them typing; it invites
-    them to press the button without reading the field, and the box goes to
-    the old address. The one thing in this form that must be current is the
-    one thing we should not guess at.
-
-    The second is that this link now travels through a mailing platform,
-    which keeps whatever the URL contains. Name and email are the ordinary
-    content of a marketing list. Where somebody lives does not have to be.
-
-    The form still says straight away whether we can ship to a state — it
-    says it when they choose one, which is also when they have told us the
-    truth rather than confirmed something stale.
-    """
-    parts = {"src": source, "f": row["first"], "l": row["last"], "e": row["email"]}
-    query = "&".join(f"{k}={quote(v)}" for k, v in parts.items() if v)
-    return f"{SITE}/?{query}#join"
 
 
 def read(path: Path) -> list[dict]:
@@ -212,27 +189,37 @@ def waves(people: list[dict]) -> list[tuple[str, str, list[dict]]]:
 # the cost of going quickly is the address the invoices go out from.
 LADDER = [50, 100, 200, 300, 400, 500]
 
-# What goes in a wave file, and nothing else. A wave file is now uploaded to
-# a mailing platform (mail-templates/CAMPAIGN.md), which makes every column a
-# decision about what a third party gets to hold.
+# What goes in a wave file, and nothing else. A wave file is uploaded to a
+# mailing platform (mail-templates/CAMPAIGN.md), which makes every column a
+# decision about what a third party gets to hold permanently — including
+# after the account is closed or the vendor folds.
 #
-# The platform needs an address to send to, a name to greet and the link. It
-# has no use for a date of birth, a home address, a postcode or a telephone
-# number, and the October export carries 953, 904 and 929 of the last three.
-# None of them makes the letter better; all of them sit in somebody else's
-# system afterwards, including after an account is closed or a vendor folds.
-# These are consumer records collected in California, so this is a CCPA
-# question and not only a tidiness one.
-WAVE_FIELDS = ["email", "first", "link"]
+# An address to send to and a name to greet. That is the whole of it.
+#
+# Not a date of birth, a home address, a postcode or a telephone number: the
+# October export carries 953, 904 and 929 of the last three, none of them
+# makes the letter better, and these are consumer records collected in
+# California, so it is a CCPA question and not only a tidiness one.
+#
+# Not the club name either. "6 Bottle Red Only Wine Club" tells the platform
+# precisely which winery's list this is, which is the winery's business to
+# disclose in its own words and not a column's business to leak.
+#
+# AND NO LINK COLUMN. There used to be one, per person, because a local
+# sender built each message. A platform does not work that way: the link
+# lives once in the campaign's template, where it can carry that wave's own
+# `src` and pull the reader's name in with the platform's merge tags, e.g.
+#
+#     https://warmspringscellar.com/?src=wave-3-twelve-bottle&f=*|FNAME|*#join
+#
+# One campaign per wave, one `src` per campaign. Attribution is unchanged and
+# the contact rows stay clean — the wave names printed by this script are the
+# `src` values to use.
+WAVE_FIELDS = ["email", "first", "last"]
 
 # The unlicensed letter is about the state, so it keeps the state.
-UNLICENSED_FIELDS = ["email", "first", "state", "link"]
+UNLICENSED_FIELDS = ["email", "first", "last", "state"]
 
-# Held-back rows are the one place a telephone number earns its keep: 81 of
-# them are held only because the export has no state, and INVITATIONS.md says
-# the way to recover it is the old club system, an invoice, or a telephone
-# call. Nothing in this file is uploaded anywhere — a person reads the reason
-# and acts on it — so the detail stays where the work is.
 HELD_FIELDS = ["email", "first", "last", "state", "city", "postcode", "club",
                "phone", "held_because"]
 
@@ -262,24 +249,13 @@ def sends(plan: list[tuple[str, str, list[dict]]]) -> list[tuple[str, str, list[
     return out
 
 
-def write(rows: list[dict], path: Path, source: str,
-          fields: list[str] = WAVE_FIELDS) -> None:
-    """One file, ready to upload, carrying only `fields`.
-
-    `link` is built rather than copied, and it is worth knowing what it
-    carries, because a URL reaches the platform whatever the columns say:
-    the person's first and last name, their email, and the wave. Nothing
-    else. That is the ordinary content of a marketing list. A date of birth,
-    a telephone number and a home address are not, and none of the three
-    gets past this function — see link_for for why the address in particular
-    is left out even though we have it.
-    """
+def write(rows: list[dict], path: Path, fields: list[str] = WAVE_FIELDS) -> None:
+    """One file, ready to upload, carrying only `fields`."""
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         for person in rows:
-            writer.writerow({**{k: person.get(k, "") for k in fields},
-                             "link": link_for(person, source)})
+            writer.writerow({k: person.get(k, "") for k in fields})
 
 
 def main() -> None:
@@ -305,7 +281,7 @@ def main() -> None:
 
     print("\nsends, in order — one a day, and only if the one before it behaved")
     for day, (name, why, group) in enumerate(sends(waves(people)), start=1):
-        write(group, out / f"wave-{name}.csv", f"deerfield-{name}")
+        write(group, out / f"wave-{name}.csv")
         states = len({p["state"] for p in group})
         print(f"  day {day}: {len(group):4d}  wave-{name}.csv  ({states} states)\n"
               f"          {why}")
@@ -318,8 +294,7 @@ def main() -> None:
     # reach is what turns this into an ordinary application today — which is
     # why the state stays as a COLUMN here, so the file can be read by state.
     if unlicensed:
-        write(unlicensed, out / "letter-unlicensed-states.csv", "deerfield-unlicensed",
-              UNLICENSED_FIELDS)
+        write(unlicensed, out / "letter-unlicensed-states.csv", UNLICENSED_FIELDS)
         where = Counter(p["state"] for p in unlicensed).most_common()
         print(f"\n  {len(unlicensed):4d}  letter-unlicensed-states.csv — a different letter: "
               + ", ".join(f"{state} {count}" for state, count in where))
@@ -338,9 +313,13 @@ def main() -> None:
           "reason first. The only file here with a telephone number in it, and "
           "the only one that is never uploaded anywhere.")
     print(f"\nWritten to {out}. Personal data: keep it out of the repository.")
-    print("The wave files carry three columns — address, first name, link — "
+    print("The wave files carry three columns — address, first name, surname — "
           "because every column in them becomes something a mailing platform "
-          "holds. Subtract /admin/campaigns/suppressions.csv before uploading.")
+          "holds for good. Subtract /admin/campaigns/suppressions.csv before "
+          "uploading one.")
+    print("There is no link column: build the link once in each campaign's "
+          "template, with that wave's name above as its ?src= value, and let "
+          "the platform's merge tags fill in the reader.")
 
 
 if __name__ == "__main__":

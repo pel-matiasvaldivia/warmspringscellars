@@ -123,8 +123,8 @@ warmspringscellar.com - club@warmspringscellar.com
 
 ------------------------------------------------------------------------
 
-You are receiving this at {{email}} because you are a member of the
-Deerfield Ranch Winery wine club. To unsubscribe, and we will not write
+You are receiving this at {{email}} because Cecilia wrote to you by post
+about the launch of this winery. To unsubscribe, and we will not write
 again:
 
   {{unsubscribe_url}}

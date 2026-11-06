@@ -269,6 +269,51 @@ def test_the_letter_leaves_a_slot_for_the_platforms_unsubscribe_link():
         assert "{{unsubscribe_url}}" in body, f"{name} has nowhere for the link"
 
 
+def test_the_footer_gives_the_postal_letter_as_the_reason():
+    """Why this arrived, without telling each reader what we hold about them.
+
+    The footer used to say "because you are a member of the Deerfield Ranch
+    Winery wine club", which is a disclosure to every single recipient that
+    this winery is holding their membership of another one. The printed
+    letter Cecilia posted is a better answer: it is true, it is the contact
+    they will actually remember, and it reveals nothing they did not already
+    know we knew.
+    """
+    for part, name in zip(letter(), ("html", "text")):
+        body = flat(part)
+        assert "because Cecilia wrote to you by post" in body, \
+            f"the {name} footer does not say why this arrived"
+        assert "member of the Deerfield" not in body, \
+            f"the {name} footer tells the reader we hold their old club record"
+
+
+def test_an_uploaded_wave_carries_only_a_name_and_an_address():
+    """Three columns, and the reasons they are the only three.
+
+    A wave file goes to a mailing platform, which keeps every column for
+    good. No date of birth, no home address, no telephone number. No club
+    name either — "6 Bottle Red Only Wine Club" tells the platform exactly
+    whose list this is, which is the winery's own disclosure to make in its
+    own words. And no per-person link: with a platform the link lives once
+    in the campaign template.
+    """
+    sys.path.insert(0, str(REPO / "tools"))
+    import plan_invitations                                   # noqa: PLC0415
+
+    assert plan_invitations.WAVE_FIELDS == ["email", "first", "last"]
+    for leak in ("phone", "postcode", "club", "city", "link"):
+        assert leak not in plan_invitations.WAVE_FIELDS, \
+            f"{leak} would be handed to the platform for good"
+    # The unlicensed letter is about the state, so that file keeps it.
+    assert "state" in plan_invitations.UNLICENSED_FIELDS
+    # Held-back rows keep the telephone number: ringing somebody is the
+    # documented way the 81 rows with no state get one. That file is never
+    # uploaded.
+    assert "phone" in plan_invitations.HELD_FIELDS
+    assert not hasattr(plan_invitations, "link_for"), \
+        "the per-person link is the platform's template's job now"
+
+
 def test_the_plain_text_letter_never_ships_its_editors_note():
     _html, text = letter()
     assert "plain-text twin" not in text, "the note to the editor came too"
