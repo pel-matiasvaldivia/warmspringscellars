@@ -104,10 +104,26 @@ def tidy_name(raw: str) -> str:
 
 
 def link_for(row: dict, source: str) -> str:
-    """The form, with what we already know filled in and the wave recorded."""
+    """The form, with the name filled in and the wave recorded.
+
+    The name and the address, and deliberately NOT the city or the state.
+
+    Two reasons, and the first is the one that matters. **The address in the
+    export may be years old, and the wine is going to a door.** Prefilling a
+    city somebody moved out of in 2019 does not save them typing; it invites
+    them to press the button without reading the field, and the box goes to
+    the old address. The one thing in this form that must be current is the
+    one thing we should not guess at.
+
+    The second is that this link now travels through a mailing platform,
+    which keeps whatever the URL contains. Name and email are the ordinary
+    content of a marketing list. Where somebody lives does not have to be.
+
+    The form still says straight away whether we can ship to a state — it
+    says it when they choose one, which is also when they have told us the
+    truth rather than confirmed something stale.
+    """
     parts = {"src": source, "f": row["first"], "l": row["last"], "e": row["email"]}
-    if row["state"] in SHIPPABLE_STATES:
-        parts["c"], parts["st"] = row["city"], row["state"]
     query = "&".join(f"{k}={quote(v)}" for k, v in parts.items() if v)
     return f"{SITE}/?{query}#join"
 
@@ -251,12 +267,12 @@ def write(rows: list[dict], path: Path, source: str,
     """One file, ready to upload, carrying only `fields`.
 
     `link` is built rather than copied, and it is worth knowing what it
-    carries: the personalised query string holds the person's first and last
-    name, their email and — only where the winery is licensed — their city
-    and state, so the form fills itself in and the reply takes a minute. That
-    much reaches the platform inside the URL whatever the columns say. It is
-    the ordinary content of any marketing list; a date of birth and a
-    telephone number are not, which is why those stop here.
+    carries, because a URL reaches the platform whatever the columns say:
+    the person's first and last name, their email, and the wave. Nothing
+    else. That is the ordinary content of a marketing list. A date of birth,
+    a telephone number and a home address are not, and none of the three
+    gets past this function — see link_for for why the address in particular
+    is left out even though we have it.
     """
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
@@ -296,9 +312,11 @@ def main() -> None:
 
     # Their own file, and their own letter: invitation-unlicensed.html, which
     # says we cannot ship there instead of asking them to join something they
-    # cannot have. The link still works for them — it fills in everything but
-    # the state, because an address in a state we can reach is the one thing
-    # that turns this into an ordinary application today.
+    # cannot have. The link still works for them, and asking them for an
+    # address is no longer the special case it once was: no link prefills one
+    # now. For these 23 it is the whole question — an address somewhere we can
+    # reach is what turns this into an ordinary application today — which is
+    # why the state stays as a COLUMN here, so the file can be read by state.
     if unlicensed:
         write(unlicensed, out / "letter-unlicensed-states.csv", "deerfield-unlicensed",
               UNLICENSED_FIELDS)

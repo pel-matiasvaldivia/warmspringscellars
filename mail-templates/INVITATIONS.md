@@ -128,9 +128,9 @@ actually true.
 **An address somewhere we can reach.** An office, a second home, family they
 visit. What governs the permit is where the box is delivered, not where the
 member lives, so this is an ordinary delivery and not a way around anything —
-and it is the one route that turns a reply into a member *today*. Their link
-fills in everything except the state, on purpose: the address is the whole
-question, and the one in the export is the wrong one.
+and it is the one route that turns a reply into a member *today*. No link
+prefills an address any more, theirs included, so there is nothing to undo:
+the question is simply open, which for these 23 is the whole point.
 
 **Or: tell us to write when it opens.** No date is promised, because none can
 be. It depends on a licence the winery does not control.
@@ -174,17 +174,26 @@ Every row carries a personalised link to the form on the site:
 
 ```
 https://warmspringscellar.com/?src=deerfield-1-inner-circle&f=Anita&l=Vogel
-  &e=anita%40example.com&c=Los%20Angeles&st=California#join
+  &e=anita%40example.com#join
 ```
 
-The form fills itself in from it, so the person presses one button and chooses
-an allocation. Three things come from doing it this way rather than mailing
-people a membership they never asked for:
+Name, address, wave. **Not the city and not the state**, although the export
+has both. The form fills in the tedious part, the person types where the wine
+should go, and presses one button. Three things come from doing it this way
+rather than mailing people a membership they never asked for:
 
 * **They ask.** The request is theirs, which is a different thing in law and a
   different thing in the morning.
 * **The address is current.** The one in the export may be years old, and the
-  wine is going to a door.
+  wine is going to a door. This is why the link stopped carrying it: a
+  prefilled city somebody moved out of in 2019 does not save them typing, it
+  invites them to press the button without reading the field — and then the
+  box goes to the old address. The form still says straight away whether we
+  can ship to a state; it says it when they choose one, which is also when
+  they have told us the truth rather than confirmed something stale.
+* **The platform never sees it.** The link travels through a mailing
+  platform, which keeps whatever the URL contains. A name and an email are
+  the ordinary content of a marketing list. Where somebody lives is not.
 * **It is one queue.** They land in **Applications** beside everybody else,
   and get approved the same way. Nothing special, nothing to remember.
 

@@ -3104,6 +3104,12 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     if (!params.toString()) return;
     campaign = (params.get('src') || '').slice(0, 60);
 
+    // 'c' and 'st' are still honoured but nothing sends them any more:
+    // tools/plan_invitations.py deliberately leaves the address out of the
+    // link, because the one in the Deerfield export may be years old and a
+    // prefilled city invites somebody to confirm a door they moved out of.
+    // A link built by hand — a QR code on a printed piece, say — can still
+    // use them. A missing one simply leaves the field empty.
     [['f', '#f-first'], ['l', '#f-last'], ['e', '#f-email'],
      ['c', '#f-city'], ['st', '#f-state']].forEach(function (pair) {
       var value = (params.get(pair[0]) || '').trim();
