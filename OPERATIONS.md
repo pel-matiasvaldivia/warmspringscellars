@@ -633,6 +633,21 @@ Microsoft has been retiring basic authentication for SMTP. On the day it goes
 in a tenant, a username and a password stop working with no warning. So the
 adapter also speaks **XOAUTH2**, which is the path that survives.
 
+**This is the only route for this winery**, because
+`wineclub@warmspringscellar.com` is a shared mailbox and §8.2 is therefore
+closed. Two things to settle before starting, in this order:
+
+* **Does the shared mailbox hold an Exchange Online licence?** Shared
+  mailboxes are unlicensed by default, and Microsoft's own guidance for
+  client SMTP submission says it needs a licensed mailbox. If sending is
+  refused after everything below is correct, this is the first thing to
+  check — it is a licence assignment, not a code problem.
+* **Shared mailboxes are explicitly supported over XOAUTH2.** Microsoft's
+  documentation says that for a shared mailbox the application obtains its
+  own token and puts the shared mailbox's address in the SASL `user=` field.
+  That is exactly what the adapter does with `SMTP_USER`, so nothing here
+  needs changing for a shared mailbox — only step 4's grant has to name it.
+
 It is done once, and it needs a tenant administrator:
 
 1. **Entra ID → App registrations → New registration.** Name it `Warm Springs
@@ -649,7 +664,7 @@ It is done once, and it needs a tenant administrator:
 
    ```powershell
    Connect-ExchangeOnline
-   New-ServicePrincipal -AppId <client id> -ServiceId <the app's object id>
+   New-ServicePrincipal -AppId <client id> -ObjectId <the app's object id>
    Add-MailboxPermission -Identity wineclub@warmspringscellar.com `
        -User <the app's object id> -AccessRights FullAccess
    ```

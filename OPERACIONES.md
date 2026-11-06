@@ -639,6 +639,22 @@ Microsoft viene retirando la autenticación básica para SMTP. El día que la
 apaga en un tenant, usuario y contraseña dejan de servir sin aviso previo. Por
 eso el adaptador también habla **XOAUTH2**, que es el camino que sobrevive.
 
+**Es el único camino para esta bodega**, porque
+`wineclub@warmspringscellar.com` es una casilla compartida y la §8.2 queda
+cerrada. Dos cosas que conviene resolver antes de empezar, en este orden:
+
+* **¿La casilla compartida tiene licencia de Exchange Online?** Las casillas
+  compartidas no la tienen por defecto, y la propia guía de Microsoft para
+  envío SMTP de cliente dice que hace falta una casilla con licencia. Si
+  después de hacer todo lo de abajo el envío sigue siendo rechazado, esto es
+  lo primero que hay que mirar: es una licencia, no un problema de código.
+* **Las casillas compartidas están soportadas por XOAUTH2.** La documentación
+  de Microsoft dice que para una casilla compartida la aplicación obtiene su
+  propio token y pone la dirección de la casilla compartida en el campo
+  `user=` de SASL. Es exactamente lo que hace el adaptador con `SMTP_USER`,
+  así que no hay que cambiar nada por ser compartida: sólo el permiso del
+  paso 4 tiene que nombrarla.
+
 Se hace una vez, y hace falta un administrador del tenant:
 
 1. **Entra ID → App registrations → New registration.** Nombre: `Warm Springs
@@ -655,7 +671,7 @@ Se hace una vez, y hace falta un administrador del tenant:
 
    ```powershell
    Connect-ExchangeOnline
-   New-ServicePrincipal -AppId <client id> -ServiceId <object id de la app>
+   New-ServicePrincipal -AppId <client id> -ObjectId <object id de la app>
    Add-MailboxPermission -Identity wineclub@warmspringscellar.com `
        -User <object id de la app> -AccessRights FullAccess
    ```
