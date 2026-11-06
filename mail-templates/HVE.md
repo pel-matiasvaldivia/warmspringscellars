@@ -5,6 +5,34 @@ Email (HVE)** rather than through a mailing platform. This file is what that
 means in practice: what HVE does, what it does not, what the club had to build
 to cover the difference, and the order the first send happens in.
 
+## Why not Brevo, Mailchimp, Klaviyo, SendGrid or SES
+
+Because of the list, not the tool. The Deerfield list was collected by one
+winery and handed to another, which makes it a third-party list, and **every
+one of those platforms forbids sending to one**: Brevo calls acquired lists
+"strictly prohibited", Klaviyo and Mailchimp put them outside their acceptable
+use policies, Twilio's policy covers SendGrid, and AWS says purchased or
+rented lists are "not allowed on Amazon SES under any circumstances".
+
+The failure mode is not a warning. It is the account suspended part-way
+through a wave, with the list inside it — Brevo has a help article on what to
+do with your contacts afterwards, which is how often it happens.
+
+Two routes were considered, November 2026:
+
+* **Deerfield sends it.** Their own list, from their own account, with a link
+  here. No third-party policy to breach, and it arrives from somebody the
+  reader knows. This was the better route and was **not taken**.
+* **The winery sends it through HVE.** Taken. HVE is the tenant's own
+  infrastructure, so there is no third-party acceptable-use policy to breach
+  — the risk moves from "the account is suspended" to "the domain's
+  reputation is spent", which is what the subdomain, the ramp and the
+  suppression list below exist to contain.
+
+Once somebody has joined through the form they are a first-party, opted-in
+contact and an ordinary platform is fine for writing to them. That list starts
+at zero on the day the first person joins; it is not this one.
+
 ## The one thing to settle before anything else
 
 **Confirm that your HVE account can send to recipients outside the tenant, and

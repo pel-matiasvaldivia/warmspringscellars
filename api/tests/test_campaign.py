@@ -398,6 +398,38 @@ def test_both_halves_of_the_letter_carry_the_unsubscribe_link():
         assert "21 or older" in part
 
 
+def test_the_letter_says_why_this_person_is_hearing_from_us():
+    """The one line the reader is actually weighing.
+
+    The draft opened "You've received an announcement from Cecilia Valdivia",
+    which assumed Deerfield had already written to them. Under the plan that
+    was chosen nobody has: this letter IS the announcement, sent by the
+    winery to a list it was handed. A letter that opens by referring to one
+    the reader never got reads as a mass mailing that does not know who it is
+    talking to, and the footer's fine print is not where somebody looks for
+    the answer.
+    """
+    sys.path.insert(0, str(REPO / "tools"))
+    import send_campaign                                      # noqa: PLC0415
+
+    letter = send_campaign.Letter.load("new-kid-on-the-block", "x")
+    html, text = letter.render({
+        "first_name": "Anita", "email": "a@example.com", "link": "https://x/",
+        "unsubscribe_url": "https://x/unsubscribe?t=abc", "postal_address": "x",
+    })
+    import re as _re
+    for part, name in ((html, "html"), (text, "text")):
+        # Comments out: the file explains the change, and an explanation the
+        # reader never sees must not be able to pass or fail this.
+        flat = " ".join(_re.sub(r"<!--.*?-->", "", part, flags=_re.S).split())
+        assert "You are hearing from us because" in flat, \
+            f"the {name} part never says why this letter arrived"
+        assert "You&rsquo;ve received an announcement" not in flat, \
+            f"the {name} part still assumes a letter Deerfield never sent"
+        assert "You've received an announcement" not in flat, \
+            f"the {name} part still assumes a letter Deerfield never sent"
+
+
 def test_the_letter_does_not_promise_free_shipping():
     """The draft said shipping was complimentary. It is not, and has not been
     since 19 October: every tier is billed the carrier's rate less a credit.
