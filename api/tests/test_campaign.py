@@ -269,6 +269,26 @@ def test_the_letter_leaves_a_slot_for_the_platforms_unsubscribe_link():
         assert "{{unsubscribe_url}}" in body, f"{name} has nowhere for the link"
 
 
+def test_no_letter_anywhere_still_promises_free_shipping():
+    """The same stale claim turned up in three letters, found one at a time.
+
+    Shipping stopped being included on 19 October. The announcement letter was
+    corrected first; `invitation-unlicensed.html` was caught only when it was
+    about to go to the 23 people in states the winery has no permit for, and
+    `invitation.html` after that. A letter that promises carriage and then
+    charges it at checkout is the kind of thing a member remembers, so this
+    reads every letter in the folder rather than the one in hand.
+    """
+    import re as _re
+    for path in sorted((REPO / "mail-templates").glob("*.html")):
+        body = " ".join(
+            _re.sub(r"<!--.*?-->", "", path.read_text(), flags=_re.S).split()).lower()
+        for promise in ("shipping included", "carriage included",
+                        "shipping is complimentary", "carriage is ours",
+                        "complimentary shipping"):
+            assert promise not in body, f"{path.name} promises free carriage"
+
+
 def test_the_footer_gives_the_postal_letter_as_the_reason():
     """Why this arrived, without telling each reader what we hold about them.
 
