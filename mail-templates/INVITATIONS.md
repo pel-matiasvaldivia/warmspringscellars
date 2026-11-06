@@ -107,11 +107,22 @@ a wave of thirty, mean the next wave waits.
 | 2 | a role address (`info@`, `sales@`), not a person |
 | 1 | a test row |
 
-The 81 without a state are worth more than the other 106 together: they are
-ordinary members whose export row is simply incomplete. If their state can be
-recovered — from the old club system, from an invoice, from a telephone call —
-they join a later wave. What they must not get is a letter inviting them to
-join something that may not be able to ship to them.
+**The 81 without a state turned out not to be incomplete rows at all.**
+Looked at by club, 74 of them belong to a *Pick Up* club: they collected their
+wine at the winery, so the old system never had a shipping state to record.
+Nothing is missing. Only the remaining 7 are genuinely partial rows.
+
+That changes what they are owed and what they are being offered. Warm Springs
+Cellar has no pick-up allocation — all three tiers ship, three times a year —
+so these 74 are being asked to take up something materially different from
+what they had. Somebody should decide whether that deserves a sentence of its
+own in their wave, because they are the one group for whom the offer is not
+simply "the same club, new winery".
+
+They are written to all the same. The form asks every visitor for their state
+and decides from the answer, so a state nobody recorded in 2019 is not a
+reason to leave somebody out: the person settles it themselves in the one
+place where the answer is current.
 
 ## The 23 in states we have no licence for
 
