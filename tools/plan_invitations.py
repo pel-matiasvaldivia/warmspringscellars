@@ -21,8 +21,17 @@ a person decides what happens to them.
 
     python3 tools/plan_invitations.py <export.csv> <output-directory>
 
-The export and everything written from it are personal data — names, home
-addresses, dates of birth, telephone numbers. They do not belong in this
+A wave file is uploaded to a mailing platform, which makes every column in
+it a decision about what a third party gets to hold permanently. So a wave
+file carries three: the address, the first name and the link. The export it
+came from carries dates of birth, home addresses and telephone numbers —
+953, 904 and 929 of them in the October list — and none of those reach a
+platform from here. They survive in held-back.csv alone, which nobody
+uploads and which exists so a person can ring somebody and recover a
+missing state.
+
+The export and everything written from it are personal data, and consumer
+records collected in California at that. They do not belong in this
 repository, and the script refuses to write inside it.
 """
 
@@ -187,7 +196,29 @@ def waves(people: list[dict]) -> list[tuple[str, str, list[dict]]]:
 # the cost of going quickly is the address the invoices go out from.
 LADDER = [50, 100, 200, 300, 400, 500]
 
-FIELDS = ["email", "first", "last", "state", "city", "postcode", "club", "phone", "link"]
+# What goes in a wave file, and nothing else. A wave file is now uploaded to
+# a mailing platform (mail-templates/CAMPAIGN.md), which makes every column a
+# decision about what a third party gets to hold.
+#
+# The platform needs an address to send to, a name to greet and the link. It
+# has no use for a date of birth, a home address, a postcode or a telephone
+# number, and the October export carries 953, 904 and 929 of the last three.
+# None of them makes the letter better; all of them sit in somebody else's
+# system afterwards, including after an account is closed or a vendor folds.
+# These are consumer records collected in California, so this is a CCPA
+# question and not only a tidiness one.
+WAVE_FIELDS = ["email", "first", "link"]
+
+# The unlicensed letter is about the state, so it keeps the state.
+UNLICENSED_FIELDS = ["email", "first", "state", "link"]
+
+# Held-back rows are the one place a telephone number earns its keep: 81 of
+# them are held only because the export has no state, and INVITATIONS.md says
+# the way to recover it is the old club system, an invoice, or a telephone
+# call. Nothing in this file is uploaded anywhere — a person reads the reason
+# and acts on it — so the detail stays where the work is.
+HELD_FIELDS = ["email", "first", "last", "state", "city", "postcode", "club",
+               "phone", "held_because"]
 
 
 def sends(plan: list[tuple[str, str, list[dict]]]) -> list[tuple[str, str, list[dict]]]:
@@ -215,12 +246,23 @@ def sends(plan: list[tuple[str, str, list[dict]]]) -> list[tuple[str, str, list[
     return out
 
 
-def write(rows: list[dict], path: Path, source: str) -> None:
+def write(rows: list[dict], path: Path, source: str,
+          fields: list[str] = WAVE_FIELDS) -> None:
+    """One file, ready to upload, carrying only `fields`.
+
+    `link` is built rather than copied, and it is worth knowing what it
+    carries: the personalised query string holds the person's first and last
+    name, their email and — only where the winery is licensed — their city
+    and state, so the form fills itself in and the reply takes a minute. That
+    much reaches the platform inside the URL whatever the columns say. It is
+    the ordinary content of any marketing list; a date of birth and a
+    telephone number are not, which is why those stop here.
+    """
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=FIELDS)
+        writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         for person in rows:
-            writer.writerow({**{k: person.get(k, "") for k in FIELDS},
+            writer.writerow({**{k: person.get(k, "") for k in fields},
                              "link": link_for(person, source)})
 
 
@@ -258,22 +300,29 @@ def main() -> None:
     # the state, because an address in a state we can reach is the one thing
     # that turns this into an ordinary application today.
     if unlicensed:
-        write(unlicensed, out / "letter-unlicensed-states.csv", "deerfield-unlicensed")
+        write(unlicensed, out / "letter-unlicensed-states.csv", "deerfield-unlicensed",
+              UNLICENSED_FIELDS)
         where = Counter(p["state"] for p in unlicensed).most_common()
         print(f"\n  {len(unlicensed):4d}  letter-unlicensed-states.csv — a different letter: "
               + ", ".join(f"{state} {count}" for state, count in where))
 
     # The held rows get the reason instead of a link: there is nothing to
-    # click until a person has decided what to do about each one.
+    # click until a person has decided what to do about each one. This is the
+    # one file that keeps the telephone number, because ringing somebody is
+    # how the 81 rows with no state get a state.
     with (out / "held-back.csv").open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=FIELDS[:-1] + ["held_because"])
+        writer = csv.DictWriter(handle, fieldnames=HELD_FIELDS)
         writer.writeheader()
         for person in held:
-            writer.writerow({**{k: person.get(k, "") for k in FIELDS[:-1]},
+            writer.writerow({**{k: person.get(k, "") for k in HELD_FIELDS},
                              "held_because": person["held"]})
     print(f"\n  {len(held):4d}  held-back.csv — nobody writes to these without reading the "
-          "reason first")
+          "reason first. The only file here with a telephone number in it, and "
+          "the only one that is never uploaded anywhere.")
     print(f"\nWritten to {out}. Personal data: keep it out of the repository.")
+    print("The wave files carry three columns — address, first name, link — "
+          "because every column in them becomes something a mailing platform "
+          "holds. Subtract /admin/campaigns/suppressions.csv before uploading.")
 
 
 if __name__ == "__main__":
