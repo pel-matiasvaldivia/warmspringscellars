@@ -1124,3 +1124,32 @@ def test_the_declines_alert_goes_to_the_winery_not_the_member(client):
     desk = letters(client, "refused")[0]
     assert client.main.settings.alerts_to in desk
     assert "ada@example.com" not in desk.split("Subject:")[0]
+
+
+def test_the_club_does_not_sign_letters_to_itself(client):
+    """An operational alert is not a letter from Cecilia to Cecilia.
+
+    The house wrapper signs every message "Cecilia Valdivia, Owner &
+    Winemaker" and closes with "you are receiving this because you asked for
+    an allocation... you must be 21 or older to purchase". On a note the
+    service sends the desk, she is signing to herself and the consumer
+    footer is addressed to somebody who did neither of those things.
+    """
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    from app.payments.base import Charge
+    client.main.payments.charge = lambda **kw: Charge(
+        id="pi_x", paid=False, error="Declined.", needs_member=False)
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                follow_redirects=False)
+
+    desk = letters(client, "refused")[0]
+    assert "you asked for an allocation" not in desk
+    assert "21 or older" not in desk
+    assert "Owner & Winemaker" not in desk
+    assert "Nobody outside the winery sees this" in desk
+
+    # The member's own letter keeps both, because they are for a member.
+    theirs = letters(client, "/club/card/")[0]
+    assert "21 or older" in theirs
+    assert "Owner & Winemaker" in theirs

@@ -21,7 +21,24 @@ def _plain(name: str) -> str:
     return name[4:] if name.lower().startswith("the ") else name
 
 
-def _html(body: str) -> str:
+def _html(body: str, internal: bool = False) -> str:
+    """The house wrapper. `internal` is for mail the club sends to itself.
+
+    An operational alert signed "Cecilia Valdivia, Owner & Winemaker" is
+    Cecilia signing a note to herself, and the consumer footer below —
+    "you asked for an allocation", "you must be 21 or older to purchase" —
+    is addressed to somebody who did neither. Both come off.
+    """
+    signature = "" if internal else """
+<p style="margin:26px 0 0;font-size:13px;color:#5c4650">Cecilia Valdivia, Owner &amp; Winemaker<br>
+<span style="color:#9a8890">Glen Ellen, Sonoma Valley</span></p>"""
+    footer = """
+<p style="font:11px/1.5 system-ui,sans-serif;color:#9a8890;max-width:520px;margin:14px auto 0">
+Sent by the club service to the cellar desk. Nobody outside the winery sees this.</p>""" \
+        if internal else """
+<p style="font:11px/1.5 system-ui,sans-serif;color:#9a8890;max-width:520px;margin:14px auto 0">
+You are receiving this because you asked for an allocation at warmspringscellar.com.
+You must be 21 or older to purchase. Please drink responsibly.</p>"""
     return f"""<!doctype html><html><body style="margin:0;background:#faf8f5;padding:28px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <table role="presentation" width="100%" style="max-width:520px;background:#fff;
@@ -29,13 +46,8 @@ def _html(body: str) -> str:
 <tr><td>
 <p style="font:600 11px/1 system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;
  color:#5c0037;margin:0 0 22px">Warm Springs Cellar</p>
-{body}
-<p style="margin:26px 0 0;font-size:13px;color:#5c4650">Cecilia Valdivia, Owner &amp; Winemaker<br>
-<span style="color:#9a8890">Glen Ellen, Sonoma Valley</span></p>
-</td></tr></table>
-<p style="font:11px/1.5 system-ui,sans-serif;color:#9a8890;max-width:520px;margin:14px auto 0">
-You are receiving this because you asked for an allocation at warmspringscellar.com.
-You must be 21 or older to purchase. Please drink responsibly.</p>
+{body}{signature}
+</td></tr></table>{footer}
 </td></tr></table></body></html>"""
 
 
@@ -405,7 +417,7 @@ do not: these orders sit in Orders as failed, and the wine has already left
 the cellar.
 
 Retry a card from Orders once the member says they have replaced it.
-"""
+"""  # no signature: the club does not sign letters to itself
 
     rows = "".join(
         f'<tr><td style="padding:6px 0;border-bottom:1px solid #e2d8d0">'
@@ -422,7 +434,7 @@ charged, holding {held}.</p>
 <p style="margin:18px 0 0;font-size:13px;color:#5c4650">Each of them has been written to
 with a link to put in another card, so the usual next step is to wait a day. What nobody
 else will do is notice if they do not: these orders sit in Orders as failed, and the wine
-has already left the cellar.</p>""")
+has already left the cellar.</p>""", internal=True)
 
-    return mailer.send(Message(to=to, subject=f"{count} {noun} refused — {held} unpaid",
+    return mailer.send(Message(to=to, subject=f"{count} {noun} refused - {held} unpaid",
                                text=text, html=html, reply_to=reply_to))
