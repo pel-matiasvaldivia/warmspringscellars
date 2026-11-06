@@ -24,7 +24,7 @@ MUTED = (0.52, 0.47, 0.49)
 SELLER = [
     "Warm Springs Cellar",
     POSTAL_ADDRESS,
-    "club@warmspringscellar.com · 707.318-0167",
+    "wineclub@warmspringscellar.com · 707.318-0167",
 ]
 
 

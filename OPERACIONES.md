@@ -112,7 +112,7 @@ alguien ansioso no es dos socios.
 
 ### 3.1b Alguien que escribió en vez de completar el formulario
 
-Hay gente que escribe a `club@warmspringscellar.com`, llama por teléfono o
+Hay gente que escribe a `wineclub@warmspringscellar.com`, llama por teléfono o
 pregunta en la bodega. **"Add one by hand"**, arriba a la derecha de
 **Applications**, los mete en la misma cola: nombre, apellido, mail y estado, y
 el resto opcional. Desde ese momento son una solicitud como cualquier otra —
@@ -602,13 +602,25 @@ reiniciar; no hay nada que tocar en el código.
 
 ### 8.2 Microsoft 365 con contraseña
 
+> **No está disponible para esta bodega, y no es un interruptor que alguien
+> pueda encender.** `wineclub@warmspringscellar.com` es una **casilla
+> compartida**. Una casilla compartida no tiene contraseña y no puede iniciar
+> sesión, así que no hay nada que poner en `SMTP_PASSWORD`. Todo lo que sigue
+> describe una casilla común con licencia y queda para el día que el club use
+> una. **Andá a §8.3.**
+>
+> El error, si alguien lo intenta igual, es `535 5.7.3` — el inquilino
+> rechazando el inicio de sesión — y se parece exactamente a una contraseña
+> equivocada. No lo es.
+
+
 ```
 SMTP_HOST=smtp.office365.com
 SMTP_PORT=587
-SMTP_USER=club@warmspringscellar.com
+SMTP_USER=wineclub@warmspringscellar.com
 SMTP_PASSWORD=<la contraseña de esa casilla>
-MAIL_FROM=club@warmspringscellar.com
-MAIL_REPLY_TO=club@warmspringscellar.com
+MAIL_FROM=wineclub@warmspringscellar.com
+MAIL_REPLY_TO=wineclub@warmspringscellar.com
 ```
 
 La casilla necesita licencia de Exchange Online —una casilla compartida sin
@@ -644,7 +656,7 @@ Se hace una vez, y hace falta un administrador del tenant:
    ```powershell
    Connect-ExchangeOnline
    New-ServicePrincipal -AppId <client id> -ServiceId <object id de la app>
-   Add-MailboxPermission -Identity club@warmspringscellar.com `
+   Add-MailboxPermission -Identity wineclub@warmspringscellar.com `
        -User <object id de la app> -AccessRights FullAccess
    ```
 
@@ -654,7 +666,7 @@ Se hace una vez, y hace falta un administrador del tenant:
    ```
    SMTP_HOST=smtp.office365.com
    SMTP_PORT=587
-   SMTP_USER=club@warmspringscellar.com
+   SMTP_USER=wineclub@warmspringscellar.com
    SMTP_PASSWORD=
    SMTP_OAUTH_TENANT_ID=<Directory (tenant) ID>
    SMTP_OAUTH_CLIENT_ID=<Application (client) ID>

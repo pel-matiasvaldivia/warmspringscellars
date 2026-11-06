@@ -109,7 +109,7 @@ members.
 
 ### 3.1b Somebody who wrote instead of filling in the form
 
-People write to `club@warmspringscellar.com`, telephone, or ask at the winery.
+People write to `wineclub@warmspringscellar.com`, telephone, or ask at the winery.
 **"Add one by hand"**, at the top right of **Applications**, puts them into the
 same queue: name, email, state, and the rest optional. From that moment they
 are an ordinary application — pending, then approved, then the invitation and
@@ -599,13 +599,23 @@ token, otherwise the password, and with neither it does not authenticate at all
 
 ### 8.2 Microsoft 365 with a password
 
+> **Not available to this winery, and it is not a setting anybody can turn
+> on.** `wineclub@warmspringscellar.com` is a **shared mailbox**. A shared
+> mailbox has no password and cannot sign in, so there is nothing for
+> `SMTP_PASSWORD` to hold. Everything below describes an ordinary licensed
+> mailbox and is kept for the day the club uses one. **Go to §8.3.**
+>
+> The failure, if somebody tries anyway, is `535 5.7.3` — the tenant refusing
+> the sign-in itself — and it looks exactly like a wrong password. It is not.
+
+
 ```
 SMTP_HOST=smtp.office365.com
 SMTP_PORT=587
-SMTP_USER=club@warmspringscellar.com
+SMTP_USER=wineclub@warmspringscellar.com
 SMTP_PASSWORD=<that mailbox's password>
-MAIL_FROM=club@warmspringscellar.com
-MAIL_REPLY_TO=club@warmspringscellar.com
+MAIL_FROM=wineclub@warmspringscellar.com
+MAIL_REPLY_TO=wineclub@warmspringscellar.com
 ```
 
 The mailbox needs an Exchange Online licence — an unlicensed shared mailbox
@@ -640,7 +650,7 @@ It is done once, and it needs a tenant administrator:
    ```powershell
    Connect-ExchangeOnline
    New-ServicePrincipal -AppId <client id> -ServiceId <the app's object id>
-   Add-MailboxPermission -Identity club@warmspringscellar.com `
+   Add-MailboxPermission -Identity wineclub@warmspringscellar.com `
        -User <the app's object id> -AccessRights FullAccess
    ```
 
@@ -650,7 +660,7 @@ It is done once, and it needs a tenant administrator:
    ```
    SMTP_HOST=smtp.office365.com
    SMTP_PORT=587
-   SMTP_USER=club@warmspringscellar.com
+   SMTP_USER=wineclub@warmspringscellar.com
    SMTP_PASSWORD=
    SMTP_OAUTH_TENANT_ID=<Directory (tenant) ID>
    SMTP_OAUTH_CLIENT_ID=<Application (client) ID>

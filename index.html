@@ -2709,7 +2709,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       <svg class="door-mark" aria-hidden="true"><use href="#door-mark"/></svg>
     </div>
     <div class="footer-contact">
-      <a href="mailto:club@warmspringscellar.com">club@warmspringscellar.com</a><br>
+      <a href="mailto:wineclub@warmspringscellar.com">wineclub@warmspringscellar.com</a><br>
       <a href="tel:+17073180167">707.318-0167</a><br>
       <span style="font-size:0.72rem;color:var(--c-footer-text);">By appointment only</span>
     </div>
@@ -3232,7 +3232,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       if (!result.ok) {
         formError(result.data && result.data.error
           ? result.data.error
-          : 'Something went wrong at our end. Write to club@warmspringscellar.com and ' +
+          : 'Something went wrong at our end. Write to wineclub@warmspringscellar.com and ' +
             'we will sort it out.');
         return;
       }
@@ -3245,7 +3245,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           (body.first_name ? body.first_name + ', you are' : 'You are') + ' on the list for ' +
           waitingFor + '. We will write the day we can ship there, and nothing before it. ' +
           'If you have an address in a state we already reach — work, family, a second ' +
-          'home — write to club@warmspringscellar.com and we can start today.';
+          'home — write to wineclub@warmspringscellar.com and we can start today.';
       } else {
         var tier = $('#f-tier');
         var tierName = tier.options[tier.selectedIndex].textContent.split('—')[0].trim();
@@ -3260,7 +3260,7 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       scrollToTarget(success);
     }).catch(function () {
       formError('We could not reach the cellar just now. Try again in a moment, or ' +
-                'write to club@warmspringscellar.com.');
+                'write to wineclub@warmspringscellar.com.');
     });
   });
 })();

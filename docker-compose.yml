@@ -68,8 +68,8 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-club@warmspringscellar.com}
-      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-club@warmspringscellar.com}
+      MAIL_FROM: ${MAIL_FROM:-wineclub@warmspringscellar.com}
+      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-wineclub@warmspringscellar.com}
       # Set these three and SMTP authenticates with an OAuth2 token instead
       # of SMTP_PASSWORD. Microsoft 365 is retiring basic auth for SMTP.
       SMTP_OAUTH_TENANT_ID: ${SMTP_OAUTH_TENANT_ID:-}

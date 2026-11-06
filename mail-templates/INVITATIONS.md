@@ -148,7 +148,7 @@ be. It depends on a licence the winery does not control.
 
 ### What happens when one of them replies
 
-Set **Reply-To: club@warmspringscellar.com** on the send, or the replies go
+Set **Reply-To: wineclub@warmspringscellar.com** on the send, or the replies go
 to the sending platform's own address and nobody ever reads them. That is the
 trap in this letter: it is the only one of the three that asks for an answer
 rather than a click.

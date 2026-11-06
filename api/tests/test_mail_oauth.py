@@ -27,7 +27,7 @@ from app.mail.smtp import SmtpMailer                              # noqa: E402
 
 MESSAGE = Message(to="member@example.com", subject="Your allocation",
                   text="Plain text.", html="<p>Rich text.</p>",
-                  reply_to="club@warmspringscellar.com")
+                  reply_to="wineclub@warmspringscellar.com")
 
 
 class Recorder:
@@ -148,7 +148,7 @@ def test_the_message_itself_is_unchanged_by_any_of_this(recorder):
     [server] = recorder.instances
     [msg] = server.sent
     assert msg["To"] == "member@example.com"
-    assert msg["Reply-To"] == "club@warmspringscellar.com"
+    assert msg["Reply-To"] == "wineclub@warmspringscellar.com"
     assert msg.get_content_type() == "multipart/alternative"
 
 
@@ -214,7 +214,7 @@ def test_it_refuses_to_be_built_half_configured():
 def test_the_factory_picks_oauth_when_it_is_configured(monkeypatch, tmp_path):
     for key, value in {
         "DATA_DIR": str(tmp_path), "SMTP_HOST": "smtp.office365.com",
-        "SMTP_USER": "club@warmspringscellar.com",
+        "SMTP_USER": "wineclub@warmspringscellar.com",
         "SMTP_OAUTH_TENANT_ID": "t", "SMTP_OAUTH_CLIENT_ID": "c",
         "SMTP_OAUTH_CLIENT_SECRET": "s",
     }.items():

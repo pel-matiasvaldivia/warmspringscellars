@@ -1,6 +1,6 @@
 # What answers the club's inbox
 
-`club@warmspringscellar.com` is published in the page footer, in the form's
+`wineclub@warmspringscellar.com` is published in the page footer, in the form's
 own error messages, and as the Reply-To on every mail the club sends. People
 write to it. Nothing in the club service reads that mailbox — the service
 only sends — so without this, an enquiry by mail lives or dies in whoever
@@ -38,7 +38,7 @@ Names in the Power Automate designer move between versions, so take these as
 the shape rather than as exact labels, and confirm each step in the tenant.
 
 1. **Trigger** — *When a new email arrives in a shared mailbox*, with the
-   mailbox set to `club@warmspringscellar.com`. Microsoft's own training
+   mailbox set to `wineclub@warmspringscellar.com`. Microsoft's own training
    material lists this trigger for shared mailboxes. ([Microsoft Learn][pa])
 2. **Reply** — reply to the sender with the rendered `auto-reply.html`. Set
    the *Original Mailbox Address* field in the action's advanced options to
@@ -61,7 +61,7 @@ Plain text on purpose: it is an internal alert, not a piece of the brand.
 ```
 Subject: Someone wrote to the club — <From>
 
-A new message reached club@warmspringscellar.com.
+A new message reached wineclub@warmspringscellar.com.
 
   From:     <From>
   Subject:  <Subject>

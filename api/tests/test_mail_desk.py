@@ -51,9 +51,9 @@ def test_no_server_is_said_plainly_and_nothing_else_is_claimed(monkeypatch, tmp_
 
 def test_a_password_on_microsoft_is_marked_as_borrowed_time(monkeypatch, tmp_path):
     settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="smtp.office365.com",
-                            SMTP_USER="club@warmspringscellar.com",
+                            SMTP_USER="wineclub@warmspringscellar.com",
                             SMTP_PASSWORD="hunter2",
-                            MAIL_FROM="club@warmspringscellar.com")
+                            MAIL_FROM="wineclub@warmspringscellar.com")
     auth = states(configuration(settings, "LOGIN"), "Authentication")
     assert auth.state == "warn"
     assert "retiring basic authentication" in auth.detail
@@ -61,16 +61,16 @@ def test_a_password_on_microsoft_is_marked_as_borrowed_time(monkeypatch, tmp_pat
 
 def test_a_password_on_any_other_server_is_simply_right(monkeypatch, tmp_path):
     settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="smtp.fastmail.com",
-                            SMTP_USER="club@warmspringscellar.com",
+                            SMTP_USER="wineclub@warmspringscellar.com",
                             SMTP_PASSWORD="hunter2",
-                            MAIL_FROM="club@warmspringscellar.com")
+                            MAIL_FROM="wineclub@warmspringscellar.com")
     assert states(configuration(settings, "LOGIN"), "Authentication").state == "ok"
 
 
 def test_oauth_is_right_and_shows_which_application_is_sending(monkeypatch, tmp_path):
     settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="smtp.office365.com",
-                            SMTP_USER="club@warmspringscellar.com",
-                            MAIL_FROM="club@warmspringscellar.com",
+                            SMTP_USER="wineclub@warmspringscellar.com",
+                            MAIL_FROM="wineclub@warmspringscellar.com",
                             SMTP_OAUTH_TENANT_ID="tenant-1",
                             SMTP_OAUTH_CLIENT_ID="client-1",
                             SMTP_OAUTH_CLIENT_SECRET="s")
@@ -92,7 +92,7 @@ def test_a_token_with_no_mailbox_named_is_wrong_not_merely_untidy(monkeypatch, t
 def test_signing_in_as_one_address_and_sending_as_another_is_flagged(monkeypatch, tmp_path):
     settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="smtp.office365.com",
                             SMTP_USER="noreply@warmspringscellar.com",
-                            SMTP_PASSWORD="x", MAIL_FROM="club@warmspringscellar.com")
+                            SMTP_PASSWORD="x", MAIL_FROM="wineclub@warmspringscellar.com")
     mailbox = states(configuration(settings, "LOGIN"), "Mailbox")
     assert mailbox.state == "warn" and "Send As" in mailbox.detail
 
@@ -115,7 +115,7 @@ def test_sending_from_a_domain_the_site_does_not_use_is_flagged(monkeypatch, tmp
 def test_the_relay_connector_needs_no_account_and_is_not_nagged(monkeypatch, tmp_path):
     settings = settings_for(monkeypatch, tmp_path,
                             SMTP_HOST="wsc.mail.protection.outlook.com",
-                            SMTP_PORT="25", MAIL_FROM="club@warmspringscellar.com",
+                            SMTP_PORT="25", MAIL_FROM="wineclub@warmspringscellar.com",
                             PUBLIC_BASE_URL="https://warmspringscellar.com")
     auth = states(configuration(settings, "none"), "Authentication")
     assert auth.state == "ok" and "IP address" in auth.detail
@@ -229,8 +229,8 @@ def test_with_no_server_the_probe_checks_the_outbox_instead(tmp_path):
 # ── the test message ─────────────────────────────────────────────────────
 def test_the_trial_message_carries_the_evidence_and_no_secret(monkeypatch, tmp_path):
     settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="smtp.office365.com",
-                            SMTP_USER="club@warmspringscellar.com",
-                            MAIL_FROM="club@warmspringscellar.com",
+                            SMTP_USER="wineclub@warmspringscellar.com",
+                            MAIL_FROM="wineclub@warmspringscellar.com",
                             MAIL_REPLY_TO="cecilia.valdivia@warmspringscellar.com",
                             SMTP_OAUTH_TENANT_ID="t", SMTP_OAUTH_CLIENT_ID="c",
                             SMTP_OAUTH_CLIENT_SECRET="super-secret")

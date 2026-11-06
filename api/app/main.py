@@ -194,7 +194,7 @@ async def create_application(request: Request) -> JSONResponse:
     if rate_limited(client_key(request)):
         return JSONResponse(
             {"ok": False, "error": "That is a lot of requests from one place. "
-                                   "Write to club@warmspringscellar.com instead."},
+                                   "Write to wineclub@warmspringscellar.com instead."},
             status_code=429,
         )
 
@@ -222,7 +222,7 @@ async def join_waiting_list(request: Request) -> JSONResponse:
     if rate_limited(client_key(request)):
         return JSONResponse(
             {"ok": False, "error": "That is a lot of requests from one place. "
-                                   "Write to club@warmspringscellar.com instead."},
+                                   "Write to wineclub@warmspringscellar.com instead."},
             status_code=429,
         )
 
@@ -375,7 +375,7 @@ def card_replaced(request: Request, token: str) -> HTMLResponse:
                  "email."
                  if saved else
                  "Our provider has not confirmed the card yet. It is usually seconds. "
-                 "If you do not hear from us today, write to club@warmspringscellar.com.",
+                 "If you do not hear from us today, write to wineclub@warmspringscellar.com.",
          "cta_url": "/", "cta_label": "Back to the cellar"},
     )
 

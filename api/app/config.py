@@ -73,8 +73,8 @@ class Settings:
     smtp_oauth_authority: str = field(
         default_factory=lambda: _env("SMTP_OAUTH_AUTHORITY",
                                      "https://login.microsoftonline.com"))
-    mail_from: str = field(default_factory=lambda: _env("MAIL_FROM", "club@warmspringscellar.com"))
-    mail_reply_to: str = field(default_factory=lambda: _env("MAIL_REPLY_TO", "club@warmspringscellar.com"))
+    mail_from: str = field(default_factory=lambda: _env("MAIL_FROM", "wineclub@warmspringscellar.com"))
+    mail_reply_to: str = field(default_factory=lambda: _env("MAIL_REPLY_TO", "wineclub@warmspringscellar.com"))
 
     offer_days: int = field(default_factory=lambda: int(_env("OFFER_DAYS", "14")))
     currency: str = field(default_factory=lambda: _env("CURRENCY", "usd"))

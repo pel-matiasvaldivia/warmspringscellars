@@ -98,7 +98,7 @@ notices go out from is not dragged down with it.
 1. Add the subdomain at the DNS host.
 2. Publish the SPF, DKIM and DMARC records the provider gives you, and wait
    for its dashboard to show all three verified. Do not send before it does.
-3. Set the reply address to **`club@warmspringscellar.com`**, the mailbox
+3. Set the reply address to **`wineclub@warmspringscellar.com`**, the mailbox
    somebody actually reads. This letter will draw replies.
 
 ---
@@ -163,7 +163,7 @@ Two things to check in the preview, both of which have bitten real senders:
   Settings → Contact attributes. Get it wrong and 983 people are greeted as
   "Wine Lover".
 
-Set **Reply-To: club@warmspringscellar.com** on every campaign, or the
+Set **Reply-To: wineclub@warmspringscellar.com** on every campaign, or the
 replies land in Brevo and nobody reads them.
 
 Then **send one to yourself first**, at a personal Gmail, and in **Show
