@@ -665,6 +665,32 @@ It is done once, and it needs a tenant administrator. **Three different
 identifiers appear below and they are not interchangeable**; each step says
 which one it wants.
 
+Steps 1 to 3 are done in the Entra portal. **Steps 4 and 5 have no portal
+equivalent at all**: Microsoft's documentation says the service principal
+*must* be registered through Exchange Online PowerShell and gives no web route
+for either cmdlet, so there is no admin-centre setting to go looking for. Step
+6 does have a documented web path, but only for accounts under **Users →
+Active users**, where a shared mailbox is not listed. Do steps 4, 5 and 6 in
+one session and the question does not arise.
+
+That session needs nothing installed. Open **shell.azure.com**, choose
+PowerShell, and:
+
+```powershell
+Install-Module ExchangeOnlineManagement -Scope CurrentUser -Force
+Connect-ExchangeOnline -Organization warmspringscellar.com -Device
+```
+
+`-Device` prints a code to enter at **microsoft.com/devicelogin**, because a
+browser-based shell cannot open the usual sign-in window — without it, an
+account with MFA is exactly where a browser-only attempt stalls. Microsoft does
+not document Cloud Shell for this, so treat it as a convenience rather than a
+supported path: recent module versions want PowerShell 7.6 or newer (check
+`$PSVersionTable` first), and a WAM error on sign-in needs a *fresh* session
+with `-DisableWAM`, since re-running the command once an auth context is set
+does nothing. PowerShell 7 installed locally works the same way — on macOS and
+Linux as well as Windows — and needs no `-Device`.
+
 1. **Entra ID → App registrations → New registration.** Name it `Warm Springs
    Cellar — club mail`. No redirect URI: this application never signs in as
    anybody. From the Overview page keep the **Application (client) ID** and

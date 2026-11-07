@@ -673,6 +673,35 @@ Se hace una vez, y hace falta un administrador del tenant. **Abajo aparecen
 tres identificadores distintos y no son intercambiables**; cada paso dice cuál
 quiere.
 
+Los pasos 1 a 3 se hacen en el portal de Entra. **Los pasos 4 y 5 no tienen
+equivalente en el portal**: la documentación de Microsoft dice que el service
+principal *debe* registrarse por Exchange Online PowerShell y no da ninguna
+ruta web para ninguno de los dos comandos, así que no hay una opción escondida
+en el centro de administración que valga la pena buscar. El paso 6 sí tiene una
+ruta web documentada, pero sólo para cuentas que aparecen en **Users → Active
+users**, donde una casilla compartida no figura. Hacé los pasos 4, 5 y 6 en una
+sola sesión y el problema no existe.
+
+Esa sesión no necesita instalar nada. Abrí **shell.azure.com**, elegí
+PowerShell, y:
+
+```powershell
+Install-Module ExchangeOnlineManagement -Scope CurrentUser -Force
+Connect-ExchangeOnline -Organization warmspringscellar.com -Device
+```
+
+`-Device` imprime un código para ingresar en **microsoft.com/devicelogin**,
+porque una consola dentro del navegador no puede abrir la ventana de inicio de
+sesión habitual. Sin eso, una cuenta con MFA es justamente donde se traba un
+intento hecho sólo desde la web. Microsoft no documenta Cloud Shell para esto,
+así que tomalo como una comodidad y no como un camino soportado: las versiones
+recientes del módulo quieren PowerShell 7.6 o posterior (mirá `$PSVersionTable`
+primero), y si el inicio de sesión falla con un error de WAM hace falta una
+sesión *nueva* con `-DisableWAM`, porque reintentar en la misma sesión, una vez
+fijado el contexto de autenticación, no hace nada. PowerShell 7 instalado
+localmente funciona igual —en macOS y Linux además de Windows— y no necesita
+`-Device`.
+
 1. **Entra ID → App registrations → New registration.** Nombre: `Warm Springs
    Cellar — club mail`. Sin redirect URI: esta aplicación no inicia sesión
    como nadie. De la página Overview guardá el **Application (client) ID** y
