@@ -635,49 +635,125 @@ hay que usar la casilla de servicio.
 
 ### 8.3 Microsoft 365 con OAuth2
 
-Microsoft viene retirando la autenticación básica para SMTP. El día que la
-apaga en un tenant, usuario y contraseña dejan de servir sin aviso previo. Por
-eso el adaptador también habla **XOAUTH2**, que es el camino que sobrevive.
+**Es el único camino para esta bodega.** `wineclub@warmspringscellar.com` es
+una casilla compartida, así que la §8.2 queda cerrada: no hay contraseña que
+poner en ninguna parte.
 
-**Es el único camino para esta bodega**, porque
-`wineclub@warmspringscellar.com` es una casilla compartida y la §8.2 queda
-cerrada. Dos cosas que conviene resolver antes de empezar, en este orden:
+Y es también el camino que dura. El cronograma de Microsoft, revisado en enero
+de 2026, deja la autenticación básica para envío SMTP funcionando hasta
+**diciembre de 2026**; después queda desactivada por defecto en los tenants
+existentes —un administrador todavía puede volver a encenderla— y no
+disponible en los nuevos, y la fecha de retiro definitivo se anuncia en la
+segunda mitad de 2027. Contra OAuth2 no hay ningún aviso de retiro. Así que
+esto no es un rodeo por no tener contraseña: es la configuración a la que el
+club debería llegar de todos modos.
 
-* **¿La casilla compartida tiene licencia de Exchange Online?** Las casillas
-  compartidas no la tienen por defecto, y la propia guía de Microsoft para
-  envío SMTP de cliente dice que hace falta una casilla con licencia. Si
-  después de hacer todo lo de abajo el envío sigue siendo rechazado, esto es
-  lo primero que hay que mirar: es una licencia, no un problema de código.
-* **Las casillas compartidas están soportadas por XOAUTH2.** La documentación
-  de Microsoft dice que para una casilla compartida la aplicación obtiene su
-  propio token y pone la dirección de la casilla compartida en el campo
-  `user=` de SASL. Es exactamente lo que hace el adaptador con `SMTP_USER`,
-  así que no hay que cambiar nada por ser compartida: sólo el permiso del
-  paso 4 tiene que nombrarla.
+El nombre del permiso, el scope del token y la cadena SASL que manda el
+adaptador están verificados contra las dos páginas de referencia de Microsoft,
+*Authenticate an IMAP, POP or SMTP connection using OAuth* y *Enable or
+disable authenticated client SMTP submission*. Coinciden exactamente.
 
-Se hace una vez, y hace falta un administrador del tenant:
+**Dos cosas que esas páginas no resuelven, y que esta bodega sí tiene:**
+
+* **Si una casilla compartida sin licencia puede hacer esto.** Ninguna de las
+  dos lo dice. Las casillas compartidas no llevan licencia por defecto; las
+  páginas no declaran que SMTP AUTH exija una, pero tampoco la eximen. Si todo
+  lo de abajo está bien y el envío sigue rechazado, asignale una licencia de
+  Exchange Online a esa casilla y probá de nuevo. Es lo primero que hay que
+  probar, no lo último, y se hace en el centro de administración: no es un
+  problema de código.
+* **Una casilla compartida con un token de aplicación.** La instrucción de
+  Microsoft para casillas compartidas —poner la dirección de la casilla en el
+  campo `user=` de SASL— está en la mitad *delegada* de su página, donde hay
+  una persona que inició sesión. No la repite para credenciales de cliente. El
+  adaptador hace exactamente eso con `SMTP_USER`, y es la única forma que
+  puede funcionar, pero tomalo como razonado y no como citado.
+
+Se hace una vez, y hace falta un administrador del tenant. **Abajo aparecen
+tres identificadores distintos y no son intercambiables**; cada paso dice cuál
+quiere.
 
 1. **Entra ID → App registrations → New registration.** Nombre: `Warm Springs
    Cellar — club mail`. Sin redirect URI: esta aplicación no inicia sesión
-   como nadie.
+   como nadie. De la página Overview guardá el **Application (client) ID** y
+   el **Directory (tenant) ID**.
 2. **Certificates & secrets → New client secret.** Copiar el *Value* —no el
    Secret ID— en el momento: después no se vuelve a mostrar. Anotar también la
    fecha de vencimiento, porque el día que vence el correo deja de salir.
+   Microsoft permite 24 meses como máximo, así que esto va al calendario: no
+   es algo que se haga una sola vez.
 3. **API permissions → Add a permission → APIs my organization uses →
    Office 365 Exchange Online → Application permissions → `SMTP.SendAsApp`**, y
    después **Grant admin consent**. Sin el consentimiento el token sale igual y
    el servidor lo rechaza, que es la forma más confusa de fallar.
-4. **Darle la casilla**, en Exchange Online PowerShell:
+4. **Registrar la aplicación en Exchange**, en Exchange Online PowerShell:
 
    ```powershell
-   Connect-ExchangeOnline
-   New-ServicePrincipal -AppId <client id> -ObjectId <object id de la app>
-   Add-MailboxPermission -Identity wineclub@warmspringscellar.com `
-       -User <object id de la app> -AccessRights FullAccess
+   Connect-ExchangeOnline -Organization warmspringscellar.com
+
+   New-ServicePrincipal -AppId <Application (client) ID> `
+       -ObjectId <Object ID de Enterprise applications> `
+       -DisplayName "Warm Springs Cellar - club mail"
    ```
 
-   El *object id* es el de la Enterprise application, no el de la registración.
-5. **En `.env`:**
+   > **El error que cuesta una tarde.** Ese `-ObjectId` es el de **Entra ID →
+   > Enterprise applications →** esta app **→ Overview**, y *no* el Object ID
+   > de su página de **App registrations**. Las dos pantallas son casi
+   > idénticas. Las palabras de Microsoft: *"Using the incorrect Object ID
+   > will cause an authentication failure"*. La falla no menciona ningún id:
+   > llega como `535 5.7.3`, que parece un problema de credenciales y no lo
+   > es.
+
+5. **Darle la casilla a ese principal**, en la misma sesión:
+
+   ```powershell
+   $sp = Get-ServicePrincipal -Identity "Warm Springs Cellar - club mail"
+   Add-MailboxPermission -Identity wineclub@warmspringscellar.com `
+       -User $sp.Identity -AccessRights FullAccess
+   ```
+
+   Leé el id con `Get-ServicePrincipal` en lugar de pegarlo: el valor que
+   quiere `Add-MailboxPermission` es un **tercer** id, distinto otra vez de
+   los dos del paso 4. Microsoft lo advierte: *"Different IDs are used during
+   creation of the Exchange service principal and also later when granting
+   mailbox permissions"*. Dejando que PowerShell lo lleve, no hay nada que
+   elegir.
+
+   `FullAccess` es lo que la página documenta para este flujo. Si algún día el
+   club necesita mandar *desde otra* dirección que la que usa para
+   autenticarse, eso es `Add-RecipientPermission` y es otro permiso.
+
+6. **Habilitar SMTP AUTH para esa casilla.** Este paso es fácil de pasar por
+   alto y es la razón más probable de que una configuración correcta siga sin
+   mandar:
+
+   ```powershell
+   # ¿Cómo está hoy la configuración de toda la organización?
+   Get-TransportConfig | Format-List SmtpClientAuthenticationDisabled
+
+   # Encenderlo para esta casilla sola, diga lo que diga esa configuración.
+   Set-CASMailbox -Identity wineclub@warmspringscellar.com `
+       -SmtpClientAuthenticationDisabled $false
+   Get-CASMailbox -Identity wineclub@warmspringscellar.com |
+       Format-List SmtpClientAuthenticationDisabled
+   ```
+
+   El valor por casilla tiene precedencia sobre el de la organización: `$null`
+   significa *seguir a la organización*, mientras que `$true` o `$false` la
+   sobreescriben. **No toques `Set-TransportConfig`.** La recomendación de
+   Microsoft es dejar SMTP AUTH apagado en toda la organización y encenderlo
+   sólo en las casillas que lo necesitan, que es exactamente lo que hace el
+   comando de arriba.
+
+   Si el tenant tiene **security defaults** activado, SMTP AUTH ya está
+   apagado para toda la organización; el `$false` por casilla es lo que pasa
+   por encima de eso. Aparte, una **authentication policy** que desactive la
+   autenticación básica para SMTP bloquea SMTP AUTH "even if you enable the
+   settings" —Microsoft no dice si eso alcanza también a los clientes OAuth—,
+   así que si todo esto está bien y la autenticación sigue rechazada, buscá
+   una política de ese tipo antes de sospechar del código.
+
+7. **En `.env`:**
 
    ```
    SMTP_HOST=smtp.office365.com
@@ -690,7 +766,19 @@ Se hace una vez, y hace falta un administrador del tenant:
    ```
 
    `SMTP_USER` **se deja puesto**. El token dice qué aplicación manda, nunca
-   desde qué casilla; la casilla hay que nombrarla igual.
+   desde qué casilla; la casilla hay que nombrarla igual. Dejá
+   `SMTP_OAUTH_SCOPE` en su valor por defecto: el adaptador pide
+   `https://outlook.office365.com/.default`, que es el recurso que espera el
+   envío SMTP. Un token de Microsoft Graph es un token válido que el endpoint
+   de SMTP rechaza, y ésa es otra hora de confusión.
+
+Después reiniciá y abrí **`/admin/mail`** en el escritorio. Lee la
+configuración sin tocar la red, y ofrece una prueba de conexión que conecta,
+cifra, autentica y corta sin mandar nada. Lo que querés ver del servidor es
+`235 2.7.0 Authentication successful`; la falla a reconocer es
+`535 5.7.3 Authentication unsuccessful`, y a esta altura sus causas más
+probables son, en orden: el paso 6 sin hacer, el Object ID equivocado en el
+paso 4, o el consentimiento del paso 3 sin otorgar.
 
 El servicio pide un token, lo guarda y lo reusa hasta dos minutos antes de que
 venza. No pide uno por mensaje.

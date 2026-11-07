@@ -13,9 +13,14 @@ Deliberately not a dependency. MSAL would do this and a great deal more; this
 is one POST and a cached string, and `httpx` is already here for Stripe and
 QuickBooks.
 
-NOT EXERCISED against a real tenant from the machine this was written on,
-which has no egress to login.microsoftonline.com. The request shape follows
-Microsoft's documentation and the caching is covered by tests.
+The REQUEST SHAPE is confirmed against the real endpoint: posting this body
+to login.microsoftonline.com returns `AADSTS900021`, a complaint about the
+tenant identifier's value, which Microsoft can only reach by having parsed
+the grant type, the client id, the secret and the scope first. What is still
+unexercised is a successful exchange, because that needs a real tenant and a
+real secret, and neither belongs on this machine. The caching and the error
+reporting are covered by tests; `tools/check_smtp_oauth.py` is what runs this
+against the tenant once the secret exists.
 """
 
 from __future__ import annotations

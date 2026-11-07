@@ -629,48 +629,120 @@ account has MFA, a person's password will not do: use the service mailbox.
 
 ### 8.3 Microsoft 365 with OAuth2
 
-Microsoft has been retiring basic authentication for SMTP. On the day it goes
-in a tenant, a username and a password stop working with no warning. So the
-adapter also speaks **XOAUTH2**, which is the path that survives.
+**This is the only route for this winery.** `wineclub@warmspringscellar.com`
+is a shared mailbox, so §8.2 is closed: there is no password to put anywhere.
 
-**This is the only route for this winery**, because
-`wineclub@warmspringscellar.com` is a shared mailbox and §8.2 is therefore
-closed. Two things to settle before starting, in this order:
+It is also the route that lasts. Microsoft's timetable, as revised in January
+2026, leaves basic authentication for SMTP submission working through
+**December 2026**; after that it is disabled by default on existing tenants —
+an administrator can still switch it back on — and unavailable on new ones,
+with the final removal date to be announced in the second half of 2027. No
+retirement notice stands against OAuth2. So this is not a workaround for a
+missing password; it is where the club should end up regardless.
 
-* **Does the shared mailbox hold an Exchange Online licence?** Shared
-  mailboxes are unlicensed by default, and Microsoft's own guidance for
-  client SMTP submission says it needs a licensed mailbox. If sending is
-  refused after everything below is correct, this is the first thing to
-  check — it is a licence assignment, not a code problem.
-* **Shared mailboxes are explicitly supported over XOAUTH2.** Microsoft's
-  documentation says that for a shared mailbox the application obtains its
-  own token and puts the shared mailbox's address in the SASL `user=` field.
-  That is exactly what the adapter does with `SMTP_USER`, so nothing here
-  needs changing for a shared mailbox — only step 4's grant has to name it.
+The permission name, the token scope and the SASL string the adapter sends are
+all verified against Microsoft's two reference pages, *Authenticate an IMAP,
+POP or SMTP connection using OAuth* and *Enable or disable authenticated
+client SMTP submission*. They match exactly.
 
-It is done once, and it needs a tenant administrator:
+**Two things those pages do not settle, which this winery runs into:**
+
+* **Whether an unlicensed shared mailbox can do this at all.** Neither page
+  says. Shared mailboxes carry no licence by default; the pages state no
+  licence requirement for SMTP AUTH and no exemption either. If every step
+  below is right and sending is still refused, assign an Exchange Online
+  licence to that mailbox and try again. That is the first thing to try, not
+  the last, and it is an assignment in the admin centre rather than a code
+  problem.
+* **A shared mailbox with an app-only token.** Microsoft's shared-mailbox
+  instruction — put the shared mailbox's address in the SASL `user=` field —
+  sits in the *delegated* half of its page, where a person has signed in. It
+  is not repeated for client credentials. The adapter does precisely that
+  with `SMTP_USER`, and it is the only shape that can work, but treat it as
+  reasoned rather than quoted.
+
+It is done once, and it needs a tenant administrator. **Three different
+identifiers appear below and they are not interchangeable**; each step says
+which one it wants.
 
 1. **Entra ID → App registrations → New registration.** Name it `Warm Springs
    Cellar — club mail`. No redirect URI: this application never signs in as
-   anybody.
+   anybody. From the Overview page keep the **Application (client) ID** and
+   the **Directory (tenant) ID**.
 2. **Certificates & secrets → New client secret.** Copy the *Value* — not the
    Secret ID — there and then; it is never shown again. Note its expiry date
-   too, because the day it lapses the mail stops going out.
+   too, because the day it lapses the mail stops going out. Microsoft allows
+   at most 24 months, so this is a diary entry, not a one-off.
 3. **API permissions → Add a permission → APIs my organization uses →
    Office 365 Exchange Online → Application permissions → `SMTP.SendAsApp`**,
    then **Grant admin consent**. Without the consent a token is still issued
    and the server refuses it, which is the most confusing way to fail.
-4. **Give it the mailbox**, in Exchange Online PowerShell:
+4. **Register the application with Exchange**, in Exchange Online PowerShell:
 
    ```powershell
-   Connect-ExchangeOnline
-   New-ServicePrincipal -AppId <client id> -ObjectId <the app's object id>
-   Add-MailboxPermission -Identity wineclub@warmspringscellar.com `
-       -User <the app's object id> -AccessRights FullAccess
+   Connect-ExchangeOnline -Organization warmspringscellar.com
+
+   New-ServicePrincipal -AppId <Application (client) ID> `
+       -ObjectId <Enterprise applications Object ID> `
+       -DisplayName "Warm Springs Cellar - club mail"
    ```
 
-   The *object id* is the Enterprise application's, not the registration's.
-5. **In `.env`:**
+   > **The one mistake that costs an afternoon.** That `-ObjectId` is the one
+   > on **Entra ID → Enterprise applications →** this app **→ Overview**, and
+   > *not* the Object ID on its **App registrations** page. The two sit on
+   > near-identical screens. Microsoft's own wording: *"Using the incorrect
+   > Object ID will cause an authentication failure."* The failure says
+   > nothing about an id — it arrives as `535 5.7.3`, which reads like a
+   > credential problem and is not one.
+
+5. **Give that principal the mailbox**, in the same session:
+
+   ```powershell
+   $sp = Get-ServicePrincipal -Identity "Warm Springs Cellar - club mail"
+   Add-MailboxPermission -Identity wineclub@warmspringscellar.com `
+       -User $sp.Identity -AccessRights FullAccess
+   ```
+
+   Read the id back with `Get-ServicePrincipal` rather than pasting it: the
+   value `Add-MailboxPermission` wants is a **third** id, different again from
+   the two in step 4. Microsoft flags this itself — *"Different IDs are used
+   during creation of the Exchange service principal and also later when
+   granting mailbox permissions."* Letting PowerShell carry it across removes
+   the choice.
+
+   `FullAccess` is what the page documents for this flow. If the club ever
+   needs to send as a *different* address from the one it signs in as, that is
+   `Add-RecipientPermission` and a separate grant.
+
+6. **Enable SMTP AUTH for that mailbox.** This step is easy to miss and is the
+   likeliest reason a correct configuration still will not send:
+
+   ```powershell
+   # What is the organisation-wide setting today?
+   Get-TransportConfig | Format-List SmtpClientAuthenticationDisabled
+
+   # Turn it on for this one mailbox, whatever that setting says.
+   Set-CASMailbox -Identity wineclub@warmspringscellar.com `
+       -SmtpClientAuthenticationDisabled $false
+   Get-CASMailbox -Identity wineclub@warmspringscellar.com |
+       Format-List SmtpClientAuthenticationDisabled
+   ```
+
+   The per-mailbox value takes precedence over the organisation's: `$null`
+   means *follow the organisation*, while `$true` or `$false` overrides it.
+   **Leave `Set-TransportConfig` alone.** Microsoft's own recommendation is to
+   keep SMTP AUTH disabled across the organisation and enable it only on the
+   mailboxes that need it, which is exactly what the command above does.
+
+   If **security defaults** are enabled on the tenant, SMTP AUTH is already
+   disabled organisation-wide; the per-mailbox `$false` is what gets past
+   that. Separately, an **authentication policy** that disables basic
+   authentication for SMTP blocks SMTP AUTH "even if you enable the settings"
+   — Microsoft does not say whether that reaches OAuth clients too, so if
+   everything here is right and authentication is still refused, look for such
+   a policy before suspecting the code.
+
+7. **In `.env`:**
 
    ```
    SMTP_HOST=smtp.office365.com
@@ -683,7 +755,19 @@ It is done once, and it needs a tenant administrator:
    ```
 
    `SMTP_USER` **stays set**. The token says which application is sending,
-   never from which mailbox; the mailbox has to be named as well.
+   never from which mailbox; the mailbox has to be named as well. Leave
+   `SMTP_OAUTH_SCOPE` at its default — the adapter asks for
+   `https://outlook.office365.com/.default`, which is the resource SMTP
+   submission expects. A token for Microsoft Graph is a valid token that the
+   SMTP endpoint refuses, and that is another confusing hour.
+
+Then restart and open **`/admin/mail`** on the desk. It reads the settings back
+without touching the network, and offers a connection test that connects,
+encrypts, authenticates and hangs up without sending anything. What you are
+looking for from the server is `235 2.7.0 Authentication successful`; the
+failure to recognise is `535 5.7.3 Authentication unsuccessful`, and by this
+point its likeliest causes are, in order: step 6 not done, the wrong Object ID
+in step 4, or admin consent not granted in step 3.
 
 The service asks for one token, keeps it, and reuses it until two minutes
 before it expires. It does not ask for one per message.
