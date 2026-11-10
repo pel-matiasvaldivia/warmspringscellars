@@ -56,19 +56,34 @@
     {% if offers %}
       <h2 style="margin:1.5rem 0 .5rem">Invitations</h2>
       <table>
-        <tr><th>Sent</th><th>Status</th><th>Expires</th><th>Link</th></tr>
+        <tr><th>Sent</th><th>Status</th><th>Expires</th><th>Link</th><th></th></tr>
         {% for o in offers %}
         <tr>
           <td class="num">{{ o.created_at[:16].replace('T',' ') }}</td>
           <td><span class="pill {{ o.status }}">{{ o.status }}</span></td>
           <td class="num">{{ o.expires_at[:10] }}</td>
           <td><code>{{ offer_urls[o.id] }}</code></td>
+          <td>
+            {% if o.status not in ('accepted', 'revoked') %}
+            <form method="post" action="/admin/offers/{{ o.id }}/resend"
+                  style="margin:0">
+              <button type="submit">Send it again</button>
+            </form>
+            {% endif %}
+          </td>
         </tr>
         {% endfor %}
       </table>
       <p class="sub" style="margin-top:.5rem">
-        The link is shown here because mail is not configured yet; once SMTP is set
-        it goes to the member and nowhere else.
+        <strong>Send it again</strong> writes to the member and opens the link for
+        another {{ offer_days }} days from today — for one that never arrived, and
+        for one that has sat unopened past its expiry. An expired invitation cannot
+        be opened by the member at all, and approving an application twice is
+        refused, so this is the way back.
+      </p>
+      <p class="sub" style="margin-top:.35rem">
+        The link is also printed here so it can be given to somebody over the
+        telephone. It is the same one the email carries.
       </p>
     {% endif %}
   </div>

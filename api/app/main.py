@@ -628,6 +628,7 @@ def admin_application(request: Request, app_id: int,
         request, "application.html", "applications",
         app=application, offers=offers, events=events,
         offer_urls={o["id"]: flow.offer_url(int(o["id"])) for o in offers},
+        offer_days=settings.offer_days,
         tiers=catalogue().tiers,
     )
 
@@ -654,6 +655,38 @@ async def admin_approve(request: Request, app_id: int,
         with db.transaction() as con:
             log(con, "offer", offer_id, "invitation_failed", actor=actor, error=str(exc))
         done = f"Approved, but the email did not go out: {exc}. The link is below."
+    return RedirectResponse(f"/admin/applications/{app_id}?done={done}", status_code=303)
+
+
+@app.post("/admin/offers/{offer_id}/resend")
+def admin_resend_invitation(offer_id: int,
+                            actor: str = Depends(require_admin)) -> RedirectResponse:
+    """Send the invitation again, on a link that is open again.
+
+    The one press that rescues an application nobody could reach: the mail
+    was down when it was approved, or the link sat unopened past its expiry.
+    Both end with an approved applicant and no way in, and neither could be
+    undone from here before.
+    """
+    try:
+        offer, url = flow.reissue_offer(offer_id, actor)
+    except FlowError as exc:
+        return RedirectResponse(f"/admin?done=Not done: {exc}", status_code=303)
+
+    app_id = int(offer["application_id"])
+    application = db.one("SELECT * FROM application WHERE id = ?", (app_id,))
+    try:
+        where = send_invitation(mailer, application, url, offer["expires_at"][:10],
+                                settings.mail_reply_to)
+        with db.transaction() as con:
+            log(con, "offer", offer_id, "invitation_sent", actor=actor, to=where)
+        done = (f"Sent again to {application['email']}, and good until "
+                f"{offer['expires_at'][:10]}.")
+    except Exception as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, "offer", offer_id, "invitation_failed", actor=actor, error=str(exc))
+        done = (f"The link is open again until {offer['expires_at'][:10]}, but the "
+                f"email did not go out: {exc} — copy it from below instead.")
     return RedirectResponse(f"/admin/applications/{app_id}?done={done}", status_code=303)
 
 

@@ -306,6 +306,42 @@ class Flow:
 
         return offer_id, self.offer_url(offer_id)
 
+    def reissue_offer(self, offer_id: int, actor: str) -> tuple[sqlite3.Row, str]:
+        """Open an invitation again, and hand back a link that works.
+
+        Two dead ends meet here and both were reachable with no way out.
+
+        An invitation whose email never left — the mailer was down, the
+        address bounced — leaves an application sitting in `approved` with
+        nothing in anybody's inbox, and nothing on the desk to press.
+
+        Worse, an offer past `expires_at` is refused by `open_offer` for good
+        and marked `expired`, while `approve_application` will not run twice
+        on an application already approved. So the applicant could not get in
+        and the winery could not let them: an accepted member lost to a clock.
+
+        `accepted` and `revoked` are left alone. One is already a member, and
+        the other is a decision somebody took deliberately.
+        """
+        with self.db.transaction() as con:
+            offer = _require(con, "offer", offer_id)
+            if offer["status"] == "accepted":
+                raise FlowError("that invitation was already accepted — they are a "
+                                "member, and another link would not help them")
+            if offer["status"] == "revoked":
+                raise FlowError("that invitation was revoked, which somebody chose "
+                                "to do. Undo it there rather than around it")
+
+            expires = datetime.now(timezone.utc) + timedelta(days=self.settings.offer_days)
+            con.execute(
+                "UPDATE offer SET status = 'sent', expires_at = ? WHERE id = ?",
+                (expires.isoformat(timespec="seconds"), offer_id),
+            )
+            log(con, "offer", offer_id, "reissued", actor=actor, was=offer["status"],
+                expires_at=expires.isoformat(timespec="seconds"))
+            offer = _require(con, "offer", offer_id)
+        return offer, self.offer_url(offer_id)
+
     def decline_application(self, app_id: int, actor: str, reason: str = "") -> None:
         with self.db.transaction() as con:
             app = _require(con, "application", app_id)

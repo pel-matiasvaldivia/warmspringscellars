@@ -1228,3 +1228,77 @@ def test_the_club_does_not_sign_letters_to_itself(client):
     theirs = letters(client, "/club/card/")[0]
     assert "21 or older" in theirs
     assert "Owner & Winemaker" in theirs
+
+
+# ── an invitation that nobody could use ──────────────────────────────────
+def _the_offer(client) -> dict:
+    row = client.main.db.one("SELECT * FROM offer ORDER BY id DESC")
+    return {k: row[k] for k in row.keys()}
+
+
+def test_an_expired_invitation_can_be_opened_again(client):
+    """The dead end this exists for.
+
+    open_offer refuses an expired offer for good, and approve_application
+    will not run twice on an approved application. Without a way back, a
+    clock could lose an applicant the winery had already said yes to.
+    """
+    from datetime import datetime, timedelta, timezone      # noqa: PLC0415
+    token = approve(client, apply_(client))
+    offer = _the_offer(client)
+    gone = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(timespec="seconds")
+    with client.main.db.transaction() as con:
+        con.execute("UPDATE offer SET expires_at = ? WHERE id = ?", (gone, offer["id"]))
+
+    assert client.get(f"/club/offer/{token}").status_code != 200, "dead to begin with"
+
+    res = client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                      follow_redirects=False)
+
+    assert res.status_code == 303
+    again = _the_offer(client)
+    assert again["status"] == "sent"
+    assert again["expires_at"] > gone, "the expiry has to move off the past"
+    # and the member can get in on a freshly minted link
+    fresh = client.main.flow.offer_url(int(offer["id"])).rsplit("/", 1)[1]
+    assert client.get(f"/club/offer/{fresh}").status_code == 200
+
+
+def test_sending_it_again_writes_to_the_member(client):
+    app_id = apply_(client)
+    approve(client, app_id)
+    offer = _the_offer(client)
+    before = len(list((client.tmp / "outbox").glob("*.eml")))
+
+    client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                follow_redirects=False)
+
+    after = list((client.tmp / "outbox").glob("*.eml"))
+    assert len(after) > before, "the whole point is that it goes out again"
+
+
+def test_an_accepted_invitation_is_not_reopened(client):
+    """They are a member. A second link would only confuse them."""
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    offer = _the_offer(client)
+    assert offer["status"] == "accepted"
+
+    res = client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                      follow_redirects=False)
+
+    assert "Not done" in unquote(res.headers["location"])
+    assert _the_offer(client)["status"] == "accepted", "untouched"
+
+
+def test_a_revoked_invitation_is_not_quietly_undone(client):
+    app_id = apply_(client)
+    approve(client, app_id)
+    offer = _the_offer(client)
+    with client.main.db.transaction() as con:
+        con.execute("UPDATE offer SET status = 'revoked' WHERE id = ?", (offer["id"],))
+
+    res = client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                      follow_redirects=False)
+
+    assert "Not done" in unquote(res.headers["location"])
+    assert _the_offer(client)["status"] == "revoked"
