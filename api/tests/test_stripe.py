@@ -302,7 +302,6 @@ def _setup(provider, monkeypatch, *, success_url: str) -> str:
         customer_id="cus_1",
         reference="offer-7-tasting-case",
         description="Warm Springs Cellar — The Tasting Case",
-        customer_email="member@example.com",
         success_url=success_url,
         cancel_url="https://warmspringscellar.com/club/offer/T/cancel",
         currency="usd",
@@ -374,7 +373,6 @@ def test_the_session_does_not_name_payment_methods(provider, monkeypatch):
     provider.create_setup(
         customer_id="cus_1",
         reference="offer-7-tasting-case", description="x",
-        customer_email="member@example.com",
         success_url="https://warmspringscellar.com/w", cancel_url="https://x/c",
         currency="usd", metadata={"offer_id": "7"},
     )
@@ -407,7 +405,6 @@ def test_a_customer_is_named_on_the_session(provider, monkeypatch):
     made = provider.ensure_customer(email="member@example.com", name="A Member")
     provider.create_setup(
         customer_id=made, reference="offer-7-tasting-case", description="x",
-        customer_email="member@example.com",
         success_url="https://warmspringscellar.com/w", cancel_url="https://x/c",
         currency="usd", metadata={"offer_id": "7"},
     )
@@ -417,3 +414,56 @@ def test_a_customer_is_named_on_the_session(provider, monkeypatch):
     assert customers[0].endswith("/customers")
     assert "email=member%40example.com" in customers[1]
     assert "customer=cus_made" in session[1], "the session must name them"
+
+
+def test_the_session_does_not_also_carry_an_email(provider, monkeypatch):
+    """Naming the customer and their email together is refused.
+
+    "You may only specify one of these parameters: customer, customer_email."
+    The two were never alternatives for the same job: `customer_email` is for
+    the case where Checkout makes the customer itself, which is exactly what
+    the club stopped letting it do when a live session came back with
+    `customer: null`. Fixing that made this line a contradiction, and Stripe
+    refused the request rather than ignore it — so a member got a 500 on the
+    page where they were about to hand over a card.
+
+    The email is not lost: it goes on the customer, one call earlier.
+    """
+    seen: dict = {}
+
+    def fake_post(url, content=None, **kwargs):
+        seen.setdefault("bodies", []).append((url, content or ""))
+        if url.endswith("/customers"):
+            return Answer(200, {"id": "cus_made"})
+        return Answer(200, {"id": "cs_1", "url": "https://checkout.stripe.com/c/x"})
+
+    monkeypatch.setattr("app.payments.stripe_provider.httpx.post", fake_post)
+    made = provider.ensure_customer(email="member@example.com", name="A Member")
+    provider.create_setup(
+        customer_id=made, reference="offer-7-tasting-case", description="x",
+        success_url="https://warmspringscellar.com/w", cancel_url="https://x/c",
+        currency="usd", metadata={"offer_id": "7"},
+    )
+
+    customers, session = seen["bodies"]
+    assert "customer_email" not in session[1]
+    assert "customer=cus_made" in session[1]
+    # And the address is still on record, which is why dropping it is safe.
+    assert "email=member%40example.com" in customers[1]
+
+
+def test_no_caller_can_pass_an_email_to_create_setup():
+    """The parameter is gone from the protocol, not just from the payload.
+
+    Left in the signature it would read as something a caller may set, and
+    the next person to add a provider would carry it through to a request
+    that cannot hold it. The failure would come back at the card page.
+    """
+    import inspect                                            # noqa: PLC0415
+
+    from app.payments import base, fake, stripe_provider      # noqa: PLC0415
+
+    for module in (base.PaymentProvider, fake.FakeProvider,
+                   stripe_provider.StripeProvider):
+        taken = inspect.signature(module.create_setup).parameters
+        assert "customer_email" not in taken, module

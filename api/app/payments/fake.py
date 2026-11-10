@@ -38,7 +38,6 @@ class FakeProvider:
         customer_id: str,
         reference: str,
         description: str,
-        customer_email: str,
         success_url: str,
         cancel_url: str,
         currency: str,

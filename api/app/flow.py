@@ -227,7 +227,6 @@ class Flow:
                              name=f"{member['first_name']} {member['last_name']}".strip())),
             reference=f"card-{membership_id}-{now()}",
             description="Warm Springs Cellar — card on file",
-            customer_email=member["email"],
             success_url=f"{self.settings.public_base_url}/club/card/{token}/done",
             cancel_url=f"{self.settings.public_base_url}/club/card/{token}",
             currency=self.settings.currency,
@@ -534,7 +533,6 @@ class Flow:
                 name=f"{app['first_name']} {app['last_name']}".strip()),
             reference=reference,
             description=f"Warm Springs Cellar — {tier.name}",
-            customer_email=app["email"],
             success_url=f"{self.settings.public_base_url}/club/offer/{token}/welcome",
             cancel_url=f"{self.settings.public_base_url}/club/offer/{token}?checkout=cancelled",
             # Nothing is charged here. It is named so the provider can work

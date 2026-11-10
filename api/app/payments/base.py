@@ -76,13 +76,18 @@ class PaymentProvider(Protocol):
         customer_id: str,
         reference: str,
         description: str,
-        customer_email: str,
         success_url: str,
         cancel_url: str,
         currency: str,
         metadata: dict[str, str],
     ) -> SetupSession:
-        """A page where the member saves a card. Charges nothing."""
+        """A page where the member saves a card. Charges nothing.
+
+        No email is passed. It belongs on the customer made by
+        `ensure_customer`, and a provider may well refuse to be told twice:
+        Stripe answers "you may only specify one of these parameters:
+        customer, customer_email".
+        """
         ...
 
     def charge(
