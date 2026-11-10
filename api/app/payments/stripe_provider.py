@@ -102,6 +102,7 @@ class StripeProvider:
         customer_email: str,
         success_url: str,
         cancel_url: str,
+        currency: str,
         metadata: dict[str, str],
     ) -> SetupSession:
         payload = {
@@ -109,6 +110,15 @@ class StripeProvider:
             # Customer to attach it to, which is what `customer` on the
             # completed session carries back.
             "mode": "setup",
+            # Required here even though this session takes no money, and for
+            # a reason worth knowing: with the methods no longer named below,
+            # Stripe works out which to offer, and that depends on the
+            # currency the card will eventually be charged in. Leave it out
+            # and the whole request is refused with "Missing required param".
+            #
+            # So the two go together. Removing payment_method_types is what
+            # makes currency necessary.
+            "currency": currency,
             # No `payment_method_types`. Stripe stopped accepting it when a
             # Checkout Session is created and now refuses the whole request:
             # "Payment methods are now managed from your Dashboard settings."

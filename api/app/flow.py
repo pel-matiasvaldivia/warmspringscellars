@@ -220,6 +220,7 @@ class Flow:
             customer_email=member["email"],
             success_url=f"{self.settings.public_base_url}/club/card/{token}/done",
             cancel_url=f"{self.settings.public_base_url}/club/card/{token}",
+            currency=self.settings.currency,
             metadata=as_metadata(membership_id=membership_id),
         )
         with self.db.transaction() as con:
@@ -519,6 +520,11 @@ class Flow:
             customer_email=app["email"],
             success_url=f"{self.settings.public_base_url}/club/offer/{token}/welcome",
             cancel_url=f"{self.settings.public_base_url}/club/offer/{token}?checkout=cancelled",
+            # Nothing is charged here. It is named so the provider can work
+            # out which payment methods to offer, which depends on what the
+            # card will eventually be charged in — and it is the same setting
+            # the release charges in, so the two cannot drift apart.
+            currency=self.settings.currency,
             metadata=as_metadata(offer_id=offer["id"], application_id=app["id"],
                                  tier_key=tier.key),
         )

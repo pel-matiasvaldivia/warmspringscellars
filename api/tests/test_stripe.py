@@ -304,6 +304,7 @@ def _setup(provider, monkeypatch, *, success_url: str) -> str:
         customer_email="member@example.com",
         success_url=success_url,
         cancel_url="https://warmspringscellar.com/club/offer/T/cancel",
+        currency="usd",
         metadata={"offer_id": "7"},
     )
     return seen["key"]
@@ -373,8 +374,12 @@ def test_the_session_does_not_name_payment_methods(provider, monkeypatch):
         reference="offer-7-tasting-case", description="x",
         customer_email="member@example.com",
         success_url="https://warmspringscellar.com/w", cancel_url="https://x/c",
-        metadata={"offer_id": "7"},
+        currency="usd", metadata={"offer_id": "7"},
     )
 
     assert "payment_method_types" not in seen["body"]
     assert "mode=setup" in seen["body"], "still a setup session, taking no money"
+    # The two go together. With the methods no longer named, Stripe works out
+    # which to offer from the currency the card will be charged in, and
+    # refuses the request outright without it.
+    assert "currency=usd" in seen["body"]
