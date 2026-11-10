@@ -993,6 +993,81 @@ def test_telling_them_charges_nobody(client):
     assert client.main.db.one("SELECT COUNT(*) c FROM invoice")["c"] == before
 
 
+def _backdate_the_notice(client, hours: int) -> None:
+    from datetime import datetime, timedelta, timezone      # noqa: PLC0415
+    stamp = (datetime.now(timezone.utc)
+             - timedelta(hours=hours)).isoformat(timespec="seconds")
+    with client.main.db.transaction() as con:
+        con.execute("UPDATE event SET created_at = ?"
+                    " WHERE action = 'release_notice_sent'", (stamp,))
+
+
+def test_charging_the_same_day_as_the_warning_is_refused(client):
+    """The warning is only a warning if the money has not already moved.
+
+    It is also two messages to one person on one day, which is what a relay's
+    daily allowance runs out of first.
+    """
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                follow_redirects=False)
+
+    res = client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                      follow_redirects=False)
+
+    assert res.status_code == 303, "a refusal, not a crash"
+    said = unquote(res.headers["location"])
+    assert "Not done" in said and "24h" in said
+    assert "Orders" in said, "it has to name the way round"
+    order = client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')
+    assert order["paid_at"] is None and order["status"] == "pending_payment"
+
+
+def test_once_the_day_has_passed_the_release_charges(client):
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                follow_redirects=False)
+    _backdate_the_notice(client, 25)
+
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                follow_redirects=False)
+
+    assert client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')["paid_at"]
+
+
+def test_a_release_nobody_was_warned_about_is_not_held_back(client):
+    """The gap follows a notice. No notice is a different decision."""
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+
+    client.post(f"/admin/releases/{release_id}/charge", auth=ADMIN,
+                follow_redirects=False)
+
+    assert client.main.db.one('SELECT * FROM "order" ORDER BY id DESC')["paid_at"]
+
+
+def test_one_order_can_still_be_charged_while_the_release_waits(client):
+    """The member who rings up and asks to be taken now.
+
+    Holding the whole release back must not strand a single order, or the
+    rule becomes something to switch off rather than work with.
+    """
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    release_id = plan_release(client)
+    client.post(f"/admin/releases/{release_id}/notify", auth=ADMIN,
+                follow_redirects=False)
+    order_id = int(client.main.db.one('SELECT id FROM "order" ORDER BY id DESC')["id"])
+
+    res = client.post(f"/admin/orders/{order_id}/charge", auth=ADMIN,
+                      follow_redirects=False)
+
+    assert res.status_code == 303
+    assert client.main.db.one('SELECT * FROM "order" WHERE id = ?',
+                              (order_id,))["paid_at"]
+
+
 def test_nobody_is_warned_about_money_that_has_already_gone(client):
     """Pressing it after Charge must not tell a paid member a charge is coming."""
     pay(client, approve(client, apply_(client)), "tasting-case")

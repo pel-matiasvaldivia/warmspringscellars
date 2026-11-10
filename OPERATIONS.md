@@ -292,8 +292,24 @@ Spring, Fall and Christmas. On **Releases**:
 3. **"Raise orders"** raises one order **for each member there is wine for**,
    at their own tier and price, and takes those bottles out of the cellar.
    They are raised `pending_payment`: **this press takes no money.**
-4. **"Charge N"** charges those orders against the cards members left when
+4. **"Tell them"**, between the two, writes to everybody in the release
+   saying what is coming and what it will cost. It takes no money.
+5. **"Charge N"** charges those orders against the cards members left when
    they joined. This is the press that moves money.
+
+**Charging waits a day behind telling them.** Press Charge sooner and it
+refuses, naming the hour it becomes possible. Two unrelated reasons want the
+same gap, which is why it is enforced rather than remembered: a warning that
+arrives minutes before the charge is a receipt with extra steps rather than a
+chance to move a card or say no; and the notice and the receipt are two
+messages to one person, so sending both on one day doubles the busiest day's
+volume, which is what a relay's daily allowance runs out of first (§8.5).
+
+The refusal holds the *release*. One order can still be charged on its own
+from **Orders**, which is the way round for the member who rings up and asks
+to be taken now. A release nobody was told about is not held back at all: the
+gap follows a notice, and sending none is a different decision. The wait is
+`RELEASE_NOTICE_GAP_HOURS`, 24 by default, and 0 turns it off.
 
 **Three presses, on purpose.** Between composing and raising you can see who
 is in the release and which wine runs out first. Between raising and charging

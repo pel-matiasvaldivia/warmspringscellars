@@ -294,8 +294,25 @@ Primavera, otoño y Navidad. En **Releases**:
 3. **"Raise orders"** levanta una orden **por cada socio para el que hay
    vino**, con su nivel y su precio, y saca esas botellas de la bodega. Salen
    en `pending_payment`: **ese botón no cobra nada.**
-4. **"Charge N"** cobra esas órdenes contra las tarjetas que los socios
+4. **"Tell them"**, entre los dos, le escribe a todos los de ese despacho
+   diciendo qué viene y cuánto va a costar. No cobra nada.
+5. **"Charge N"** cobra esas órdenes contra las tarjetas que los socios
    dejaron al sumarse. Ese es el botón que mueve la plata.
+
+**El cobro espera un día detrás del aviso.** Si apretás Charge antes, se
+niega y te dice a partir de qué hora se puede. Dos razones sin relación entre
+sí quieren el mismo hueco, y por eso está impuesto en vez de quedar librado a
+que alguien se acuerde: un aviso que llega minutos antes del cobro no es un
+aviso sino un comprobante con pasos de más, en vez de la oportunidad de
+cambiar una tarjeta o decir que no; y el aviso y el comprobante son dos
+mensajes a la misma persona, así que mandarlos el mismo día duplica el día más
+cargado, que es lo que primero agota el cupo diario de un relay (§8.5).
+
+La negativa frena el *despacho*. Una orden suelta se puede cobrar igual desde
+**Orders**, que es la salida para el socio que llama y pide que le cobren ya.
+Un despacho del que nadie fue avisado no se frena: el hueco sigue a un aviso, y
+no mandar ninguno es otra decisión. La espera es `RELEASE_NOTICE_GAP_HOURS`,
+24 por defecto, y 0 la apaga.
 
 **Tres botones, a propósito.** Entre componer y levantar se ve quiénes entran
 y qué vino se corta primero. Entre levantar y cobrar se ve exactamente qué se

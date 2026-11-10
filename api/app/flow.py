@@ -34,6 +34,24 @@ class FlowError(RuntimeError):
     """A refused transition, or input the flow will not accept."""
 
 
+def _in_words(when: datetime) -> str:
+    """How long ago, for a refusal somebody reads once and acts on.
+
+    A timestamp makes the reader do the subtraction, and they are reading
+    because something they expected to work did not.
+    """
+    minutes = int((datetime.now(timezone.utc) - when).total_seconds() // 60)
+    if minutes < 1:
+        return "just now"
+    if minutes < 60:
+        return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours} hour{'s' if hours != 1 else ''} ago"
+    days = hours // 24
+    return f"{days} day{'s' if days != 1 else ''} ago"
+
+
 # A carrier will not leave wine on a doorstep: somebody over 21 has to be there
 # to sign for it, which a box at the post office cannot do, so the address has
 # to be one a person is at. Caught here rather than by the carrier three days
@@ -619,6 +637,7 @@ class Flow:
         """
         with self.db.transaction() as con:
             _require(con, "release", release_id)
+        self._require_notice_has_settled(release_id)
         rows = self.db.all(
             'SELECT id FROM "order" WHERE release_id = ?'
             " AND status IN ('pending_payment', 'failed') ORDER BY id",
@@ -630,6 +649,45 @@ class Flow:
                 paid=sum(1 for r in results if r["paid"]),
                 failed=sum(1 for r in results if not r["paid"]))
         return results
+
+    def _require_notice_has_settled(self, release_id: int) -> None:
+        """Refuse to charge within hours of warning people it was coming.
+
+        Only when a notice actually went out. A release charged without one
+        sends a single message per member and warns nobody, which is a
+        different decision and not this one to make.
+
+        Refusing the whole release still leaves one order chargeable on its
+        own, which is the escape hatch for the member who rings up and asks
+        to be taken now.
+        """
+        gap = self.settings.release_notice_gap_hours
+        if gap <= 0:
+            return
+        row = self.db.one(
+            "SELECT MAX(e.created_at) AS last FROM event e"
+            ' JOIN "order" o ON o.id = e.subject_id'
+            " WHERE e.subject = 'order' AND e.action = 'release_notice_sent'"
+            "   AND o.release_id = ?",
+            (release_id,),
+        )
+        if row is None or not row["last"]:
+            return
+
+        sent = datetime.fromisoformat(row["last"])
+        if sent.tzinfo is None:
+            sent = sent.replace(tzinfo=timezone.utc)
+        ready = sent + timedelta(hours=gap)
+        if datetime.now(timezone.utc) >= ready:
+            return
+
+        raise FlowError(
+            f"the last release notice went out {_in_words(sent)} and the "
+            f"charges wait {gap}h behind it, so this release can be charged "
+            f"from {ready.strftime('%d %b %H:%M')} UTC. The gap gives a member "
+            f"time to move a card or say no, and keeps the notice and the "
+            f"receipt off the same day's sending allowance. One order can "
+            f"still be charged on its own from Orders.")
 
     # ── orders, invoices, shipments ──────────────────────────────────────
     def _create_order(self, con: sqlite3.Connection, membership_id: int, tier: Tier,

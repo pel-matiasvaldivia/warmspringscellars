@@ -82,6 +82,22 @@ class Settings:
     # volume makes that worth doing.
     alert_to: str = field(default_factory=lambda: _env("ALERT_TO"))
 
+    # How long the warning gets to sit in somebody's inbox before the money
+    # moves. Two unrelated reasons want the same gap, which is why it is worth
+    # enforcing rather than remembering:
+    #
+    #   The member's. A notice that arrives after the charge is an apology.
+    #   One that arrives minutes before is not a warning either — it is a
+    #   receipt with extra steps. A day is time to move a card or say no.
+    #
+    #   The sender's. Notice and receipt are two messages to the same person;
+    #   sending both the same day doubles the busiest day's volume, and a
+    #   relay's daily allowance is what binds first. OPERATIONS.md §8.5.
+    #
+    # Set to 0 to charge whenever, for a deployment where neither applies.
+    release_notice_gap_hours: int = field(
+        default_factory=lambda: int(_env("RELEASE_NOTICE_GAP_HOURS", "24")))
+
     offer_days: int = field(default_factory=lambda: int(_env("OFFER_DAYS", "14")))
     currency: str = field(default_factory=lambda: _env("CURRENCY", "usd"))
 
