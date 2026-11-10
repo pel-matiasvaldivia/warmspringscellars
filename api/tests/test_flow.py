@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 ADMIN = ("cellar", "test-password")
 
 
-def letters(client, containing: str = "") -> list[str]:
+def letters(client, containing: str = "", to: str = "") -> list[str]:
     """The outbox, oldest first, decoded; optionally only the ones that say something.
 
     Counting messages was how these tests used to check who was written to,
@@ -47,7 +47,13 @@ def letters(client, containing: str = "") -> list[str]:
             if part.get_content_maintype() == "text":
                 parts.append(part.get_content())
         out.append(" ".join(" ".join(parts).split()))
-    return [t for t in out if containing in t] if containing else out
+    if containing:
+        out = [t for t in out if containing in t]
+    # ...and optionally only the ones that went to one person. A sentence the
+    # club says to a member it may also say to itself about them, so a phrase
+    # alone stopped being enough to mean "this person got this letter" the
+    # first time an internal alert reused one.
+    return [t for t in out if f"To: {to}" in t] if to else out
 
 
 @pytest.fixture()
@@ -206,7 +212,8 @@ def test_request_to_shipment(client):
     # was saved, receipted when it was charged
     assert len(letters(client, "We have your request")) == 1
     assert len(letters(client, "/club/offer/")) == 1
-    assert len(letters(client, "Nothing has been charged")) == 1
+    assert len(letters(client, "Nothing has been charged",
+                       to=APPLICATION["email"])) == 1
     assert len(letters(client, "Invoice")) == 1
 
     # pack it, ship it, deliver it
@@ -1505,3 +1512,46 @@ def test_without_the_setting_nothing_changes(client):
     assert client.main.db.one("SELECT * FROM application ORDER BY id DESC")["status"] \
         == "pending"
     assert client.main.db.one("SELECT COUNT(*) c FROM offer")["c"] == 0
+
+
+def test_the_winery_is_told_when_somebody_joins(client):
+    """Nobody at the cellar touches a new member on the way in any more."""
+    pay(client, approve(client, apply_(client)), "tasting-case")
+
+    letters = [p.read_text() for p in (client.tmp / "outbox").glob("*.eml")]
+    alerts = [b for b in letters if "New member" in b]
+    assert len(alerts) == 1, "one alert, when the membership actually exists"
+    alert = alerts[0]
+    assert "Tasting Case" in alert, "the allocation leads: the cellar must find bottles"
+    assert "3 bottles" in alert
+    assert "Nothing has been charged" in alert
+    assert client.main.db.one(
+        "SELECT * FROM event WHERE subject = 'membership' AND action = 'winery_told'"
+    ) is not None
+
+
+def test_an_applicant_who_never_finishes_is_not_announced(client):
+    """Asking is not joining, and an alert for each would stop being read."""
+    approve(client, apply_(client))          # invited, no card
+
+    letters = [p.read_text() for p in (client.tmp / "outbox").glob("*.eml")]
+    assert not any("New member" in b for b in letters)
+
+
+def test_a_failed_alert_does_not_cost_the_member_their_membership(client,
+                                                                  monkeypatch):
+    """A webhook that answers non-2xx is redelivered.
+
+    The winery missing one alert is a nuisance; the same card being processed
+    twice because of it is not.
+    """
+    import app.main as main                                   # noqa: PLC0415
+    monkeypatch.setattr(main, "send_member_joined",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("no mail")))
+
+    pay(client, approve(client, apply_(client)), "tasting-case")
+
+    assert client.main.db.one("SELECT COUNT(*) c FROM membership")["c"] == 1
+    assert client.main.db.one(
+        "SELECT * FROM event WHERE subject = 'membership' AND action = 'winery_not_told'"
+    ) is not None

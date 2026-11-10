@@ -114,6 +114,14 @@ simple, así nadie se queda en silencio. La aprobación queda registrada contra 
 solicitud con `auto` como quien decidió, así que **Applications** sigue
 mostrando quién dejó entrar a cada socio.
 
+**La bodega se entera de cada socio nuevo.** Un mensaje a `ALERT_TO` (o a la
+casilla del club) cuando la membresía existe de verdad —tarjeta guardada,
+nivel elegido—, encabezado por el nivel, que es para lo que la bodega tiene
+que encontrar botellas. No cuando se llena el formulario: mucha gente pregunta
+y nunca termina, y un aviso por cada una enseñaría a quien los lee a dejar de
+leerlos. Si ese aviso no se puede mandar, la membresía queda igual y el
+silencio se registra contra ella.
+
 ### 3.1 Llega la solicitud
 
 Cae en **Applications** en estado `pending` —o, con la aprobación automática

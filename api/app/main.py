@@ -44,6 +44,7 @@ from .notify import (
     send_invitation,
     send_application_received,
     send_declines_alert,
+    send_member_joined,
     send_receipt,
     send_release_notice,
     send_shipment_notice,
@@ -548,6 +549,24 @@ async def handle_card(payload: bytes, signature: str | None,
     except Exception as exc:                                   # noqa: BLE001
         with db.transaction() as con:
             log(con, "membership", membership_id, "welcome_failed", error=str(exc))
+
+    # And tell the winery, which otherwise learns of a new member only by
+    # looking. That matters most where nobody looked on the way in either:
+    # with approval automatic, this is the first time a person at the cellar
+    # hears about them at all.
+    #
+    # Its own try/except, after the member's own letter. A failure here must
+    # not take down the webhook: a non-2xx has the provider redeliver, and
+    # the one thing worse than the winery missing an alert is the member's
+    # card being processed twice over it.
+    try:
+        tell = send_member_joined(mailer, member, tier, settings.alerts_to,
+                                  settings.mail_reply_to)
+        with db.transaction() as con:
+            log(con, "membership", membership_id, "winery_told", to=tell)
+    except Exception as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, "membership", membership_id, "winery_not_told", error=str(exc))
 
     return membership_id
 

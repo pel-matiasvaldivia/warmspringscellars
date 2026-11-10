@@ -111,6 +111,14 @@ acknowledgement goes instead, so nobody is left with silence. The approval is
 recorded against the application with `auto` as the decider, so **Applications**
 still shows who let each member in.
 
+**The winery hears about every new member.** One message to `ALERT_TO` (or the
+club mailbox) when a membership is actually created — the card saved, the
+allocation chosen — naming the allocation first, because that is what the
+cellar has to find bottles for. Not when the form is filled in: plenty of
+people ask and never finish, and an alert for each would teach whoever reads
+it to stop reading. If that alert cannot be sent the membership still stands
+and the silence is recorded against it.
+
 ### 3.1 The request arrives
 
 It lands in **Applications** as `pending` — or, with automatic approval on, as
