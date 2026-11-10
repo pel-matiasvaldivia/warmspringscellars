@@ -29,6 +29,33 @@ STATES = ("ok", "warn", "bad", "off", "info")
 M365_SUBMISSION = "smtp.office365.com"
 M365_RELAY_SUFFIX = ".mail.protection.outlook.com"
 
+# Providers that issue their OWN user name for SMTP, unrelated to any address.
+# Filling SMTP_USER with the From address is the mistake every one of them
+# answers with a sentence about the credentials that never says which field is
+# wrong, so it is worth catching before the connection is even tried.
+RELAY_HOSTS = {
+    "mail.smtp2go.com": "SMTP2GO",
+    "smtp.sendgrid.net": "SendGrid",
+    "smtp.mailgun.org": "Mailgun",
+    "smtp.postmarkapp.com": "Postmark",
+    "smtp.resend.com": "Resend",
+}
+
+
+def is_microsoft(host: str) -> bool:
+    return host == M365_SUBMISSION or host.endswith(M365_RELAY_SUFFIX)
+
+
+def relay_name(host: str) -> str:
+    """The provider's name, when the host is one that issues its own login."""
+    if host in RELAY_HOSTS:
+        return RELAY_HOSTS[host]
+    for known, name in RELAY_HOSTS.items():
+        # smtp2go answers on several regional names under the same domain.
+        if host.endswith("." + known.partition(".")[2]):
+            return name
+    return ""
+
 
 @dataclass(frozen=True)
 class Check:
@@ -113,17 +140,47 @@ def _authentication(settings: Settings, mechanism: str, host: str) -> Check:
 
 
 def _mailbox(settings: Settings, mechanism: str) -> Check:
+    """Whether the account signing in and the address being sent as agree.
+
+    What counts as agreement depends entirely on who is being signed in to.
+    Microsoft 365 signs in as a mailbox, so a login that differs from the From
+    address needs Send As. A relay provider signs in as an account, so a login
+    that differs is not merely allowed — it is the only shape that works, and a
+    login that MATCHES the From address is the error.
+    """
     if mechanism == "XOAUTH2" and not settings.smtp_user:
         return Check("Mailbox", "bad",
                      "SMTP_USER is unset. The token says which application is "
                      "sending, never from which mailbox, so the mailbox has to "
                      "be named as well.")
-    if settings.smtp_user and settings.smtp_user.lower() != settings.mail_from.lower():
+
+    user, sender = settings.smtp_user, settings.mail_from
+    provider = relay_name(settings.smtp_host)
+
+    if user and user.lower() == sender.lower() and provider and mechanism == "LOGIN":
         return Check("Mailbox", "warn",
-                     f"Signing in as {settings.smtp_user} but sending as "
-                     f"{settings.mail_from}. Microsoft 365 refuses that unless "
-                     f"the account has Send As over the other mailbox.")
-    return Check("Mailbox", "ok", f"Sending as {settings.mail_from}.")
+                     f"SMTP_USER is the From address. {provider} issues its own "
+                     f"user name for SMTP, which is not an email address, and "
+                     f"refuses this one — with a sentence about the credentials "
+                     f"that never says which field is wrong. Put that user name "
+                     f"in SMTP_USER and leave MAIL_FROM as it is.")
+
+    if user and user.lower() != sender.lower():
+        if provider:
+            return Check("Mailbox", "ok",
+                         f"Signing in to {provider} as {user} and sending as "
+                         f"{sender}, which is how a relay works: the user name "
+                         f"says which account, the address says who it is from.")
+        if is_microsoft(settings.smtp_host):
+            return Check("Mailbox", "warn",
+                         f"Signing in as {user} but sending as {sender}. "
+                         f"Microsoft 365 refuses that unless the account has "
+                         f"Send As over the other mailbox.")
+        return Check("Mailbox", "info",
+                     f"Signing in as {user} and sending as {sender}. Whether a "
+                     f"server allows that is the server's own rule.")
+
+    return Check("Mailbox", "ok", f"Sending as {sender}.")
 
 
 def trial_message(settings: Settings, to: str, mechanism: str) -> Message:

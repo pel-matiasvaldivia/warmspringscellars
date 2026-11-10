@@ -1301,6 +1301,13 @@ def admin_mail(request: Request, verify: int = 0,
         from_domain=settings.mail_from.rpartition('@')[2],
         port=settings.smtp_port,
         suggested=settings.mail_reply_to,
+        # Which failures are worth listing depends on who refuses them. The
+        # Microsoft errors are meaningless against a relay, and the relay's
+        # are meaningless against Microsoft; showing both would bury the one
+        # that applies.
+        host=settings.smtp_host,
+        microsoft=mail_check.is_microsoft(settings.smtp_host),
+        provider=mail_check.relay_name(settings.smtp_host),
     )
 
 

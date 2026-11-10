@@ -93,6 +93,31 @@
   <h2>
     If it does not work</h2>
   <table>
+    {% if provider %}
+    <tr><th>535 Incorrect authentication data</th>
+        <td><strong>Almost always <code>SMTP_USER</code>.</strong> {{ provider }}
+            issues its own user name for SMTP — created under its SMTP Users
+            screen, and not an email address. Putting
+            <code>{{ mail_from }}</code> there is refused with this sentence,
+            which never says which of the two fields is wrong.
+            <code>MAIL_FROM</code> stays as it is; only the login changes. The
+            password is that user's, not the one you log in to the dashboard
+            with.</td></tr>
+    <tr><th>Arrives, but signed by {{ provider }}</th>
+        <td>In the message's <code>Authentication-Results</code>,
+            <code>header.d</code> names {{ provider }} rather than
+            <code>{{ from_domain }}</code>. The mail is delivered, so nothing
+            looks wrong — but it is credited to them instead of to the winery.
+            The sending domain was never verified: publish the CNAMEs their
+            dashboard gives and verify it. <code>SPF</code> passing on their
+            domain rather than ours is correct and not the same fault.</td></tr>
+    <tr><th>Stops part-way through a release</th>
+        <td>The plan's allowance for the month or the day. It binds on the
+            busiest day rather than the total — see the operations manual,
+            §8.5. Sending the release notices one day and running the charges
+            the next halves the worst day.</td></tr>
+    {% endif %}
+    {% if microsoft %}
     <tr><th>535 5.7.139</th>
         <td>Microsoft 365 has basic authentication switched off for that
             mailbox. It is not the password: move to OAuth2 — three settings
@@ -118,6 +143,7 @@
             Exchange Online PowerShell:
             <code>Add-MailboxPermission</code> for the app's service
             principal.</td></tr>
+    {% endif %}
     <tr><th>Sent, never arrived</th>
         <td>Not an SMTP problem. SPF, DKIM and DMARC for
             <code>{{ from_domain }}</code>, and the recipient's

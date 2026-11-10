@@ -97,6 +97,53 @@ def test_signing_in_as_one_address_and_sending_as_another_is_flagged(monkeypatch
     assert mailbox.state == "warn" and "Send As" in mailbox.detail
 
 
+def test_a_relay_login_that_is_the_from_address_is_caught_before_the_server_does(
+        monkeypatch, tmp_path):
+    """The mistake a relay answers with a sentence that names no field.
+
+    Every provider in RELAY_HOSTS issues its own user name and refuses the
+    From address as a login. The refusal talks about the credentials, so it
+    reads as a wrong password and the hours go into the password.
+    """
+    settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="mail.smtp2go.com",
+                            SMTP_USER="wineclub@warmspringscellar.com",
+                            SMTP_PASSWORD="x",
+                            MAIL_FROM="wineclub@warmspringscellar.com")
+    mailbox = states(configuration(settings, "LOGIN"), "Mailbox")
+    assert mailbox.state == "warn"
+    assert "SMTP2GO" in mailbox.detail and "SMTP_USER" in mailbox.detail
+    # and it must not send anybody to the Microsoft answer
+    assert "Send As" not in mailbox.detail and "365" not in mailbox.detail
+
+
+def test_a_relay_login_unlike_the_from_address_is_right_not_merely_tolerated(
+        monkeypatch, tmp_path):
+    """The shape Microsoft calls wrong is the only one a relay accepts."""
+    settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="mail.smtp2go.com",
+                            SMTP_USER="warmspringscellar", SMTP_PASSWORD="x",
+                            MAIL_FROM="wineclub@warmspringscellar.com")
+    mailbox = states(configuration(settings, "LOGIN"), "Mailbox")
+    assert mailbox.state == "ok"
+    assert "Send As" not in mailbox.detail
+
+
+def test_microsoft_still_wants_the_login_to_match_the_sender(monkeypatch, tmp_path):
+    """The relay rule must not have loosened the Microsoft one."""
+    settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="smtp.office365.com",
+                            SMTP_USER="someone", SMTP_PASSWORD="x",
+                            MAIL_FROM="wineclub@warmspringscellar.com")
+    assert states(configuration(settings, "LOGIN"), "Mailbox").state == "warn"
+
+
+def test_an_unknown_server_is_described_rather_than_judged(monkeypatch, tmp_path):
+    """Neither Microsoft's rule nor a relay's applies, so claim neither."""
+    settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="smtp.example.org",
+                            SMTP_USER="someone", SMTP_PASSWORD="x",
+                            MAIL_FROM="wineclub@warmspringscellar.com")
+    mailbox = states(configuration(settings, "LOGIN"), "Mailbox")
+    assert mailbox.state == "info" and "Send As" not in mailbox.detail
+
+
 def test_starttls_turned_off_is_the_one_thing_called_wrong(monkeypatch, tmp_path):
     settings = settings_for(monkeypatch, tmp_path, SMTP_HOST="smtp.office365.com",
                             SMTP_USER="club@x.com", SMTP_PASSWORD="x",
@@ -297,3 +344,41 @@ def test_an_address_that_is_not_one_is_refused_before_anything_opens(client, tmp
                       auth=ADMIN, follow_redirects=False)
     assert "That is not an address" in said(res)
     assert list((tmp_path / "outbox").glob("*mail-test*.eml")) == []
+
+
+def test_the_page_answers_for_the_server_that_is_actually_refusing(
+        tmp_path, monkeypatch):
+    """The troubleshooting table has to match who said no.
+
+    Microsoft's failures and a relay's are disjoint, and each set is noise
+    against the other server. Showing both would bury the line that applies —
+    and the Microsoft set ends by recommending OAuth2, which against a relay
+    is advice to rebuild something that was never the problem.
+    """
+    import importlib                                      # noqa: PLC0415
+    from fastapi.testclient import TestClient             # noqa: PLC0415
+
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SECRET_KEY", "test-secret-key-not-random")
+    monkeypatch.setenv("ADMIN_USER", ADMIN[0])
+    monkeypatch.setenv("ADMIN_PASSWORD", ADMIN[1])
+    monkeypatch.setenv("PUBLIC_BASE_URL", "http://testserver")
+    monkeypatch.setenv("SMTP_HOST", "mail.smtp2go.com")
+    monkeypatch.setenv("SMTP_PORT", "8025")
+    monkeypatch.setenv("SMTP_USER", "warmspringscellar")
+    monkeypatch.setenv("SMTP_PASSWORD", "x")
+    monkeypatch.setenv("MAIL_FROM", "wineclub@warmspringscellar.com")
+    monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
+
+    for name in [m for m in list(sys.modules) if m.startswith("app")]:
+        del sys.modules[name]
+    main = importlib.reload(importlib.import_module("app.main"))
+
+    with TestClient(main.app) as relay_client:
+        page = relay_client.get("/admin/mail", auth=ADMIN).text
+
+    assert "Incorrect authentication data" in page, "the refusal it will meet"
+    assert "SMTP2GO" in page, "named, so the advice is actionable"
+    assert "AADSTS" not in page and "5.7.139" not in page, "Microsoft's, not ours"
+    assert "OAuth2" not in page, "never send a relay to the token flow"
+    assert "Timed out" in page, "the answers that hold for any server stay"
