@@ -862,9 +862,29 @@ sigue llegando a la casilla compartida de Microsoft 365 como siempre.
 **El DNS es la parte que hay que hacer bien, y es menos trabajo del que
 parece.** Verificá el dominio en el panel del proveedor y publicá los CNAME que
 te dé: un selector DKIM y un return-path. **No agregues ningún `include:` al
-registro SPF.** El SPF se evalúa contra el remitente del sobre, que es el
-return-path del proveedor y no la dirección del From; el `-all` de la §8.6
-nunca se le aplica. Lo que hace legítimo el correo para este dominio es la
+registro SPF.** El SPF se evalúa contra el remitente del sobre y no contra la
+dirección del From, y el CNAME de return-path hace que ese remitente del sobre
+sea un subdominio de este dominio apuntado al proveedor. El `-all` de la §8.6
+se evalúa contra el registro de ese subdominio, nunca contra el del raíz, así
+que no se le aplica.
+
+Cómo se ve un resultado correcto, tomado del primer mensaje que salió por este
+camino. Vale la pena guardarlo, porque acá pasan tres cosas distintas por tres
+razones distintas:
+
+```
+spf=pass    smtp.mailfrom=em1196132.warmspringscellar.com
+dkim=pass   (signature was verified) header.d=warmspringscellar.com
+dmarc=pass  action=none header.from=warmspringscellar.com
+compauth=pass reason=100
+```
+
+El remitente del sobre es un subdominio nuestro, así que el SPF pasa **y**
+alinea. El DKIM está firmado con `d=warmspringscellar.com` y no a nombre del
+proveedor, que es lo que compra la verificación del dominio. El DMARC pasa
+entonces porque cualquiera de los dos alinea con el dominio del From. Y
+`compauth=pass reason=100` es la mejor respuesta de Microsoft: autenticación
+explícita en vez de una conjetura. Lo que hace legítimo el correo para este dominio es la
 firma DKIM, y eso es un CNAME. Agregar el include sería innecesario y gastaría
 una de las diez consultas DNS que permite un SPF. Agregar un *segundo* registro
 SPF rompería todo lo que hoy funciona.

@@ -847,9 +847,27 @@ arriving at the Microsoft 365 shared mailbox as before.
 **The DNS is the part worth getting right, and it is less work than it looks.**
 Verify the sending domain in the provider's dashboard and publish the CNAMEs it
 gives — a DKIM selector and a return-path. **Do not add `include:` to the SPF
-record.** SPF is checked against the envelope sender, which is the provider's
-own return-path, not the address in the From line; the `-all` in §8.6 never
-applies to it. What makes the mail legitimate for this domain is the DKIM
+record.** SPF is checked against the envelope sender, not the address in the
+From line, and the return-path CNAME makes that envelope sender a subdomain of
+this domain pointed at the provider. The `-all` in §8.6 is evaluated against
+that subdomain's own record, never against the root's, so it does not apply.
+
+What a correct result looks like, from the first message that went out this
+way — worth keeping, because three different things pass here for three
+different reasons:
+
+```
+spf=pass    smtp.mailfrom=em1196132.warmspringscellar.com
+dkim=pass   (signature was verified) header.d=warmspringscellar.com
+dmarc=pass  action=none header.from=warmspringscellar.com
+compauth=pass reason=100
+```
+
+The envelope sender is a subdomain of ours, so SPF passes **and** aligns. DKIM
+is signed `d=warmspringscellar.com` rather than for the provider, which is what
+the domain verification buys. DMARC then passes because either of those aligns
+with the From domain. `compauth=pass reason=100` is Microsoft's best answer:
+explicit authentication rather than a guess. What makes the mail legitimate for this domain is the DKIM
 signature, and that is a CNAME. Adding the include would be unnecessary and
 would spend one of the ten DNS lookups an SPF record is allowed. Adding a
 *second* SPF record would break everything that works today.
