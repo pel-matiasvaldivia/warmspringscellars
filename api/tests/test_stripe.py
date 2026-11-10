@@ -284,3 +284,68 @@ def test_both_ways_out_to_stripe_use_the_same_encoding():
     assert source.count("httpx.post(") == 2, "a third would need this test read"
     assert "data=_form(" not in source, "the shape httpx silently mishandles"
     assert source.count("content=_body(payload)") == 2
+
+
+# ── idempotency keys that mean what they say ─────────────────────────────
+def _setup(provider, monkeypatch, *, success_url: str) -> str:
+    """Start a card setup, handing back the idempotency key that was sent."""
+    seen: dict = {}
+
+    def fake_post(url, content=None, **kwargs):
+        seen["key"] = kwargs.get("headers", {}).get("Idempotency-Key", "")
+        return Answer(200, {"id": "cs_1", "url": "https://checkout.stripe.com/c/x"})
+
+    monkeypatch.setattr("app.payments.stripe_provider.httpx.post", fake_post)
+    provider.create_setup(
+        reference="offer-7-tasting-case",
+        description="Warm Springs Cellar — The Tasting Case",
+        customer_email="member@example.com",
+        success_url=success_url,
+        cancel_url="https://warmspringscellar.com/club/offer/T/cancel",
+        metadata={"offer_id": "7"},
+    )
+    return seen["key"]
+
+
+def test_the_same_request_twice_keeps_the_same_key(provider, monkeypatch):
+    """A double click must still replay one session rather than open two."""
+    url = "https://warmspringscellar.com/club/offer/TOKEN-A/welcome"
+
+    assert _setup(provider, monkeypatch, success_url=url) == \
+           _setup(provider, monkeypatch, success_url=url)
+
+
+def test_a_second_attempt_does_not_reuse_the_first_attempt_key(provider,
+                                                               monkeypatch):
+    """The failure a member could not get out of.
+
+    The success URL carries the offer's signed token, and that token is
+    minted fresh on every render because its signature embeds a timestamp.
+    A member who came back to the page therefore sent the same key with
+    different parameters, which Stripe refuses — and every retry differed
+    again, so the offer stayed dead to them.
+    """
+    first = _setup(provider, monkeypatch,
+                   success_url="https://warmspringscellar.com/club/offer/TOKEN-A/welcome")
+    second = _setup(provider, monkeypatch,
+                    success_url="https://warmspringscellar.com/club/offer/TOKEN-B/welcome")
+
+    assert first != second, "a changed request needs a key of its own"
+    assert first.startswith("setup-offer-7-tasting-case-")
+    assert second.startswith("setup-offer-7-tasting-case-")
+
+
+def test_a_charge_keeps_one_key_for_one_order(provider, monkeypatch):
+    """The opposite rule, and the reason the two differ.
+
+    A charge payload carries no URL and no token, so it is stable by
+    construction — and that stable key is the whole protection against
+    taking a member's money twice for one order.
+    """
+    sent = charge_with(monkeypatch, Answer(200, {"id": "pi_1", "status": "succeeded"}))
+    provider.charge(reference="WSC-2026-0001", amount_cents=12000, currency="usd",
+                    customer_id="cus_1", payment_method_id="pm_1",
+                    description="x", metadata={"order_id": "4"})
+
+    assert sent["headers"]["Idempotency-Key"] == "charge-WSC-2026-0001", \
+        "no hash here: the order's own reference is the point"
