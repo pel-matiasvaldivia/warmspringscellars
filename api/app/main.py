@@ -235,8 +235,47 @@ async def create_application(request: Request) -> JSONResponse:
     except FlowError as exc:
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
 
+    # A repeat submission comes back as the application already on file, so
+    # 'pending' is what tells a new one from a second press of the button.
+    # Only a new one opens a door.
+    fresh = db.one("SELECT * FROM application WHERE id = ?", (app_id,))
+    if settings.auto_approve_applications and fresh and fresh["status"] == "pending":
+        if invite_without_asking(app_id):
+            return JSONResponse({"ok": True, "application_id": app_id, "invited": True},
+                                status_code=201)
+
     acknowledge(data, app_id, "application")
     return JSONResponse({"ok": True, "application_id": app_id}, status_code=201)
+
+
+def invite_without_asking(app_id: int) -> bool:
+    """Approve and invite with nobody in the loop. True if the letter went.
+
+    The invitation is the acknowledgement here: sending both would be two
+    messages about one form, and the one carrying the link is the better of
+    them. So a failure to send has to fall back rather than leave the member
+    with nothing — the application is approved either way, and a silence is
+    worse than the plainer letter.
+    """
+    try:
+        offer_id, url = flow.approve_application(app_id, "auto")
+    except FlowError as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, "application", app_id, "auto_approve_failed", error=str(exc))
+        return False
+
+    application = db.one("SELECT * FROM application WHERE id = ?", (app_id,))
+    offer = db.one("SELECT * FROM offer WHERE id = ?", (offer_id,))
+    try:
+        where = send_invitation(mailer, application, url, offer["expires_at"][:10],
+                                settings.mail_reply_to)
+    except Exception as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, "offer", offer_id, "invitation_failed", actor="auto", error=str(exc))
+        return False
+    with db.transaction() as con:
+        log(con, "offer", offer_id, "invitation_sent", actor="auto", to=where)
+    return True
 
 
 @app.post("/api/waiting")

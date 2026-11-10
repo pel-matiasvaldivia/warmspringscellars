@@ -1442,3 +1442,66 @@ def test_an_offer_cannot_be_emptied_of_allocations(client):
 
     assert "Not done" in unquote(res.headers["location"])
     assert json.loads(_the_offer(client)["allowed_tiers"]) != ["no-such-tier"]
+
+
+# ── joining without anybody looking first ────────────────────────────────
+def _auto(client, **data):
+    """Submit the public form with auto-approval switched on."""
+    client.main.settings = type(client.main.settings)(auto_approve_applications=True)
+    body = {**APPLICATION, **data}
+    return client.post("/api/applications", json=body)
+
+
+def test_auto_approval_invites_on_the_spot(client):
+    res = _auto(client)
+
+    assert res.status_code == 201 and res.json()["invited"] is True
+    app = client.main.db.one("SELECT * FROM application ORDER BY id DESC")
+    assert app["status"] == "approved" and app["decided_by"] == "auto"
+    offer = client.main.db.one("SELECT * FROM offer ORDER BY id DESC")
+    assert offer is not None, "an offer, so the link in the letter resolves"
+    body = "".join(p.read_text() for p in (client.tmp / "outbox").glob("*.eml"))
+    assert "/club/offer/" in body, "the invitation, not the plain acknowledgement"
+
+
+def test_auto_approval_still_refuses_a_state_with_no_licence(client):
+    """The checks before approval were never the approver's work."""
+    res = _auto(client, email="kentucky@example.com", state="Kentucky")
+
+    assert res.status_code == 400
+    assert client.main.db.one("SELECT COUNT(*) c FROM offer")["c"] == 0
+
+
+def test_pressing_the_button_twice_does_not_send_two_invitations(client):
+    """Without this, the form is a way to make the club send mail on demand.
+
+    The duplicate check used to look only for a pending application. With
+    approval automatic the first submission leaves it approved, so a second
+    would have found nothing, opened a second offer and written again.
+    """
+    def invitations() -> int:
+        return sum("/club/offer/" in p.read_text()
+                   for p in (client.tmp / "outbox").glob("*.eml"))
+
+    _auto(client)
+    assert invitations() == 1
+
+    second = _auto(client)
+
+    assert second.status_code == 201
+    assert client.main.db.one("SELECT COUNT(*) c FROM application")["c"] == 1
+    assert client.main.db.one("SELECT COUNT(*) c FROM offer")["c"] == 1
+    # A repeat still gets the plain acknowledgement, as it always did. What it
+    # must never get is a second door.
+    assert invitations() == 1
+    assert "invited" not in second.json()
+
+
+def test_without_the_setting_nothing_changes(client):
+    """Off unless somebody turns it on."""
+    res = client.post("/api/applications", json=APPLICATION)
+
+    assert res.status_code == 201 and "invited" not in res.json()
+    assert client.main.db.one("SELECT * FROM application ORDER BY id DESC")["status"] \
+        == "pending"
+    assert client.main.db.one("SELECT COUNT(*) c FROM offer")["c"] == 0

@@ -254,9 +254,16 @@ class Flow:
 
         with self.db.transaction() as con:
             # A second request from the same address while one is open is the
-            # same request, not a new one.
+            # same request, not a new one. 'approved' counts as open: the
+            # winery has already said yes and an invitation is out, so a
+            # repeat is somebody pressing the button twice, not somebody
+            # asking again. Leaving it out mattered little while a person
+            # approved each one and would notice the pair; with approval
+            # automatic it would mean a second invitation for every repeat
+            # submission, which is a way to make the club send mail on demand.
             open_row = con.execute(
-                "SELECT id FROM application WHERE email = ? AND status = 'pending'", (email,)
+                "SELECT id FROM application WHERE email = ?"
+                " AND status IN ('pending', 'approved')", (email,)
             ).fetchone()
             if open_row:
                 log(con, "application", int(open_row["id"]), "duplicate_request")

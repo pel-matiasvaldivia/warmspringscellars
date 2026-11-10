@@ -91,9 +91,30 @@ form → Applications → approve → the member picks a tier → pays
      → order → invoice → shipment → delivered
 ```
 
+**Approving can be automatic.** With `AUTO_APPROVE_APPLICATIONS=true` the form
+approves what it receives and sends the invitation straight back, with nobody
+in the loop. Off unless set.
+
+It loosens none of the checks in front of it, because none of them was ever
+the approver's work: an unlicensed state is still refused at the form, the
+rate limit still holds, a malformed address is still rejected, and a repeat
+submission still returns the application already on file rather than opening a
+second invitation. What it gives up is a person reading the application before
+the club opens its door — and that door can still be shut afterwards, by
+revoking the offer or pausing the membership.
+
+One visible difference: an auto-approved applicant gets **the invitation**
+instead of the "we have your application" letter. Two messages about one form
+would be noise, and the one carrying the link is the better of them. If that
+letter cannot be sent, the application stays approved and the plainer
+acknowledgement goes instead, so nobody is left with silence. The approval is
+recorded against the application with `auto` as the decider, so **Applications**
+still shows who let each member in.
+
 ### 3.1 The request arrives
 
-It lands in **Applications** as `pending`. "Open" shows the card: name, email,
+It lands in **Applications** as `pending` — or, with automatic approval on, as
+`approved` with its invitation already sent. "Open" shows the card: name, email,
 phone, city and shipping state, the tier they asked for, how they heard of us,
 and the note they wrote.
 
