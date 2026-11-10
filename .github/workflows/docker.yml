@@ -1,10 +1,18 @@
 name: Build and publish image
 
+# Published images come from `main` and from release tags, and from nowhere
+# else. A pull request still builds and tests — the `pull_request` trigger
+# below — but the build step refuses to push, so a branch cannot quietly move
+# the tag a server is pulling.
+#
+# This matters because docker-compose.yml resolves to `:latest` unless TAG
+# says otherwise, and `latest` follows whichever branch the repository calls
+# default. With work going straight onto the default branch, every commit
+# became something a `docker compose pull` would pick up, reviewed or not.
 on:
   push:
     branches:
       - main
-      - claude/warm-springs-wine-club-9rfl80
     tags:
       - "v*"
   pull_request:
