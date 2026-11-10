@@ -332,6 +332,55 @@ message.</p>""")
                                text=text, html=html, reply_to=reply_to))
 
 
+def send_member_joined(mailer: Mailer, member: sqlite3.Row, tier: Tier,
+                       to: str, reply_to: str) -> str:
+    """Tell the winery somebody has actually joined.
+
+    Sent when the card is saved and the membership exists, not when the form
+    is filled in. Those are different events and only one of them is a
+    member: plenty of people ask and never finish, and an alert for each
+    would teach whoever reads it to stop reading.
+
+    It matters more once approving is automatic, because then nobody at the
+    winery touches a new member on the way in. The figure to lead with is the
+    allocation — it is what the cellar has to find bottles for, and the
+    difference between a three-bottle case and a full one is four times the
+    wine.
+    """
+    name = f"{member['first_name']} {member['last_name']}".strip()
+    where = ", ".join(p for p in (member["ship_city"], member["ship_state"]) if p)
+    price = f"${tier.price_cents / 100:,.2f}"
+
+    text = f"""{name} has joined, on {_plain(tier.name)}.
+
+  Allocation  {_plain(tier.name)} — {tier.bottles} bottles, {price} a release
+  Ships to    {where or 'no address on file'}
+  Email       {member['email']}
+
+Nothing has been charged: the card is held and the club charges it when a
+release goes out. They are counted in the next one, so the cellar needs
+{tier.bottles} bottles for them.
+"""  # no signature: the club does not sign letters to itself
+
+    html = _html(f"""
+<p style="margin:0 0 18px;font-size:17px"><strong>{name} has joined</strong>, on
+{_plain(tier.name)}.</p>
+<table role="presentation" style="font:13px/1.9 system-ui,sans-serif;color:#5c4650;
+ border-top:1px solid #e2d8d0;border-bottom:1px solid #e2d8d0;width:100%">
+<tr><td style="color:#9a8890">Allocation</td><td align="right">
+  <strong>{_plain(tier.name)}</strong> — {tier.bottles} bottles, {price} a release</td></tr>
+<tr><td style="color:#9a8890">Ships to</td><td align="right">{where or '—'}</td></tr>
+<tr><td style="color:#9a8890">Email</td><td align="right">{member['email']}</td></tr>
+</table>
+<p style="margin:18px 0 0;font-size:14px"><strong>Nothing has been charged.</strong>
+The card is held, and the club charges it when a release goes out.</p>
+<p style="margin:14px 0 0;font-size:13px;color:#5c4650">They are counted in the next
+release, so the cellar needs {tier.bottles} bottles for them.</p>""", internal=True)
+
+    return mailer.send(Message(to=to, subject=f"New member: {name} — {_plain(tier.name)}",
+                               text=text, html=html, reply_to=reply_to))
+
+
 def send_card_request(mailer: Mailer, member: sqlite3.Row, card_url: str,
                       reply_to: str) -> str:
     """Ask for a card again, before a release rather than after.

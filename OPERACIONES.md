@@ -94,9 +94,38 @@ formulario → Applications → aprobar → el socio elige nivel → paga
           → orden → factura → envío → entregado
 ```
 
+**La aprobación puede ser automática.** Con `AUTO_APPROVE_APPLICATIONS=true` el
+formulario aprueba lo que recibe y manda la invitación de vuelta en el momento,
+sin que intervenga nadie. Apagado salvo que se encienda.
+
+No afloja ninguno de los controles que vienen antes, porque ninguno era tarea
+de quien aprobaba: un estado sin licencia lo sigue rechazando el formulario, el
+límite de tasa sigue vigente, una dirección mal formada se sigue rechazando, y
+una solicitud repetida sigue devolviendo la que ya está en la base en vez de
+abrir una segunda invitación. Lo que se resigna es que una persona lea la
+solicitud antes de que el club abra la puerta — y esa puerta se puede cerrar
+después igual, revocando la oferta o pausando la membresía.
+
+Una diferencia visible: al aprobado automáticamente le llega **la invitación**
+en lugar de la carta de "recibimos tu solicitud". Dos mensajes por un mismo
+formulario serían ruido, y el que lleva el link es el mejor de los dos. Si esa
+carta no se puede enviar, la solicitud queda aprobada igual y sale el acuse
+simple, así nadie se queda en silencio. La aprobación queda registrada contra la
+solicitud con `auto` como quien decidió, así que **Applications** sigue
+mostrando quién dejó entrar a cada socio.
+
+**La bodega se entera de cada socio nuevo.** Un mensaje a `ALERT_TO` (o a la
+casilla del club) cuando la membresía existe de verdad —tarjeta guardada,
+nivel elegido—, encabezado por el nivel, que es para lo que la bodega tiene
+que encontrar botellas. No cuando se llena el formulario: mucha gente pregunta
+y nunca termina, y un aviso por cada una enseñaría a quien los lee a dejar de
+leerlos. Si ese aviso no se puede mandar, la membresía queda igual y el
+silencio se registra contra ella.
+
 ### 3.1 Llega la solicitud
 
-Cae en **Applications** en estado `pending`. "Open" abre la ficha: nombre,
+Cae en **Applications** en estado `pending` —o, con la aprobación automática
+encendida, en `approved` y con su invitación ya enviada—. "Open" abre la ficha: nombre,
 email, teléfono, ciudad y estado de envío, el nivel que pidió, cómo nos conoció
 y la nota que escribió.
 

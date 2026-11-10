@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 ADMIN = ("cellar", "test-password")
 
 
-def letters(client, containing: str = "") -> list[str]:
+def letters(client, containing: str = "", to: str = "") -> list[str]:
     """The outbox, oldest first, decoded; optionally only the ones that say something.
 
     Counting messages was how these tests used to check who was written to,
@@ -47,7 +47,13 @@ def letters(client, containing: str = "") -> list[str]:
             if part.get_content_maintype() == "text":
                 parts.append(part.get_content())
         out.append(" ".join(" ".join(parts).split()))
-    return [t for t in out if containing in t] if containing else out
+    if containing:
+        out = [t for t in out if containing in t]
+    # ...and optionally only the ones that went to one person. A sentence the
+    # club says to a member it may also say to itself about them, so a phrase
+    # alone stopped being enough to mean "this person got this letter" the
+    # first time an internal alert reused one.
+    return [t for t in out if f"To: {to}" in t] if to else out
 
 
 @pytest.fixture()
@@ -206,7 +212,8 @@ def test_request_to_shipment(client):
     # was saved, receipted when it was charged
     assert len(letters(client, "We have your request")) == 1
     assert len(letters(client, "/club/offer/")) == 1
-    assert len(letters(client, "Nothing has been charged")) == 1
+    assert len(letters(client, "Nothing has been charged",
+                       to=APPLICATION["email"])) == 1
     assert len(letters(client, "Invoice")) == 1
 
     # pack it, ship it, deliver it
@@ -1389,4 +1396,162 @@ def test_asking_for_a_card_does_not_mention_a_decline(client):
     assert "declined" not in body.lower(), "nobody's card was declined"
     assert client.main.db.one(
         "SELECT * FROM event WHERE subject = 'membership' AND action = 'card_requested'"
+    ) is not None
+
+
+def test_an_offer_can_have_an_allocation_put_back(client):
+    """The allocations are chosen once, on a form that then disappears.
+
+    Approving draws the tier checkboxes only while the application is still
+    pending, so a box left unticked by accident could never be added back and
+    the member went on seeing a shorter list than the winery meant to offer.
+    """
+    app_id = apply_(client)
+    # approved offering only the twelve-bottle case
+    client.post(f"/admin/applications/{app_id}/approve", auth=ADMIN,
+                data={"tiers": ["full-case"]}, follow_redirects=False)
+    offer = _the_offer(client)
+    assert json.loads(offer["allowed_tiers"]) == ["full-case"]
+
+    client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                data={"tiers": ["tasting-case", "founders-reserve", "full-case"]},
+                follow_redirects=False)
+
+    assert json.loads(_the_offer(client)["allowed_tiers"]) == [
+        "tasting-case", "founders-reserve", "full-case"]
+    # and the member now sees three, on a link minted from the same offer
+    token = client.main.flow.offer_url(int(offer["id"])).rsplit("/", 1)[1]
+    page = client.get(f"/club/offer/{token}").text
+    assert "The Tasting Case" in page and "The Full Case" in page
+
+
+def test_sending_it_again_without_saying_leaves_the_allocations_alone(client):
+    """No tick boxes posted must not silently widen what was offered."""
+    app_id = apply_(client)
+    client.post(f"/admin/applications/{app_id}/approve", auth=ADMIN,
+                data={"tiers": ["full-case"]}, follow_redirects=False)
+    offer = _the_offer(client)
+
+    client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                follow_redirects=False)
+
+    assert json.loads(_the_offer(client)["allowed_tiers"]) == ["full-case"]
+
+
+def test_an_offer_cannot_be_emptied_of_allocations(client):
+    """An offer with nothing on the table is not an offer."""
+    app_id = apply_(client)
+    approve(client, app_id)
+    offer = _the_offer(client)
+
+    res = client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                      data={"tiers": ["no-such-tier"]}, follow_redirects=False)
+
+    assert "Not done" in unquote(res.headers["location"])
+    assert json.loads(_the_offer(client)["allowed_tiers"]) != ["no-such-tier"]
+
+
+# ── joining without anybody looking first ────────────────────────────────
+def _auto(client, **data):
+    """Submit the public form with auto-approval switched on."""
+    client.main.settings = type(client.main.settings)(auto_approve_applications=True)
+    body = {**APPLICATION, **data}
+    return client.post("/api/applications", json=body)
+
+
+def test_auto_approval_invites_on_the_spot(client):
+    res = _auto(client)
+
+    assert res.status_code == 201 and res.json()["invited"] is True
+    app = client.main.db.one("SELECT * FROM application ORDER BY id DESC")
+    assert app["status"] == "approved" and app["decided_by"] == "auto"
+    offer = client.main.db.one("SELECT * FROM offer ORDER BY id DESC")
+    assert offer is not None, "an offer, so the link in the letter resolves"
+    body = "".join(p.read_text() for p in (client.tmp / "outbox").glob("*.eml"))
+    assert "/club/offer/" in body, "the invitation, not the plain acknowledgement"
+
+
+def test_auto_approval_still_refuses_a_state_with_no_licence(client):
+    """The checks before approval were never the approver's work."""
+    res = _auto(client, email="kentucky@example.com", state="Kentucky")
+
+    assert res.status_code == 400
+    assert client.main.db.one("SELECT COUNT(*) c FROM offer")["c"] == 0
+
+
+def test_pressing_the_button_twice_does_not_send_two_invitations(client):
+    """Without this, the form is a way to make the club send mail on demand.
+
+    The duplicate check used to look only for a pending application. With
+    approval automatic the first submission leaves it approved, so a second
+    would have found nothing, opened a second offer and written again.
+    """
+    def invitations() -> int:
+        return sum("/club/offer/" in p.read_text()
+                   for p in (client.tmp / "outbox").glob("*.eml"))
+
+    _auto(client)
+    assert invitations() == 1
+
+    second = _auto(client)
+
+    assert second.status_code == 201
+    assert client.main.db.one("SELECT COUNT(*) c FROM application")["c"] == 1
+    assert client.main.db.one("SELECT COUNT(*) c FROM offer")["c"] == 1
+    # A repeat still gets the plain acknowledgement, as it always did. What it
+    # must never get is a second door.
+    assert invitations() == 1
+    assert "invited" not in second.json()
+
+
+def test_without_the_setting_nothing_changes(client):
+    """Off unless somebody turns it on."""
+    res = client.post("/api/applications", json=APPLICATION)
+
+    assert res.status_code == 201 and "invited" not in res.json()
+    assert client.main.db.one("SELECT * FROM application ORDER BY id DESC")["status"] \
+        == "pending"
+    assert client.main.db.one("SELECT COUNT(*) c FROM offer")["c"] == 0
+
+
+def test_the_winery_is_told_when_somebody_joins(client):
+    """Nobody at the cellar touches a new member on the way in any more."""
+    pay(client, approve(client, apply_(client)), "tasting-case")
+
+    letters = [p.read_text() for p in (client.tmp / "outbox").glob("*.eml")]
+    alerts = [b for b in letters if "New member" in b]
+    assert len(alerts) == 1, "one alert, when the membership actually exists"
+    alert = alerts[0]
+    assert "Tasting Case" in alert, "the allocation leads: the cellar must find bottles"
+    assert "3 bottles" in alert
+    assert "Nothing has been charged" in alert
+    assert client.main.db.one(
+        "SELECT * FROM event WHERE subject = 'membership' AND action = 'winery_told'"
+    ) is not None
+
+
+def test_an_applicant_who_never_finishes_is_not_announced(client):
+    """Asking is not joining, and an alert for each would stop being read."""
+    approve(client, apply_(client))          # invited, no card
+
+    letters = [p.read_text() for p in (client.tmp / "outbox").glob("*.eml")]
+    assert not any("New member" in b for b in letters)
+
+
+def test_a_failed_alert_does_not_cost_the_member_their_membership(client,
+                                                                  monkeypatch):
+    """A webhook that answers non-2xx is redelivered.
+
+    The winery missing one alert is a nuisance; the same card being processed
+    twice because of it is not.
+    """
+    import app.main as main                                   # noqa: PLC0415
+    monkeypatch.setattr(main, "send_member_joined",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("no mail")))
+
+    pay(client, approve(client, apply_(client)), "tasting-case")
+
+    assert client.main.db.one("SELECT COUNT(*) c FROM membership")["c"] == 1
+    assert client.main.db.one(
+        "SELECT * FROM event WHERE subject = 'membership' AND action = 'winery_not_told'"
     ) is not None

@@ -98,6 +98,19 @@ class Settings:
     release_notice_gap_hours: int = field(
         default_factory=lambda: int(_env("RELEASE_NOTICE_GAP_HOURS", "24")))
 
+    # Approve what the public form sends, without anybody looking first, and
+    # send the invitation straight back. The winery's choice, not a default:
+    # it is off unless somebody turns it on.
+    #
+    # What it does NOT loosen, because none of it was ever the approver's
+    # work: the licensed-states check, the rate limit, the email-shape check
+    # and the duplicate check all run before this and all still refuse. What
+    # it gives up is a person reading the application before the club opens
+    # its door — which can still be shut afterwards, by revoking the offer or
+    # pausing the membership.
+    auto_approve_applications: bool = field(
+        default_factory=lambda: _bool("AUTO_APPROVE_APPLICATIONS", False))
+
     offer_days: int = field(default_factory=lambda: int(_env("OFFER_DAYS", "14")))
     currency: str = field(default_factory=lambda: _env("CURRENCY", "usd"))
 
