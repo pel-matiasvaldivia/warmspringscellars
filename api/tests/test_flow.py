@@ -1330,3 +1330,63 @@ def test_a_revoked_invitation_is_not_quietly_undone(client):
 
     assert "Not done" in unquote(res.headers["location"])
     assert _the_offer(client)["status"] == "revoked"
+
+
+# ── a card the club cannot charge ────────────────────────────────────────
+def test_a_card_saved_by_another_provider_is_called_out(client):
+    """Swapping payment provider leaves rows that look complete and are not.
+
+    The reference was issued by the old provider, so the new one cannot
+    charge it, while Members goes on showing a membership with a card
+    against it. A release is a poor moment to discover that.
+    """
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    member_id = int(client.main.db.one("SELECT id FROM membership ORDER BY id DESC")["id"])
+    with client.main.db.transaction() as con:
+        con.execute("UPDATE membership SET provider = 'someone-else' WHERE id = ?",
+                    (member_id,))
+
+    page = client.get("/admin/memberships", auth=ADMIN).text
+
+    assert "stale card" in page
+    assert f"/admin/memberships/{member_id}/card-link" in page, "and a way to fix it"
+
+
+def test_a_membership_with_no_card_is_offered_the_same_way_out(client):
+    """A card that went away, rather than one that never worked.
+
+    Same remedy, so the screen must reach the same place rather than treating
+    an empty reference as nothing to say.
+    """
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    member_id = int(client.main.db.one("SELECT id FROM membership ORDER BY id DESC")["id"])
+    with client.main.db.transaction() as con:
+        con.execute("UPDATE membership SET provider_customer_id = NULL,"
+                    " provider_payment_method = NULL WHERE id = ?", (member_id,))
+
+    page = client.get("/admin/memberships", auth=ADMIN).text
+
+    assert "no card" in page
+    assert f"/admin/memberships/{member_id}/card-link" in page
+
+
+def test_asking_for_a_card_does_not_mention_a_decline(client):
+    """The wrong letter here would worry somebody about their bank.
+
+    Nothing was declined: the club changed provider and the old reference
+    went with it. Saying otherwise is untrue and frightening.
+    """
+    pay(client, approve(client, apply_(client)), "tasting-case")
+    member_id = int(client.main.db.one("SELECT id FROM membership ORDER BY id DESC")["id"])
+
+    res = client.post(f"/admin/memberships/{member_id}/card-link", auth=ADMIN,
+                      follow_redirects=False)
+
+    assert res.status_code == 303
+    assert "Nothing was charged" in unquote(res.headers["location"])
+    body = "".join(p.read_text() for p in (client.tmp / "outbox").glob("*.eml"))
+    assert "nothing is wrong at your end" in body.lower()
+    assert "declined" not in body.lower(), "nobody's card was declined"
+    assert client.main.db.one(
+        "SELECT * FROM event WHERE subject = 'membership' AND action = 'card_requested'"
+    ) is not None

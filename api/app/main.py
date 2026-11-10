@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import secrets
+import sqlite3
 import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
@@ -37,6 +38,7 @@ from .flow import ALLOWED, Address, Flow, FlowError
 from .invoices import ensure_pdf, money
 from .mail import build_mailer, check as mail_check
 from .notify import (
+    send_card_request,
     send_charge_failed,
     send_decline,
     send_invitation,
@@ -773,12 +775,62 @@ def admin_waiting_drop(waiting_id: int,
     return RedirectResponse("/admin/waiting?done=Taken off the list.", status_code=303)
 
 
+def card_standing(row: sqlite3.Row) -> tuple[str, str]:
+    """Whether the card held against a membership could actually be charged.
+
+    The membership records which provider saved the card. Replace the
+    provider — a sandbox for a real account, one company for another — and
+    every card saved under the old one becomes a reference nobody can charge,
+    while the row goes on looking complete. A release is a poor moment to
+    find that out, so it is said here instead.
+
+    What this cannot see is a card saved by the SAME provider in its test
+    mode: the reference looks ordinary and only the provider knows it is not.
+    That one shows up as a charge that fails, which is why this says 'looks
+    usable' rather than 'usable'.
+    """
+    if not (row["provider_customer_id"] and row["provider_payment_method"]):
+        return "none", "No card. They were invited but never finished."
+    if (row["provider"] or "") != payments.name:
+        return "stale", (f"Saved by '{row['provider'] or 'nothing'}' while the club "
+                         f"now uses '{payments.name}'. There is nothing to charge: "
+                         f"ask for a card again, before a release does it badly.")
+    return "ok", "Looks usable."
+
+
 @app.get("/admin/memberships", response_class=HTMLResponse)
 def admin_memberships(request: Request, actor: str = Depends(require_admin)) -> HTMLResponse:
     rows = db.all("SELECT * FROM membership ORDER BY id DESC LIMIT 300")
     return admin_page(request, "memberships.html", "memberships", rows=rows,
                       states=sorted(SHIPPABLE_STATES),
+                      card={r["id"]: card_standing(r) for r in rows},
                       transitions={k: sorted(v) for k, v in ALLOWED["membership"].items()})
+
+
+@app.post("/admin/memberships/{membership_id}/card-link")
+def admin_ask_for_a_card(membership_id: int,
+                         actor: str = Depends(require_admin)) -> RedirectResponse:
+    """Ask a member to put in a card, before a release needs one.
+
+    The club could already ask after a charge failed. That letter says their
+    card was declined, which for a card that was never real is both untrue
+    and worrying — and it arrives with a failed order already in the books.
+    """
+    member = db.one("SELECT * FROM membership WHERE id = ?", (membership_id,))
+    if member is None:
+        raise HTTPException(404)
+    try:
+        sent = send_card_request(mailer, member, flow.card_url(membership_id),
+                                 settings.mail_reply_to)
+        with db.transaction() as con:
+            log(con, "membership", membership_id, "card_requested", actor=actor, to=sent)
+        done = f"Asked {member['email']} for a card. Nothing was charged."
+    except Exception as exc:                                   # noqa: BLE001
+        with db.transaction() as con:
+            log(con, "membership", membership_id, "card_request_failed",
+                actor=actor, error=str(exc))
+        done = f"Not sent: {exc}"
+    return RedirectResponse(f"/admin/memberships?done={done}", status_code=303)
 
 
 @app.post("/admin/memberships/{membership_id}/address")

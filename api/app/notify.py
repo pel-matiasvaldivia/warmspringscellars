@@ -332,6 +332,55 @@ message.</p>""")
                                text=text, html=html, reply_to=reply_to))
 
 
+def send_card_request(mailer: Mailer, member: sqlite3.Row, card_url: str,
+                      reply_to: str) -> str:
+    """Ask for a card again, before a release rather than after.
+
+    Deliberately not `send_charge_failed`. Nobody's card was declined here —
+    the card the club holds was saved against a payment account the winery has
+    since replaced, so there is nothing to charge and never was. Telling them
+    they were declined would be a lie that worries them about their bank.
+
+    What it must not do is sound like a problem with their membership. It is
+    the winery's housekeeping, said plainly, with the one action at the end.
+    """
+    text = f"""Dear {member['first_name']},
+
+A short piece of housekeeping, and nothing is wrong at your end.
+
+We have changed the company that handles our card payments, and the card
+details you gave us stayed with the old one — we never hold them ourselves.
+So we have nothing to charge when this season's wine goes out.
+
+Putting one in again takes a minute, and nothing is charged today:
+
+  {card_url}
+
+Your membership and your allocation are unchanged. If you would rather leave
+the club, or you need a hand, just reply to this message.
+
+{SIGNOFF}"""
+
+    html = _html(f"""
+<p style="margin:0 0 14px">Dear {member['first_name']},</p>
+<p style="margin:0 0 18px">A short piece of housekeeping, and <strong>nothing is wrong
+at your end</strong>.</p>
+<p style="margin:0 0 18px">We have changed the company that handles our card payments,
+and the card details you gave us stayed with the old one — we never hold them ourselves.
+So we have nothing to charge when this season's wine goes out.</p>
+<p style="margin:0 0 18px"><a href="{card_url}" style="background:#5c0037;color:#fff;
+ text-decoration:none;padding:12px 24px;display:inline-block;font:600 12px/1 system-ui,
+ sans-serif;letter-spacing:.14em;text-transform:uppercase">Put in a card</a></p>
+<p style="margin:0 0 18px;font-size:13px;color:#5c4650"><strong>Nothing is charged
+today.</strong> The club charges when a release goes out, as it always has.</p>
+<p style="margin:0;font-size:13px;color:#5c4650">Your membership and your allocation are
+unchanged. If you would rather leave the club, just reply to this message.</p>""")
+
+    return mailer.send(Message(to=member["email"],
+                               subject="We need your card again — nothing is wrong",
+                               text=text, html=html, reply_to=reply_to))
+
+
 def send_application_received(mailer: Mailer, first_name: str, email: str,
                               waiting_for: str, reply_to: str) -> str:
     """Acknowledge the form, because silence is the worst answer to a request.

@@ -48,9 +48,21 @@
       </details>
     </td>
     <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
-    <td class="log">{{ r.provider or '—' }}</td>
+    {% set standing, why = card[r.id] %}
+    <td class="log">
+      {% if standing == 'ok' %}{{ r.provider }}
+      {% else %}<span class="pill {{ 'failed' if standing == 'stale' else '' }}"
+         title="{{ why }}">{{ 'no card' if standing == 'none' else 'stale card' }}</span>
+      {% endif %}
+    </td>
     <td>
       <div class="row">
+      {% if standing != 'ok' %}
+        <form method="post" action="/admin/memberships/{{ r.id }}/card-link">
+          <button class="btn ghost small" type="submit"
+                  title="{{ why }}">Ask for a card</button>
+        </form>
+      {% endif %}
       {% for target in transitions.get(r.status, []) %}
         <form method="post" action="/admin/memberships/{{ r.id }}/status">
           <input type="hidden" name="target" value="{{ target }}">
