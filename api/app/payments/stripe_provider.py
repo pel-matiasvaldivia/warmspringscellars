@@ -21,6 +21,7 @@ import hashlib
 import hmac
 import json
 import time
+from urllib.parse import urlencode
 
 import httpx
 
@@ -51,6 +52,24 @@ def _form(data: dict, prefix: str = "") -> list[tuple[str, str]]:
         elif value is not None:
             out.append((name, str(value)))
     return out
+
+
+FORM = {"Content-Type": "application/x-www-form-urlencoded"}
+
+
+def _body(payload: dict) -> str:
+    """The request body Stripe reads, encoded here rather than by the client.
+
+    Stripe wants form encoding with bracketed keys, and `_form` returns the
+    pairs in order. httpx only form-encodes a MAPPING, though: handed a list
+    of pairs it takes the whole thing for a streaming body, and the failure
+    surfaces far away inside the HTTP library as "expected a bytes-like
+    object, tuple found" — which names neither Stripe nor this file.
+
+    So both calls go through here. It owes nothing to which version of httpx
+    is installed, and a third caller cannot get it wrong in a new way.
+    """
+    return urlencode(_form(payload))
 
 
 class StripeProvider:
@@ -129,10 +148,10 @@ class StripeProvider:
         try:
             res = httpx.post(
                 f"{API}/payment_intents",
-                data=_form(payload),
+                content=_body(payload),
                 auth=(self._key, ""),
                 timeout=self._timeout,
-                headers={"Idempotency-Key": f"charge-{reference}"},
+                headers={"Idempotency-Key": f"charge-{reference}", **FORM},
             )
         except httpx.HTTPError as exc:
             raise PaymentError(f"could not reach Stripe: {exc}") from exc
@@ -194,10 +213,10 @@ class StripeProvider:
         try:
             res = httpx.post(
                 f"{API}{path}",
-                data=_form(payload),
+                content=_body(payload),
                 auth=(self._key, ""),
                 timeout=self._timeout,
-                headers={"Idempotency-Key": idempotency},
+                headers={"Idempotency-Key": idempotency, **FORM},
             )
         except httpx.HTTPError as exc:
             raise PaymentError(f"could not reach Stripe: {exc}") from exc
