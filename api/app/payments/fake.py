@@ -37,6 +37,7 @@ class FakeProvider:
         customer_email: str,
         success_url: str,
         cancel_url: str,
+        currency: str,
         metadata: dict[str, str],
     ) -> SetupSession:
         session_id = "cs_fake_" + secrets.token_urlsafe(12)

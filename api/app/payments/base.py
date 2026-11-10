@@ -74,6 +74,7 @@ class PaymentProvider(Protocol):
         customer_email: str,
         success_url: str,
         cancel_url: str,
+        currency: str,
         metadata: dict[str, str],
     ) -> SetupSession:
         """A page where the member saves a card. Charges nothing."""
