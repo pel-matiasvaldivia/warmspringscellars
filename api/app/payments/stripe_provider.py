@@ -109,7 +109,18 @@ class StripeProvider:
             # Customer to attach it to, which is what `customer` on the
             # completed session carries back.
             "mode": "setup",
-            "payment_method_types": ["card"],
+            # No `payment_method_types`. Stripe stopped accepting it when a
+            # Checkout Session is created and now refuses the whole request:
+            # "Payment methods are now managed from your Dashboard settings."
+            #
+            # So which methods a member is offered is a setting on the Stripe
+            # account rather than a line here, and the club cannot pin it from
+            # this side. In setup mode the question is narrow — the method has
+            # to be one that can be saved and charged later, which is a card
+            # for all practical purposes here — but if the account ever has
+            # others enabled for saving, they will appear on that page without
+            # this file changing. Dashboard → Settings → Payment methods is
+            # where that is decided now.
             "success_url": success_url,
             "cancel_url": cancel_url,
             "customer_email": customer_email,

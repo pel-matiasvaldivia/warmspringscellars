@@ -33,12 +33,14 @@ def provider() -> StripeProvider:
 def test_nested_payloads_use_stripe_bracket_encoding():
     encoded = dict(_form({
         "mode": "setup",
-        "payment_method_types": ["card"],
+        # A list, which Stripe numbers. No payload sends one today; the
+        # helper still has to, and this is the shape it owes them.
+        "expand": ["customer"],
         "setup_intent_data": {"metadata": {"offer_id": "7"}},
         "metadata": {"offer_id": "7"},
     }))
     assert encoded["mode"] == "setup"
-    assert encoded["payment_method_types[0]"] == "card"
+    assert encoded["expand[0]"] == "customer"
     assert encoded["setup_intent_data[metadata][offer_id]"] == "7"
     assert encoded["metadata[offer_id]"] == "7"
 
@@ -349,3 +351,30 @@ def test_a_charge_keeps_one_key_for_one_order(provider, monkeypatch):
 
     assert sent["headers"]["Idempotency-Key"] == "charge-WSC-2026-0001", \
         "no hash here: the order's own reference is the point"
+
+
+def test_the_session_does_not_name_payment_methods(provider, monkeypatch):
+    """Stripe refuses the whole request if it does.
+
+    `payment_method_types` is no longer accepted when a Checkout Session is
+    created — "Payment methods are now managed from your Dashboard settings"
+    — and the refusal takes the session with it, so a member gets a 500
+    rather than a card page. Which methods are offered is an account setting
+    now, not a line in this payload.
+    """
+    seen: dict = {}
+
+    def fake_post(url, content=None, **kwargs):
+        seen["body"] = content or ""
+        return Answer(200, {"id": "cs_1", "url": "https://checkout.stripe.com/c/x"})
+
+    monkeypatch.setattr("app.payments.stripe_provider.httpx.post", fake_post)
+    provider.create_setup(
+        reference="offer-7-tasting-case", description="x",
+        customer_email="member@example.com",
+        success_url="https://warmspringscellar.com/w", cancel_url="https://x/c",
+        metadata={"offer_id": "7"},
+    )
+
+    assert "payment_method_types" not in seen["body"]
+    assert "mode=setup" in seen["body"], "still a setup session, taking no money"
