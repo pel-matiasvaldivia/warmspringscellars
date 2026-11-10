@@ -830,7 +830,77 @@ mandar afuera —que es lo que hace este club— el dominio del remitente tiene 
 estar verificado en el tenant y el SPF tiene que cubrir esa IP. Es la opción
 sin secretos que vencer, y la que depende de que la IP del VPS no cambie.
 
-### 8.5 Que el correo llegue, no solo que salga
+### 8.5 Fuera de Microsoft 365: un proveedor transaccional
+
+Las tres opciones anteriores terminan en las mismas dos puertas: un
+administrador del tenant, y una casilla que no tiene contraseña. Cuando no hay
+ninguna de las dos, el servicio no necesita nada de Microsoft: habla SMTP a
+secas, así que cualquier proveedor que dé credenciales SMTP entra tal cual. Sin
+tocar código: cuatro valores y reiniciar.
+
+**SMTP2GO** es lo que usa el club. Gratis a este volumen, sin tarjeta, sin
+vencimiento.
+
+```
+SMTP_HOST=mail.smtp2go.com
+SMTP_PORT=587
+SMTP_USER=<un usuario SMTP creado en el panel, NO el del login>
+SMTP_PASSWORD=<la contraseña de ese usuario>
+SMTP_STARTTLS=true
+MAIL_FROM=wineclub@warmspringscellar.com
+MAIL_REPLY_TO=wineclub@warmspringscellar.com
+```
+
+Dejá todas las `SMTP_OAUTH_*` vacías: un proveedor de token tiene precedencia
+sobre la contraseña y acá no se quiere ninguno. Si el host bloquea el 587,
+SMTP2GO también atiende STARTTLS en 2525 y 8025; 465, 8465 y 443 son TLS
+implícito, que este servicio no habla.
+
+Las respuestas no cambian. SMTP2GO sólo lleva el correo saliente; el entrante
+sigue llegando a la casilla compartida de Microsoft 365 como siempre.
+
+**El DNS es la parte que hay que hacer bien, y es menos trabajo del que
+parece.** Verificá el dominio en el panel del proveedor y publicá los CNAME que
+te dé: un selector DKIM y un return-path. **No agregues ningún `include:` al
+registro SPF.** El SPF se evalúa contra el remitente del sobre, que es el
+return-path del proveedor y no la dirección del From; el `-all` de la §8.6
+nunca se le aplica. Lo que hace legítimo el correo para este dominio es la
+firma DKIM, y eso es un CNAME. Agregar el include sería innecesario y gastaría
+una de las diez consultas DNS que permite un SPF. Agregar un *segundo* registro
+SPF rompería todo lo que hoy funciona.
+
+Verificá el dominio antes del primer despacho: hasta que pase, el envío queda
+limitado a 25 por hora, y un aviso previo a cien socios tardaría cuatro horas
+en salir.
+
+**El techo.** El club manda tres mensajes por socio en cada despacho —el aviso,
+el comprobante y el aviso de envío— y son tres despachos al año. El total anual
+es irrisorio; lo que aprieta es el *día* más cargado, porque los límites del
+plan gratuito son 1.000 por mes y 200 por día:
+
+| Límite | Socios que permite | Por qué |
+| --- | --- | --- |
+| 200/día | ~100 | aviso y cobros el mismo día son dos por socio de golpe |
+| 200/día | ~200 | aviso un día y cobros al siguiente es uno por socio |
+| 1.000/mes | ~333 | tres por socio en el mes de despacho |
+
+Mandar los avisos y correr los cobros ya son dos acciones separadas en el
+escritorio, así que hacerlas con un día de diferencia duplica el techo sin
+costo — y avisa a la gente antes de cobrarle la tarjeta, que es mejor práctica
+de todos modos.
+
+Pasados unos doscientos socios: el plan Starter de SMTP2GO, o Amazon SES a
+US$0,10 por mil sin suscripción, que a este volumen son centavos al año pero
+pide cuenta de AWS y un trámite para salir del sandbox.
+
+**Algo que quedó sin confirmar.** Las fuentes se contradicen sobre qué hace una
+cuenta gratuita al llegar a 1.000 en el mes: el blog del proveedor dice que
+encola los mensajes hasta que renueva el ciclo, y dos reseñas de terceros dicen
+que el envío se detiene. Que se detenga en un mes de despacho significa que
+alguien a quien Stripe ya le cobró nunca recibe su comprobante. Conviene
+preguntarlo a su soporte antes del primer despacho en vez de enterarse.
+
+### 8.6 Que el correo llegue, no solo que salga
 
 Tres registros en el DNS de `warmspringscellar.com`, y los tres son del
 dominio, no del servidor:
@@ -848,7 +918,7 @@ dominio, no del servidor:
 Una invitación que cae en correo no deseado es una solicitud aprobada que nadie
 contesta, y en el escritorio se ve igual que una que fue ignorada.
 
-### 8.6 Probar antes de prometer: la pestaña **Mail**
+### 8.7 Probar antes de prometer: la pestaña **Mail**
 
 No hace falta aprobar una solicitud de verdad para saber si el correo sale.
 La pestaña **Mail** del escritorio responde las tres preguntas en el orden en
@@ -879,13 +949,13 @@ aparecen —`535 5.7.139`, `AADSTS7000215`, el token aceptado pero el envío
 rechazado— y qué significa cada uno.
 
 > **Lo que la pestaña no puede decir.** Que la conexión funcione no es que el
-> mensaje llegue. Eso es SPF, DKIM y el filtro de spam del otro lado (§8.5), y
+> mensaje llegue. Eso es SPF, DKIM y el filtro de spam del otro lado (§8.6), y
 > solo lo contesta un envío real a una dirección real.
 
 Si algo no cierra: `docker compose logs api | grep -i smtp`. El adaptador
 registra el rechazo tal como lo dijo el servidor, con el código incluido.
 
-### 8.7 La campaña, que no es esto
+### 8.8 La campaña, que no es esto
 
 Todo lo anterior es el correo propio del club: un mensaje, a una persona,
 porque algo pasó con su orden. **La campaña es otra cosa** — la misma carta a
@@ -995,9 +1065,9 @@ se versiona.
 - [ ] Webhook apuntado a `/api/payments/webhook` y suscripto a
       `checkout.session.completed`
 - [ ] SMTP configurado y probado desde la pestaña **Mail**, con un envío a una
-      dirección de afuera del tenant (§8.6). En Microsoft 365, con OAuth2
+      dirección de afuera del tenant (§8.7). En Microsoft 365, con OAuth2
       (§8.3) antes que con contraseña
-- [ ] SPF, DKIM y DMARC publicados en `warmspringscellar.com` (§8.5)
+- [ ] SPF, DKIM y DMARC publicados en `warmspringscellar.com` (§8.6)
 - [ ] `SHIPPABLE_STATES` revisada contra los permisos reales de la bodega
 - [ ] QuickBooks: app creada, URI de retorno registrada, el ítem creado
       y **una factura enviada a una empresa sandbox** antes de pasar a

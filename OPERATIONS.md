@@ -816,7 +816,74 @@ which is what this club does — the sender's domain has to be verified in the
 tenant and SPF has to cover that IP. It is the option with no secret to expire,
 and the one that depends on the VPS keeping its address.
 
-### 8.5 Arriving, not merely leaving
+### 8.5 Outside Microsoft 365: a transactional provider
+
+The three options above all end at the same two gates: a tenant administrator,
+and a mailbox that has no password. When neither is available, the service
+needs nothing from Microsoft at all — it speaks plain SMTP, so any provider
+that issues SMTP credentials is a drop-in. No code changes; four settings and a
+restart.
+
+**SMTP2GO** is what the club uses. Free at this volume, no card, no expiry.
+
+```
+SMTP_HOST=mail.smtp2go.com
+SMTP_PORT=587
+SMTP_USER=<an SMTP user created in the dashboard, NOT the login>
+SMTP_PASSWORD=<that user's password>
+SMTP_STARTTLS=true
+MAIL_FROM=wineclub@warmspringscellar.com
+MAIL_REPLY_TO=wineclub@warmspringscellar.com
+```
+
+Leave every `SMTP_OAUTH_*` empty: a token provider takes precedence over the
+password, and none is wanted here. If the host blocks 587, SMTP2GO also answers
+STARTTLS on 2525 and 8025; 465, 8465 and 443 are implicit TLS, which this
+service does not speak.
+
+Replies are unaffected. SMTP2GO carries outgoing mail only; incoming mail keeps
+arriving at the Microsoft 365 shared mailbox as before.
+
+**The DNS is the part worth getting right, and it is less work than it looks.**
+Verify the sending domain in the provider's dashboard and publish the CNAMEs it
+gives — a DKIM selector and a return-path. **Do not add `include:` to the SPF
+record.** SPF is checked against the envelope sender, which is the provider's
+own return-path, not the address in the From line; the `-all` in §8.6 never
+applies to it. What makes the mail legitimate for this domain is the DKIM
+signature, and that is a CNAME. Adding the include would be unnecessary and
+would spend one of the ten DNS lookups an SPF record is allowed. Adding a
+*second* SPF record would break everything that works today.
+
+Verify the domain before the first release: until it passes, sending is capped
+at 25 an hour, and a release notice to a hundred members would crawl out over
+four hours.
+
+**The ceiling.** The club sends three messages per member per release — the
+notice, the receipt, the shipping note — across three releases a year. The
+annual total is trivial; the busiest *day* is what binds, because the free
+plan's limits are 1,000 a month and 200 a day:
+
+| Limit | Members it allows | Why |
+| --- | --- | --- |
+| 200/day | ~100 | notice and charges on the same day is two per member at once |
+| 200/day | ~200 | notice one day, charges the next, is one per member |
+| 1,000/month | ~333 | three per member in a release month |
+
+Sending the notices and running the charges are already two separate actions at
+the desk, so doing them a day apart doubles the ceiling for nothing — and warns
+people before their card is charged, which is better practice regardless.
+
+Past about two hundred members: SMTP2GO's Starter plan, or Amazon SES at $0.10
+per thousand with no subscription, which at this volume is pennies a year but
+needs an AWS account and a sandbox-exit request.
+
+**One thing left unconfirmed.** Sources disagree on what a free account does at
+1,000 in a month: the provider's blog says messages are queued until the cycle
+renews, two third-party write-ups say sending stops. A stop during a release
+month means somebody Stripe has already charged never gets a receipt. Worth
+asking their support before the first release rather than finding out.
+
+### 8.6 Arriving, not merely leaving
 
 Three records in the DNS for `warmspringscellar.com`, all three belonging to
 the domain rather than the server:
@@ -834,7 +901,7 @@ the domain rather than the server:
 An invitation that lands in a junk folder is an approved application nobody
 answers, and on the desk it looks exactly like one that was ignored.
 
-### 8.6 Test before promising: the **Mail** tab
+### 8.7 Test before promising: the **Mail** tab
 
 No real application has to be approved to find out whether mail goes out. The
 **Mail** tab on the desk answers the three questions in the order they break.
@@ -865,13 +932,13 @@ actually turn up — `535 5.7.139`, `AADSTS7000215`, a token accepted but the
 send refused — and what each one means.
 
 > **What the tab cannot tell you.** A connection that works is not a message
-> that arrives. That is SPF, DKIM and somebody's spam filter (§8.5), and only
+> that arrives. That is SPF, DKIM and somebody's spam filter (§8.6), and only
 > a real send to a real address answers it.
 
 If something still does not add up: `docker compose logs api | grep -i smtp`.
 The adapter logs the refusal as the server worded it, code included.
 
-### 8.7 The campaign, which is not this
+### 8.8 The campaign, which is not this
 
 Everything above is the club's own mail: one message, to one person, because
 something happened to their order. **The campaign is a different thing** — the
@@ -984,9 +1051,9 @@ template is the only part that is versioned.
 - [ ] Webhook pointed at `/api/payments/webhook`, subscribed to
       `checkout.session.completed`
 - [ ] SMTP configured, and tested from the **Mail** tab with a send to an
-      address outside the tenant (§8.6). On Microsoft 365, with OAuth2 (§8.3)
+      address outside the tenant (§8.7). On Microsoft 365, with OAuth2 (§8.3)
       rather than a password
-- [ ] SPF, DKIM and DMARC published for `warmspringscellar.com` (§8.5)
+- [ ] SPF, DKIM and DMARC published for `warmspringscellar.com` (§8.6)
 - [ ] `SHIPPABLE_STATES` checked against the winery's actual permits
 - [ ] QuickBooks: app created, redirect URI registered, the item created, and
       **one invoice pushed to a sandbox company** before switching to
