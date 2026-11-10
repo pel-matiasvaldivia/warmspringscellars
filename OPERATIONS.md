@@ -1111,6 +1111,10 @@ template is the only part that is versioned.
 - [ ] `ADMIN_PASSWORD` set, and the address range uncommented in `nginx.conf`
 - [ ] `PUBLIC_BASE_URL` on the real domain (the links are built from it)
 - [ ] Stripe approved for alcohol sales — **they ask for it explicitly**
+- [ ] The Stripe key may **write customers** as well as checkout sessions and
+      payment intents. The club makes a Customer itself before opening the
+      card page, because Checkout does not reliably make one in setup mode and
+      a card saved against nobody cannot be charged at a release
 - [ ] Webhook pointed at `/api/payments/webhook`, subscribed to
       `checkout.session.completed`
 - [ ] SMTP configured, and tested from the **Mail** tab with a send to an

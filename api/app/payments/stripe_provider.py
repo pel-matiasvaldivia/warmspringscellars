@@ -94,9 +94,30 @@ class StripeProvider:
         self._timeout = timeout
 
     # ── the page where a card is saved ───────────────────────────────────
+    def ensure_customer(self, *, email: str, name: str) -> str:
+        """A Customer to hang the saved card on, made before the page opens.
+
+        Checkout will not reliably make one. `customer_creation` is Stripe's
+        answer for that and its documentation describes it for payment mode;
+        in setup mode a completed session came back with `customer: null`,
+        the card saved against nobody, and the club with nothing to charge
+        when the release comes round. Sending a parameter Stripe might refuse
+        is how the last three failures went, so this asks outright instead.
+
+        A retry makes a second Customer, which is untidy and harmless: only
+        the session that completes hands one back, and that is the one
+        written against the membership.
+        """
+        body = self._post("/customers", {"email": email, "name": name},
+                          _key(f"customer-{email}", {"email": email, "name": name}))
+        if not body.get("id"):
+            raise PaymentError("Stripe made a customer with no id")
+        return str(body["id"])
+
     def create_setup(
         self,
         *,
+        customer_id: str,
         reference: str,
         description: str,
         customer_email: str,
@@ -110,6 +131,11 @@ class StripeProvider:
             # Customer to attach it to, which is what `customer` on the
             # completed session carries back.
             "mode": "setup",
+            # Named, rather than left to Checkout. Without it a completed
+            # setup session came back carrying no customer at all, which
+            # leaves a card saved against nobody and no one to charge when a
+            # release goes out.
+            "customer": customer_id,
             # Required here even though this session takes no money, and for
             # a reason worth knowing: with the methods no longer named below,
             # Stripe works out which to offer, and that depends on the

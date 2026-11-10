@@ -215,6 +215,16 @@ class Flow:
             raise FlowError("this membership is closed")
 
         session = self.payments.create_setup(
+            # Their existing one where there is one, so a replaced card lands
+            # on the same customer as the old. Only a membership saved under
+            # a different provider needs a new one, and that is the case the
+            # desk calls a stale card.
+            customer_id=(member["provider_customer_id"]
+                         if member["provider"] == self.payments.name
+                         and member["provider_customer_id"]
+                         else self.payments.ensure_customer(
+                             email=member["email"],
+                             name=f"{member['first_name']} {member['last_name']}".strip())),
             reference=f"card-{membership_id}-{now()}",
             description="Warm Springs Cellar — card on file",
             customer_email=member["email"],
@@ -515,6 +525,13 @@ class Flow:
 
         reference = f"offer-{offer['id']}-{tier.key}"
         session = self.payments.create_setup(
+            # Made before the page opens, because the provider will not
+            # reliably make one itself: a completed session came back with no
+            # customer, which is a card saved against nobody and nothing to
+            # charge when the release comes round.
+            customer_id=self.payments.ensure_customer(
+                email=app["email"],
+                name=f"{app['first_name']} {app['last_name']}".strip()),
             reference=reference,
             description=f"Warm Springs Cellar — {tier.name}",
             customer_email=app["email"],

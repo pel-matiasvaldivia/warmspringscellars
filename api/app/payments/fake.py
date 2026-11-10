@@ -29,9 +29,13 @@ class FakeProvider:
         self._secret = secret
         self._base = base_url.rstrip("/")
 
+    def ensure_customer(self, *, email: str, name: str) -> str:
+        return "cus_fake_" + secrets.token_urlsafe(9)
+
     def create_setup(
         self,
         *,
+        customer_id: str,
         reference: str,
         description: str,
         customer_email: str,

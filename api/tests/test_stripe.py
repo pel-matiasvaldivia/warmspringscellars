@@ -299,6 +299,7 @@ def _setup(provider, monkeypatch, *, success_url: str) -> str:
 
     monkeypatch.setattr("app.payments.stripe_provider.httpx.post", fake_post)
     provider.create_setup(
+        customer_id="cus_1",
         reference="offer-7-tasting-case",
         description="Warm Springs Cellar — The Tasting Case",
         customer_email="member@example.com",
@@ -371,6 +372,7 @@ def test_the_session_does_not_name_payment_methods(provider, monkeypatch):
 
     monkeypatch.setattr("app.payments.stripe_provider.httpx.post", fake_post)
     provider.create_setup(
+        customer_id="cus_1",
         reference="offer-7-tasting-case", description="x",
         customer_email="member@example.com",
         success_url="https://warmspringscellar.com/w", cancel_url="https://x/c",
@@ -383,3 +385,35 @@ def test_the_session_does_not_name_payment_methods(provider, monkeypatch):
     # which to offer from the currency the card will be charged in, and
     # refuses the request outright without it.
     assert "currency=usd" in seen["body"]
+
+
+def test_a_customer_is_named_on_the_session(provider, monkeypatch):
+    """Without one, a completed session saves a card against nobody.
+
+    Checkout does not reliably make a Customer in setup mode: a live session
+    came back with `customer: null`, the card attached to no one, and the
+    club with nothing to charge when the release came round. The webhook
+    could only refuse it.
+    """
+    seen: dict = {}
+
+    def fake_post(url, content=None, **kwargs):
+        seen.setdefault("bodies", []).append((url, content or ""))
+        if url.endswith("/customers"):
+            return Answer(200, {"id": "cus_made"})
+        return Answer(200, {"id": "cs_1", "url": "https://checkout.stripe.com/c/x"})
+
+    monkeypatch.setattr("app.payments.stripe_provider.httpx.post", fake_post)
+    made = provider.ensure_customer(email="member@example.com", name="A Member")
+    provider.create_setup(
+        customer_id=made, reference="offer-7-tasting-case", description="x",
+        customer_email="member@example.com",
+        success_url="https://warmspringscellar.com/w", cancel_url="https://x/c",
+        currency="usd", metadata={"offer_id": "7"},
+    )
+
+    assert made == "cus_made"
+    customers, session = seen["bodies"]
+    assert customers[0].endswith("/customers")
+    assert "email=member%40example.com" in customers[1]
+    assert "customer=cus_made" in session[1], "the session must name them"

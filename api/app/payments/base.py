@@ -66,9 +66,14 @@ class PaymentProvider(Protocol):
     name: str
     live: bool
 
+    def ensure_customer(self, *, email: str, name: str) -> str:
+        """Someone to hang the saved card on, so a later charge has a target."""
+        ...
+
     def create_setup(
         self,
         *,
+        customer_id: str,
         reference: str,
         description: str,
         customer_email: str,
