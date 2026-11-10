@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import sys
 import time
+from urllib.parse import parse_qsl
 from pathlib import Path
 
 import pytest
@@ -179,9 +180,12 @@ def charge_with(monkeypatch, answer: Answer) -> dict:
     """Charge against a stubbed Stripe, handing back what was sent to it."""
     sent: dict = {}
 
-    def fake_post(url, data=None, **kwargs):
+    def fake_post(url, content=None, **kwargs):
         sent["url"] = url
-        sent["data"] = dict(data or [])
+        # Read back out of the wire format rather than off the call, so these
+        # assertions describe what Stripe receives and not what we meant.
+        sent["body"] = content
+        sent["data"] = dict(parse_qsl(content or "", keep_blank_values=True))
         sent["headers"] = kwargs.get("headers", {})
         return answer
 
@@ -236,3 +240,47 @@ def test_a_bank_that_wants_the_member_is_told_apart_from_a_decline(provider, mon
     assert not charge.paid
     # retrying this one in the night fails every time; only the member can settle it
     assert charge.needs_member
+
+
+# ── the body on the wire ─────────────────────────────────────────────────
+def test_what_we_hand_httpx_is_a_body_httpx_can_actually_send():
+    """The bug this file could not see.
+
+    Every other test here replaces httpx.post outright and reads the payload
+    off the call, so the adapter's intent was checked and the wire never was.
+    httpx form-encodes a mapping; given the list of pairs `_form` returns it
+    treats the whole thing as a streaming body, and the failure arrives much
+    later and much further away — inside h11, as "expected a bytes-like
+    object, tuple found", naming neither Stripe nor this adapter.
+
+    So this one builds a real httpx request and reads the bytes back.
+    """
+    import httpx                                              # noqa: PLC0415
+    from app.payments.stripe_provider import FORM, _body      # noqa: PLC0415
+
+    payload = {"mode": "setup", "metadata": {"offer": 7}, "off_session": True}
+    request = httpx.Request("POST", "https://api.stripe.com/v1/checkout/sessions",
+                            content=_body(payload), headers=FORM)
+
+    # .content raises outright on a streaming body, which is what the old
+    # call produced, so reaching these assertions is half the test.
+    body = request.content.decode()
+    assert "mode=setup" in body
+    assert "metadata%5Boffer%5D=7" in body, "Stripe's bracket nesting, encoded"
+    assert "off_session=true" in body, "a JSON bool would be rejected"
+    assert request.headers["content-type"] == "application/x-www-form-urlencoded"
+
+
+def test_both_ways_out_to_stripe_use_the_same_encoding():
+    """Two call sites post to Stripe, and only one of them was reached today.
+
+    The charge path runs three times a year, so the same fault there would
+    have waited for a release to show itself.
+    """
+    import inspect                                            # noqa: PLC0415
+    from app.payments import stripe_provider                  # noqa: PLC0415
+
+    source = inspect.getsource(stripe_provider)
+    assert source.count("httpx.post(") == 2, "a third would need this test read"
+    assert "data=_form(" not in source, "the shape httpx silently mishandles"
+    assert source.count("content=_body(payload)") == 2
