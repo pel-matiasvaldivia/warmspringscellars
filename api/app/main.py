@@ -645,6 +645,9 @@ def admin_application(request: Request, app_id: int,
         app=application, offers=offers, events=events,
         offer_urls={o["id"]: flow.offer_url(int(o["id"])) for o in offers},
         offer_days=settings.offer_days,
+        # What each offer currently puts on the table, so the form that
+        # changes it starts from the truth rather than from the default.
+        offer_tiers={o["id"]: json.loads(o["allowed_tiers"]) for o in offers},
         tiers=catalogue().tiers,
     )
 
@@ -675,8 +678,8 @@ async def admin_approve(request: Request, app_id: int,
 
 
 @app.post("/admin/offers/{offer_id}/resend")
-def admin_resend_invitation(offer_id: int,
-                            actor: str = Depends(require_admin)) -> RedirectResponse:
+async def admin_resend_invitation(request: Request, offer_id: int,
+                                  actor: str = Depends(require_admin)) -> RedirectResponse:
     """Send the invitation again, on a link that is open again.
 
     The one press that rescues an application nobody could reach: the mail
@@ -684,8 +687,10 @@ def admin_resend_invitation(offer_id: int,
     Both end with an approved applicant and no way in, and neither could be
     undone from here before.
     """
+    form = await request.form()
+    tiers = [str(t) for t in form.getlist("tiers")]
     try:
-        offer, url = flow.reissue_offer(offer_id, actor)
+        offer, url = flow.reissue_offer(offer_id, actor, tiers or None)
     except FlowError as exc:
         return RedirectResponse(f"/admin?done=Not done: {exc}", status_code=303)
 

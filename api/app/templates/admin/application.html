@@ -65,9 +65,22 @@
           <td><code>{{ offer_urls[o.id] }}</code></td>
           <td>
             {% if o.status not in ('accepted', 'revoked') %}
+            {# The allocations are set once on the approval form, which is only
+               drawn while the application is pending. Without them here, a tier
+               left unticked by accident could never be put back. #}
             <form method="post" action="/admin/offers/{{ o.id }}/resend"
                   style="margin:0">
-              <button type="submit">Send it again</button>
+              {% for t in tiers %}
+                <div style="display:flex;gap:.4rem;align-items:center;margin:.2rem 0">
+                  <input type="checkbox" name="tiers" value="{{ t.key }}"
+                         {% if t.key in offer_tiers[o.id] %}checked{% endif %}
+                         style="width:auto" id="o{{ o.id }}-{{ t.key }}">
+                  <label for="o{{ o.id }}-{{ t.key }}"
+                         style="margin:0;text-transform:none;letter-spacing:0;
+                                font-size:.8rem;color:var(--text)">{{ t.name }}</label>
+                </div>
+              {% endfor %}
+              <button type="submit" style="margin-top:.4rem">Send it again</button>
             </form>
             {% endif %}
           </td>

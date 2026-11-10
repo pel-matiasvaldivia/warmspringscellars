@@ -306,7 +306,8 @@ class Flow:
 
         return offer_id, self.offer_url(offer_id)
 
-    def reissue_offer(self, offer_id: int, actor: str) -> tuple[sqlite3.Row, str]:
+    def reissue_offer(self, offer_id: int, actor: str,
+                      allowed_tiers: list[str] | None = None) -> tuple[sqlite3.Row, str]:
         """Open an invitation again, and hand back a link that works.
 
         Two dead ends meet here and both were reachable with no way out.
@@ -322,7 +323,22 @@ class Flow:
 
         `accepted` and `revoked` are left alone. One is already a member, and
         the other is a decision somebody took deliberately.
+
+        `allowed_tiers` also corrects a third dead end. Which allocations an
+        offer carries is chosen once, on the approval form, and that form is
+        only drawn while the application is still pending — so a tier left
+        unticked by accident could never be added back, and the member went on
+        being shown a shorter list than the winery meant to offer. Changing
+        what is on the table is also a reason to write to them again, which is
+        why it belongs to this one action rather than its own.
         """
+        if allowed_tiers is not None:
+            unknown = [k for k in allowed_tiers if catalogue().get(k) is None]
+            if unknown:
+                raise FlowError("unknown tiers: " + ", ".join(unknown))
+            if not allowed_tiers:
+                raise FlowError("an offer with no tiers is not an offer")
+
         with self.db.transaction() as con:
             offer = _require(con, "offer", offer_id)
             if offer["status"] == "accepted":
@@ -333,12 +349,16 @@ class Flow:
                                 "to do. Undo it there rather than around it")
 
             expires = datetime.now(timezone.utc) + timedelta(days=self.settings.offer_days)
+            tiers = (json.dumps(allowed_tiers) if allowed_tiers is not None
+                     else offer["allowed_tiers"])
             con.execute(
-                "UPDATE offer SET status = 'sent', expires_at = ? WHERE id = ?",
-                (expires.isoformat(timespec="seconds"), offer_id),
+                "UPDATE offer SET status = 'sent', expires_at = ?, allowed_tiers = ?"
+                " WHERE id = ?",
+                (expires.isoformat(timespec="seconds"), tiers, offer_id),
             )
             log(con, "offer", offer_id, "reissued", actor=actor, was=offer["status"],
-                expires_at=expires.isoformat(timespec="seconds"))
+                expires_at=expires.isoformat(timespec="seconds"),
+                tiers=json.loads(tiers))
             offer = _require(con, "offer", offer_id)
         return offer, self.offer_url(offer_id)
 

@@ -1390,3 +1390,55 @@ def test_asking_for_a_card_does_not_mention_a_decline(client):
     assert client.main.db.one(
         "SELECT * FROM event WHERE subject = 'membership' AND action = 'card_requested'"
     ) is not None
+
+
+def test_an_offer_can_have_an_allocation_put_back(client):
+    """The allocations are chosen once, on a form that then disappears.
+
+    Approving draws the tier checkboxes only while the application is still
+    pending, so a box left unticked by accident could never be added back and
+    the member went on seeing a shorter list than the winery meant to offer.
+    """
+    app_id = apply_(client)
+    # approved offering only the twelve-bottle case
+    client.post(f"/admin/applications/{app_id}/approve", auth=ADMIN,
+                data={"tiers": ["full-case"]}, follow_redirects=False)
+    offer = _the_offer(client)
+    assert json.loads(offer["allowed_tiers"]) == ["full-case"]
+
+    client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                data={"tiers": ["tasting-case", "founders-reserve", "full-case"]},
+                follow_redirects=False)
+
+    assert json.loads(_the_offer(client)["allowed_tiers"]) == [
+        "tasting-case", "founders-reserve", "full-case"]
+    # and the member now sees three, on a link minted from the same offer
+    token = client.main.flow.offer_url(int(offer["id"])).rsplit("/", 1)[1]
+    page = client.get(f"/club/offer/{token}").text
+    assert "The Tasting Case" in page and "The Full Case" in page
+
+
+def test_sending_it_again_without_saying_leaves_the_allocations_alone(client):
+    """No tick boxes posted must not silently widen what was offered."""
+    app_id = apply_(client)
+    client.post(f"/admin/applications/{app_id}/approve", auth=ADMIN,
+                data={"tiers": ["full-case"]}, follow_redirects=False)
+    offer = _the_offer(client)
+
+    client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                follow_redirects=False)
+
+    assert json.loads(_the_offer(client)["allowed_tiers"]) == ["full-case"]
+
+
+def test_an_offer_cannot_be_emptied_of_allocations(client):
+    """An offer with nothing on the table is not an offer."""
+    app_id = apply_(client)
+    approve(client, app_id)
+    offer = _the_offer(client)
+
+    res = client.post(f"/admin/offers/{offer['id']}/resend", auth=ADMIN,
+                      data={"tiers": ["no-such-tier"]}, follow_redirects=False)
+
+    assert "Not done" in unquote(res.headers["location"])
+    assert json.loads(_the_offer(client)["allowed_tiers"]) != ["no-such-tier"]
