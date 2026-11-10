@@ -731,6 +731,34 @@ def test_an_unsigned_webhook_is_refused(client):
     assert client.main.db.one("SELECT COUNT(*) c FROM membership")["c"] == 0
 
 
+def test_a_delivery_that_cannot_be_used_is_refused_rather_than_crashing(
+        client, monkeypatch):
+    """A signature that checks out, carrying a body we cannot act on.
+
+    Retrying replays the same bytes, so it never recovers on its own; what it
+    needs is somebody to read the sentence saying what was missing. Left
+    uncaught it surfaced as a 500 with a traceback, which reads as this
+    service having fallen over rather than as the provider having sent
+    something unusable — and a member may have put in a card that never
+    became a membership.
+    """
+    # From main's own module object: the package is reloaded per test, and a
+    # freshly imported class is not the one main's except clause names.
+    def unusable(payload, signature):
+        raise client.main.PaymentError(
+            "a completed setup session carried no customer or intent")
+    monkeypatch.setattr(client.main.payments, "parse_webhook", unusable)
+
+    res = client.post("/api/payments/webhook", content=b'{"type":"x"}',
+                      headers={"x-signature": "whatever"})
+
+    assert res.status_code == 422, "understood and refused, not a crash"
+    assert "carried no customer" in res.json()["error"]
+    assert client.main.db.one(
+        "SELECT * FROM event WHERE subject = 'webhook' AND action = 'unusable'"
+    ) is not None, "it has to be written down, not only answered"
+
+
 def test_a_wrongly_signed_webhook_is_refused(client):
     res = client.post("/api/payments/webhook", content=b'{"type":"checkout.completed"}',
                       headers={"x-signature": "deadbeef"})

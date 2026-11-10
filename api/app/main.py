@@ -47,7 +47,7 @@ from .notify import (
     send_shipment_notice,
     send_welcome,
 )
-from .payments import WebhookError, build_provider
+from .payments import PaymentError, WebhookError, build_provider
 from .payments.fake import FakeProvider, unb64
 from . import shipping
 
@@ -533,6 +533,20 @@ async def payments_webhook(request: Request, background: BackgroundTasks) -> Res
         # than 200 which would silently drop a real payment.
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
     except FlowError as exc:
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=422)
+    except PaymentError as exc:
+        # The signature checked out, so this is a genuine delivery whose body
+        # we cannot use — a setup session reported complete without the
+        # customer or the card on it. Retrying replays the same bytes and will
+        # fail the same way, so what it needs is somebody to look, and the one
+        # sentence saying what was missing is the whole lead.
+        #
+        # Left uncaught this surfaced as a 500 with a traceback, which reads as
+        # the service having crashed rather than as the provider having sent
+        # something unusable. Written down because a member may have put in a
+        # card that never became a membership.
+        with db.transaction() as con:
+            log(con, "webhook", 0, "unusable", error=str(exc))
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=422)
     return JSONResponse({"ok": True})
 
