@@ -120,7 +120,6 @@ class StripeProvider:
         customer_id: str,
         reference: str,
         description: str,
-        customer_email: str,
         success_url: str,
         cancel_url: str,
         currency: str,
@@ -159,7 +158,13 @@ class StripeProvider:
             # where that is decided now.
             "success_url": success_url,
             "cancel_url": cancel_url,
-            "customer_email": customer_email,
+            # No `customer_email`. Stripe refuses the request outright —
+            # "You may only specify one of these parameters: customer,
+            # customer_email" — because naming the customer above already
+            # settles who this is, and the address is on that customer. The
+            # two were never alternatives for the same job: customer_email is
+            # for the case where Checkout makes the customer itself, which is
+            # exactly what the club stopped letting it do.
             "client_reference_id": reference,
             # Stripe is deliberately NOT asked to collect a shipping address.
             # The club takes it before this page, because whether the wine may
