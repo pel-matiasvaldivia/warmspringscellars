@@ -72,6 +72,16 @@ def _body(payload: dict) -> str:
     return urlencode(_form(payload))
 
 
+def _key(prefix: str, payload: dict) -> str:
+    """An idempotency key that means "this exact request", not "this offer".
+
+    Stripe replays a key used with the same parameters and refuses one used
+    with different ones, so a key is only safe to keep stable where the
+    request is. Where it is not, the key has to move with it.
+    """
+    return f"{prefix}-{hashlib.sha256(_body(payload).encode()).hexdigest()[:16]}"
+
+
 class StripeProvider:
     name = "stripe"
     live = True
@@ -99,7 +109,18 @@ class StripeProvider:
             # Customer to attach it to, which is what `customer` on the
             # completed session carries back.
             "mode": "setup",
-            "payment_method_types": ["card"],
+            # No `payment_method_types`. Stripe stopped accepting it when a
+            # Checkout Session is created and now refuses the whole request:
+            # "Payment methods are now managed from your Dashboard settings."
+            #
+            # So which methods a member is offered is a setting on the Stripe
+            # account rather than a line here, and the club cannot pin it from
+            # this side. In setup mode the question is narrow — the method has
+            # to be one that can be saved and charged later, which is a card
+            # for all practical purposes here — but if the account ever has
+            # others enabled for saving, they will appear on that page without
+            # this file changing. Dashboard → Settings → Payment methods is
+            # where that is decided now.
             "success_url": success_url,
             "cancel_url": cancel_url,
             "customer_email": customer_email,
@@ -112,7 +133,29 @@ class StripeProvider:
             "metadata": metadata,
             "setup_intent_data": {"metadata": metadata, "description": description},
         }
-        body = self._post("/checkout/sessions", payload, f"setup-{reference}")
+        # The key covers the payload, which is not the obvious choice and is
+        # the point. Stripe refuses a key reused with different parameters,
+        # and this payload is NOT stable between attempts: the success and
+        # cancel URLs carry the offer's signed token, and that token is minted
+        # fresh on every render because its signature embeds a timestamp.
+        #
+        # So a member who abandoned this page and came back sent the same key
+        # with a different URL, and Stripe — rightly — refused. Not once, but
+        # for good: every retry differs again, so the offer was dead to them.
+        #
+        # Hashing the payload keeps what the key is for. The same request
+        # twice, as from a double click, still replays the first session. A
+        # genuinely different request gets its own key, which is what a second
+        # attempt is. Two setup sessions where one would do is harmless: they
+        # take no money, and the member uses whichever page is in front of
+        # them.
+        #
+        # `charge` deliberately does NOT do this. There the payload has no
+        # URLs and no token, so it is stable by construction, and the stable
+        # key is the whole protection against charging a card twice for one
+        # order. A hash there would buy nothing and risk everything.
+        body = self._post("/checkout/sessions", payload,
+                          _key(f"setup-{reference}", payload))
         if not body.get("url"):
             raise PaymentError("Stripe returned a session with no URL")
         return SetupSession(id=body["id"], url=body["url"])
