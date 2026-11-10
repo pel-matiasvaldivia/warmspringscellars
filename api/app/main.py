@@ -370,6 +370,24 @@ def show_address(request: Request, token: str, tier: str = "") -> HTMLResponse:
     return address_page(request, token, chosen, values)
 
 
+@app.get("/club/offer/{token}/checkout")
+def checkout_reloaded(token: str) -> RedirectResponse:
+    """Somebody reloaded, or came back to, a page that only takes a POST.
+
+    It happens on the ordinary path, not a strange one. The address form
+    posts here, and when a field is missing the page is drawn again in the
+    answer — which leaves the browser's address bar on this URL while showing
+    a form. Reload, or press Enter in the bar, and the browser asks for it
+    with GET.
+
+    Without this that is `{"detail":"Method Not Allowed"}` on a bare white
+    page: a member halfway through joining, looking at a raw error from a
+    wine club. Send them back to the start of the choice instead, which is
+    always a page that exists.
+    """
+    return RedirectResponse(f"/club/offer/{token}", status_code=303)
+
+
 @app.post("/club/offer/{token}/checkout")
 async def start_checkout(request: Request, token: str) -> Response:
     form = await request.form()

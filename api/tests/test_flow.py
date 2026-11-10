@@ -1555,3 +1555,38 @@ def test_a_failed_alert_does_not_cost_the_member_their_membership(client,
     assert client.main.db.one(
         "SELECT * FROM event WHERE subject = 'membership' AND action = 'winery_not_told'"
     ) is not None
+
+
+def test_reloading_the_checkout_page_does_not_show_a_raw_error(client):
+    """The dead end a member reaches on the ordinary path.
+
+    The address form posts to /checkout, and a missing field draws the page
+    again in the answer — which parks the browser's address bar on a URL
+    that only takes a POST. Reload and the browser asks with GET. That used
+    to be {"detail":"Method Not Allowed"} on a bare page, shown to somebody
+    halfway through joining a wine club.
+    """
+    token = approve(client, apply_(client))
+
+    res = client.get(f"/club/offer/{token}/checkout", follow_redirects=False)
+
+    assert res.status_code == 303, "not 405, and not a JSON error"
+    assert res.headers["location"] == f"/club/offer/{token}"
+    # and that is a page, not another dead end
+    assert client.get(res.headers["location"]).status_code == 200
+
+
+def test_a_missing_address_field_comes_back_as_the_form(client):
+    """Still the form, with what they typed, rather than a redirect that
+    would drop it. The reload above is what makes that safe."""
+    token = approve(client, apply_(client))
+
+    res = client.post(f"/club/offer/{token}/checkout", data={
+        "tier_key": "tasting-case", "ship_line1": "1310 Warm Springs Rd",
+        "ship_city": "Glen Ellen", "ship_state": "California",
+        "ship_postcode": "",
+    }, follow_redirects=False)
+
+    assert res.status_code == 200
+    assert "1310 Warm Springs Rd" in res.text, "what they typed survives"
+    assert client.main.db.one("SELECT COUNT(*) c FROM membership")["c"] == 0
