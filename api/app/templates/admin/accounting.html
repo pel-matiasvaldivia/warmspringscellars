@@ -61,6 +61,30 @@
     {% endif %}
   </div>
 
+  {# Intuit will not hand over production keys until the app's own details
+     are filled in, and every one of them is an address on this site. They
+     are listed here so nobody has to reconstruct them by hand at the moment
+     they are being typed into the developer portal. #}
+  <div class="card">
+    <h2>What Intuit asks for</h2>
+    <p style="color:var(--text-2);font-size:.9rem">
+      Production keys are released only after Intuit approves the app
+      assessment, and the questionnaire asks for these. They are live pages on
+      this site — paste them into the Intuit app's
+      <b>{{ 'production' if environment == 'production' else 'development' }}</b>
+      settings exactly as written.</p>
+    <table>
+      {% for label, url in intuit_urls %}
+      <tr><th>{{ label }}</th>
+          <td><code>{{ url }}</code>
+              <a href="{{ url }}" style="font-size:.8rem;margin-left:.4rem">open</a></td></tr>
+      {% endfor %}
+    </table>
+    <p class="log">
+      Production and sandbox are separate apps with separate key pairs, so
+      these have to be registered in whichever one the club is pointed at.</p>
+  </div>
+
   <div class="card">
     <h2>
       Waiting to be filed</h2>

@@ -162,6 +162,27 @@ class Settings:
     def invoice_dir(self) -> Path:
         return self.data_dir / "invoices"
 
+    # The four addresses Intuit asks for on the way to production keys. All
+    # four are static pages served by nginx beside the landing page, so they
+    # answer a reviewer whether or not the club service is running. Derived
+    # from the public address for the same reason the redirect URI is: a
+    # value typed twice disagrees with itself eventually.
+    @property
+    def qbo_privacy_url(self) -> str:
+        return f"{self.public_base_url}/privacy"
+
+    @property
+    def qbo_terms_url(self) -> str:
+        return f"{self.public_base_url}/terms"
+
+    @property
+    def qbo_launch_url(self) -> str:
+        return f"{self.public_base_url}/quickbooks/launch"
+
+    @property
+    def qbo_disconnect_url(self) -> str:
+        return f"{self.public_base_url}/quickbooks/disconnected"
+
     @property
     def quickbooks_configured(self) -> bool:
         return bool(self.qbo_client_id and self.qbo_client_secret)

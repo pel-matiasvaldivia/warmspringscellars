@@ -1406,6 +1406,13 @@ body.banner-up .to-top { bottom: 6.2rem; }
 
 .footer-social { display: flex; gap: 1.5rem; }
 
+/* The two legal pages sit in the same line as the copyright, and must read
+   as part of it rather than as a call to action. */
+.footer-bottom > span a {
+  color: var(--c-footer-text); text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+}
+.footer-bottom > span a:hover { color: #fff; }
 .footer-social a {
   color: var(--c-footer-text);
   text-decoration: none;
@@ -2715,7 +2722,9 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
     </div>
   </div>
   <div class="footer-bottom">
-    <span>Warm Springs Cellar &middot; Glen Ellen, Sonoma Valley</span>
+    <span>Warm Springs Cellar &middot; Glen Ellen, Sonoma Valley &middot;
+      <a href="/privacy">Privacy</a> &middot;
+      <a href="/terms">Terms</a></span>
     <div class="footer-social">
       <a href="#">Instagram</a>
       <a href="#">Facebook</a>
