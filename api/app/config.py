@@ -217,6 +217,13 @@ class Settings:
             out.append("QuickBooks is not configured: invoices queue up instead of "
                        "reaching it. Nothing is lost — the queue is at /admin/accounting, "
                        "and exports as CSV. Set QBO_CLIENT_ID and QBO_CLIENT_SECRET.")
+        elif self.qbo_environment not in ("sandbox", "production"):
+            # Checked before the sandbox warning, because anything unrecognised
+            # IS the sandbox as far as the adapter is concerned — a typo like
+            # 'prod' or 'live' would otherwise book nothing and say nothing.
+            out.append(f"QBO_ENVIRONMENT is {self.qbo_environment!r}, which is neither "
+                       "'sandbox' nor 'production': the club will talk to the sandbox. "
+                       "Set it to 'production' to reach the real company.")
         elif self.payments_live and self.qbo_environment != "production":
             out.append("Stripe is live but QBO_ENVIRONMENT is 'sandbox': real money would "
                        "be booked into a practice company.")

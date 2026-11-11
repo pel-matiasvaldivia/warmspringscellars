@@ -653,3 +653,65 @@ def test_an_explicit_redirect_uri_wins_over_the_derived_one(monkeypatch):
     s = settings_with(monkeypatch, PUBLIC_BASE_URL="https://warmspringscellar.com",
                       QBO_REDIRECT_URI="https://books.example.com/cb")
     assert s.qbo_redirect_uri == "https://books.example.com/cb"
+
+
+# ── switching from the practice company to the real one ──────────────────
+#
+# The step that turns a demonstration into a live installation, and the one
+# that fails most quietly: sandbox and production are separate companies
+# behind separate Intuit apps, so a token minted in one is refused by the
+# other as a 401 — which looks exactly like an outage.
+
+def test_a_connection_records_which_world_authorised_it(monkeypatch, tmp_path):
+    stub = StubIntuit(token=TOKEN_BODY)
+    qbo = ledger_with(monkeypatch, tmp_path, stub, environment="production")
+    qbo.exchange_code("code-1", "realm-9")
+    assert qbo.store.read().environment == "production"
+
+
+def test_sandbox_tokens_are_refused_once_the_club_points_at_production(
+        monkeypatch, tmp_path):
+    """The whole point. Refused here, with a sentence, not as a 401."""
+    qbo = ledger_with(monkeypatch, tmp_path, StubIntuit(), environment="production")
+    qbo.store.write(Tokens(realm_id="realm-sandbox", refresh_token="refresh-1",
+                           access_token="access-1", environment="sandbox",
+                           access_expires_at="2099-01-01T00:00:00+00:00"))
+
+    status = qbo.status()
+    assert status["connected"] is False
+    assert status["stale_environment"] == "sandbox"
+    assert "separate companies" in status["detail"]
+
+    with pytest.raises(NotConnected) as refusal:
+        qbo.push_invoice(_an_invoice())
+    assert "authorised in sandbox" in str(refusal.value)
+    # And nothing was attempted against the real company.
+    assert qbo.keep_alive(within_days=99999) is False
+
+
+def test_a_connection_from_before_the_column_existed_still_works_in_sandbox(
+        monkeypatch, tmp_path):
+    """No gratuitous breakage: every unrecorded connection was a sandbox one."""
+    qbo = ledger_with(monkeypatch, tmp_path, StubIntuit(), environment="sandbox")
+    qbo.store.write(Tokens(realm_id="realm-old", refresh_token="refresh-1",
+                           access_token="access-1",
+                           access_expires_at="2099-01-01T00:00:00+00:00"))
+    assert qbo.store.read().environment == ""
+    assert qbo.status()["connected"] is True
+
+
+def test_but_an_unrecorded_connection_is_not_trusted_with_the_real_books(
+        monkeypatch, tmp_path):
+    qbo = ledger_with(monkeypatch, tmp_path, StubIntuit(), environment="production")
+    qbo.store.write(Tokens(realm_id="realm-old", refresh_token="refresh-1",
+                           access_token="access-1",
+                           access_expires_at="2099-01-01T00:00:00+00:00"))
+    assert qbo.status()["connected"] is False
+    assert qbo.status()["stale_environment"] == "unknown"
+
+
+def test_a_misspelled_environment_is_called_out(monkeypatch):
+    """`prod` is not `production`, and silently means sandbox."""
+    s = settings_with(monkeypatch, QBO_CLIENT_ID="abc", QBO_CLIENT_SECRET="shh",
+                      QBO_ENVIRONMENT="prod")
+    assert any("neither 'sandbox' nor 'production'" in w for w in s.warnings())

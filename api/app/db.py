@@ -310,6 +310,12 @@ CREATE INDEX IF NOT EXISTS email_suppression_when
 -- value baked into .env would be stale an hour after the first sync.
 CREATE TABLE IF NOT EXISTS oauth_token (
     provider            TEXT PRIMARY KEY,
+    -- Which of the provider's two worlds authorised these. Sandbox and
+    -- production are separate companies reached through separate apps, so a
+    -- token minted in one is refused by the other -- as a 401, which reads
+    -- like a broken connection and is not one. Recorded so the desk can be
+    -- told the truth instead.
+    environment         TEXT,
     realm_id            TEXT,
     access_token        TEXT,
     refresh_token       TEXT,
@@ -334,6 +340,10 @@ ADDED_COLUMNS: dict[str, dict[str, str]] = {
     "membership": {"provider_payment_method": "TEXT"},
     "release": {"ice_packs": "INTEGER NOT NULL DEFAULT 0"},
     "order": {"charge_error": "TEXT"},
+    # Null in a database that connected before this column existed. That is
+    # not the same as "sandbox": it means nobody wrote it down, and the
+    # adapter treats the two differently.
+    "oauth_token": {"environment": "TEXT"},
 }
 
 
