@@ -1334,9 +1334,14 @@ body.banner-up .to-top { bottom: 6.2rem; }
 .join-note {
   font-size: 0.68rem;
   color: var(--c-hero-muted);
-  opacity: 0.5;
+  /* Was 0.5. This line now carries the agreement to the terms, and a
+     consent nobody can read is not one. */
+  opacity: 0.75;
   margin-top: 0.5rem;
+  line-height: 1.5;
 }
+.join-note a { color: inherit; text-decoration: underline; }
+.join-note a:hover { color: #fff; }
 
 /* ─── FOOTER ─── */
 .footer {
@@ -2685,7 +2690,9 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       </div>
       <p class="join-error" id="joinError" role="alert" hidden></p>
       <button type="submit" class="join-submit">Submit Request</button>
-      <p class="join-note">You must be 21 years of age or older. Submitting a request does not guarantee allocation.</p>
+      <p class="join-note">You must be 21 years of age or older. Submitting a request does not guarantee allocation.
+        By submitting you agree to our <a href="/terms">Terms of Service</a> and
+        <a href="/privacy">Privacy Policy</a>.</p>
     </form>
 
     <div class="join-success" id="joinSuccess" role="status" aria-live="polite">

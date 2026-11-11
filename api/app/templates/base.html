@@ -112,6 +112,7 @@ h1 {
   margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
   font-size: 0.72rem; color: var(--muted); text-align: center;
 }
+.foot a { color: var(--muted); }
 {% block style %}{% endblock %}
 </style>
 </head>
@@ -123,7 +124,11 @@ h1 {
   {% block body %}{% endblock %}
   <footer class="foot">
     Warm Springs Cellar · Glen Ellen, Sonoma Valley · You must be 21 or older to purchase.
-    An adult signature is required on delivery.
+    An adult signature is required on delivery.<br>
+    {# Reachable from the pages where the member actually commits — the offer,
+       the address, the card. A policy linked only from the landing page is
+       not linked from where it matters. #}
+    <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a>
   </footer>
 </div>
 </body>
