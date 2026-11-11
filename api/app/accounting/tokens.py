@@ -30,10 +30,27 @@ class Tokens:
     refresh_token: str = ""
     access_expires_at: str = ""
     refresh_expires_at: str = ""
+    # Which world authorised these: "sandbox", "production", or "" for a
+    # connection made before this was written down. Empty is not a synonym
+    # for sandbox — see `authorised_for`.
+    environment: str = ""
 
     @property
     def connected(self) -> bool:
         return bool(self.realm_id and self.refresh_token)
+
+    def authorised_for(self, environment: str) -> bool:
+        """Were these minted for the world the club is now pointed at?
+
+        An unrecorded environment is taken on trust while the club is in the
+        sandbox — that is where every such connection was made, and refusing
+        it would break a working practice setup for nothing. It is NOT taken
+        on trust against production: real books are the one place where a
+        wrong guess costs something, and the repair is one click.
+        """
+        if self.environment:
+            return self.environment == environment
+        return environment != "production"
 
     @property
     def access_valid(self) -> bool:
@@ -63,6 +80,9 @@ class TokenStore:
         if row is None:
             return Tokens()
         return Tokens(
+            # A column added after the fact: absent in a row written by an
+            # older build, which `authorised_for` is what reads.
+            environment=(row["environment"] if "environment" in row.keys() else "") or "",
             realm_id=row["realm_id"] or "",
             access_token=row["access_token"] or "",
             refresh_token=row["refresh_token"] or "",
@@ -73,16 +93,18 @@ class TokenStore:
     def write(self, tokens: Tokens) -> None:
         with self.db.transaction() as con:
             con.execute(
-                "INSERT INTO oauth_token (provider, realm_id, access_token, refresh_token,"
-                " access_expires_at, refresh_expires_at, updated_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?)"
-                " ON CONFLICT(provider) DO UPDATE SET realm_id = excluded.realm_id,"
+                "INSERT INTO oauth_token (provider, environment, realm_id, access_token,"
+                " refresh_token, access_expires_at, refresh_expires_at, updated_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                " ON CONFLICT(provider) DO UPDATE SET environment = excluded.environment,"
+                " realm_id = excluded.realm_id,"
                 " access_token = excluded.access_token,"
                 " refresh_token = excluded.refresh_token,"
                 " access_expires_at = excluded.access_expires_at,"
                 " refresh_expires_at = excluded.refresh_expires_at,"
                 " updated_at = excluded.updated_at",
-                (self.provider, tokens.realm_id, tokens.access_token, tokens.refresh_token,
+                (self.provider, tokens.environment, tokens.realm_id, tokens.access_token,
+                 tokens.refresh_token,
                  tokens.access_expires_at, tokens.refresh_expires_at, now()),
             )
 

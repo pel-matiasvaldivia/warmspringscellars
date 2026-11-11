@@ -169,10 +169,13 @@ class QuickBooksLedger:
             raise AccountingError(f"Intuit refused the token request: {res.text[:300]}")
         return res.json()
 
-    @staticmethod
-    def _tokens_from(body: dict, realm_id: str) -> Tokens:
+    def _tokens_from(self, body: dict, realm_id: str) -> Tokens:
         issued = datetime.now(timezone.utc)
         return Tokens(
+            # Stamped at the moment of minting, which is the only moment it is
+            # known for certain. A refresh re-stamps it, which is right: the
+            # refresh went to the app these credentials belong to.
+            environment=self.environment,
             realm_id=realm_id,
             access_token=body.get("access_token", ""),
             refresh_token=body.get("refresh_token", ""),
@@ -189,11 +192,32 @@ class QuickBooksLedger:
         tokens = self.store.read()
         if not tokens.connected:
             return {"connected": False, "company": None, "environment": self.environment,
+                    "stale_environment": "",
                     "detail": "Configured, but nobody has authorised a company yet."}
+        if not tokens.authorised_for(self.environment):
+            # Connected, and useless. Said plainly here because the alternative
+            # is a screen that reads "Connected · production" over a company
+            # that refuses every call.
+            was = tokens.environment or "an unrecorded company"
+            return {
+                "connected": False,
+                "company": tokens.realm_id,
+                "environment": self.environment,
+                "stale_environment": tokens.environment or "unknown",
+                "detail": (
+                    f"The club is pointed at {self.environment}, but the company on "
+                    f"file was authorised in {was}. Sandbox and production are "
+                    "separate companies behind separate Intuit apps, so these "
+                    "credentials cannot reach the one the club is now asking for. "
+                    "Nothing is lost: the queue below is intact. Connect again to "
+                    "authorise the real company."
+                ),
+            }
         return {
             "connected": True,
             "company": tokens.realm_id,
             "environment": self.environment,
+            "stale_environment": "",
             "access_expires_at": tokens.access_expires_at,
             "reauthorise_before": tokens.refresh_expires_at,
             "detail": ("Connected. The connection lapses if nothing syncs for a hundred "
@@ -209,6 +233,11 @@ class QuickBooksLedger:
         tokens = self.store.read()
         if not tokens.connected or not tokens.refresh_expires_at:
             return False
+        if not tokens.authorised_for(self.environment):
+            # Nothing to keep alive: a connection to the other world lapsing
+            # is the correct outcome, and a daily job is not the place to
+            # announce it. The accounting screen says it instead.
+            return False
         try:
             deadline = datetime.fromisoformat(tokens.refresh_expires_at)
         except ValueError:
@@ -223,6 +252,16 @@ class QuickBooksLedger:
         tokens = self.store.read()
         if not tokens.connected:
             raise NotConnected("no QuickBooks company is connected")
+        if not tokens.authorised_for(self.environment):
+            # Refusing here keeps the document in the queue with a sentence
+            # somebody can act on, instead of spending it on a 401 and a
+            # refresh that cannot succeed either.
+            raise NotConnected(
+                f"the connected QuickBooks company was authorised in "
+                f"{tokens.environment or 'an unrecorded environment'}, but the club "
+                f"is configured for {self.environment}. Reconnect on "
+                "/admin/accounting to authorise the company the club is pointed at."
+            )
         if not tokens.access_valid:
             tokens = self.refresh(tokens)
         return tokens

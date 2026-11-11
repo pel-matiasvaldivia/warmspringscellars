@@ -3,7 +3,20 @@
 <h1>Orders</h1>
 <p class="sub">{{ rows|length }} shown · newest first</p>
 {% if not rows %}
-<div class="empty">No orders yet.</div>
+{# Joining raises no order, by design — so this screen is empty after a
+   perfectly good signup, which reads like something was lost. Say where
+   orders come from instead of leaving the desk to guess. #}
+<div class="empty">
+  <p>No orders yet.</p>
+  <p class="log" style="margin-top:.6rem;max-width:34rem">
+    Joining the club does not raise an order. A new member has chosen their
+    allocation and left a card — both are on
+    <a href="/admin/memberships">Memberships</a> — and nothing has been
+    charged. Orders are raised a release at a time, from
+    <a href="/admin/releases">Releases</a>: plan the release, then press
+    Generate. Nothing is charged until you press Charge after that.
+  </p>
+</div>
 {% else %}
 <table>
   <tr><th>Reference</th><th>Raised</th><th>Member</th><th>Allocation</th><th>Release</th>

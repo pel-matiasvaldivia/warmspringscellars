@@ -21,7 +21,19 @@
         the CSV export is a full substitute.</p>
 
     {% elif not status.connected %}
-      <p style="color:var(--text-2)">{{ status.detail }}</p>
+      {# A company authorised in the other world is worse than none: every
+         push fails as a 401, which reads like an outage. Flag it in red. #}
+      <p style="color:{{ 'var(--bad)' if status.stale_environment else 'var(--text-2)' }}">
+        {{ status.detail }}</p>
+      {% if status.stale_environment %}
+      <p class="log" style="margin-top:.6rem">
+        The production keys are a different pair from the sandbox ones: set
+        <code>QBO_CLIENT_ID</code> and <code>QBO_CLIENT_SECRET</code> to the
+        production values from the same Intuit app, register the redirect URI
+        below in that app's production settings, and make sure the real company
+        has items called <b>{{ wine_item }}</b> and <b>{{ shipping_item }}</b>
+        before pushing anything.</p>
+      {% endif %}
       <p style="margin-top:.9rem">
         <a class="btn" href="/admin/accounting/connect">Connect to QuickBooks</a></p>
       <p class="log" style="margin-top:.6rem">
