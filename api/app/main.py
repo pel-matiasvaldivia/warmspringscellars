@@ -1370,6 +1370,14 @@ def admin_accounting(request: Request, actor: str = Depends(require_admin)) -> H
         wine_item=settings.qbo_wine_item,
         shipping_item=settings.qbo_shipping_item,
         redirect_uri=settings.qbo_redirect_uri,
+        intuit_urls=[
+            ("Redirect URI", settings.qbo_redirect_uri),
+            ("Launch URL", settings.qbo_launch_url),
+            ("Disconnect URL", settings.qbo_disconnect_url),
+            ("Privacy policy", settings.qbo_privacy_url),
+            ("Terms / EULA", settings.qbo_terms_url),
+        ],
+        environment=settings.qbo_environment,
         rows=ledger_queue.tasks(db),
         outstanding=len(ledger_queue.pending(db)),
     )

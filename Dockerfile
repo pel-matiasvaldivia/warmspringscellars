@@ -5,6 +5,11 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY index.html /usr/share/nginx/html/index.html
 COPY images/    /usr/share/nginx/html/images/
 COPY fonts/     /usr/share/nginx/html/fonts/
+# The privacy policy, the terms, and the two pages Intuit requires an app to
+# have before it will issue production QuickBooks keys. Served from disk by
+# nginx rather than by the club service: a reviewer and a member reading the
+# privacy policy should not be told 502 because the service is restarting.
+COPY pages/     /usr/share/nginx/html/
 
 # The stock image's default vhost would collide with ours on 8080.
 RUN rm -f /etc/nginx/conf.d/default.conf \
