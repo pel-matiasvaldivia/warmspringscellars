@@ -3140,12 +3140,34 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       syncFilled(input);
     });
 
+    // A letter can offer one allocation per link, so somebody who already
+    // knows which box they want arrives with it chosen. Checked against the
+    // select's own options first: assigning an unknown key would silently
+    // blank the field instead, which is worse than ignoring the parameter.
+    var wanted = (params.get('tier') || '').trim();
+    if (wanted) {
+      var tierSelect = $('#f-tier');
+      var offered = tierSelect && $$('option', tierSelect).some(function (o) {
+        return o.value === wanted;
+      });
+      if (offered) preselectTier(wanted);
+    }
+
     if (campaign) {
       var referral = $('#f-referral');
       if (referral) {
-        // The list came from Deerfield, so that is the honest answer to show.
-        // They can change it, and if they do, their answer is the one sent.
-        var option = $$('option', referral).filter(function (o) {
+        // Only the waves that actually went to the Deerfield club list get
+        // that answer filled in. Wave 6 went to Cecilia's own contacts, and
+        // showing them "Deerfield Ranch Winery" would both tell them
+        // something untrue and file every one of them under the wrong
+        // source — which is the figure a mailing is judged by. A campaign
+        // this list does not name simply leaves the question unanswered.
+        var DEERFIELD_SENDS = ['wave-1-', 'wave-2-', 'wave-3-', 'wave-4-',
+                               'wave-5-'];
+        var fromDeerfield = DEERFIELD_SENDS.some(function (prefix) {
+          return campaign.indexOf(prefix) === 0;
+        });
+        var option = fromDeerfield && $$('option', referral).filter(function (o) {
           return o.textContent.indexOf('Deerfield') >= 0;
         })[0];
         if (option) { referral.value = option.value || option.textContent; syncFilled(referral); }
@@ -3232,8 +3254,10 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       // The campaign tag replaces the dropdown only while the dropdown still
       // holds what the campaign put there; touching it hands the answer back
       // to the person, which is where it belongs.
+      // An unanswered dropdown would otherwise send " · wave-6-…", with a
+      // separator in front of nothing.
       referral: campaign
-        ? $('#f-referral').value + ' · ' + campaign
+        ? [$('#f-referral').value, campaign].filter(Boolean).join(' · ')
         : $('#f-referral').value,
       note: $('#f-note').value.trim()
     };

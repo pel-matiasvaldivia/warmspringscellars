@@ -1,0 +1,156 @@
+The plain-text twin of an-invitation-from-glen-ellen.html. Send both parts,
+always: a bulk message carrying only an HTML part is one of the cheapest spam
+signals there is.
+
+WHO THIS IS FOR, and why it is a second letter rather than an edit of the
+first one. new-kid-on-the-block.* is written to the Deerfield list, and its
+whole frame rests on one fact — Cecilia posted a printed announcement to
+every one of those people, and the email is the follow-up to something
+already in their hands. These 102 are Cecilia's own contacts. NOBODY ON THIS
+LIST HAS HAD A LETTER. So the sentence that makes the first letter work is
+not merely unnecessary here, it is untrue, and three more lines that assume a
+shared history go with it:
+
+  * "that distinctive Sonoma character you've come to appreciate" -> they
+    have not been drinking these wines.
+  * "Thank you for your continued support." -> there is none to continue.
+  * "Your details are already in the form" -> no personalised link is built
+    for this wave, so the form is empty.
+
+What replaces the opening says why they are hearing from the winery, in one
+sentence, because that is the question a reader asks first and the one a
+platform's review asks too. CECILIA MUST CONFIRM THAT SENTENCE IS TRUE OF
+EVERY NAME ON THE LIST before this goes out. If some of these people are
+hers and others came from somewhere else, they are two mailings, not one.
+
+THE OTHER DIFFERENCE: this letter asks the reader to choose an allocation,
+so the three are named and each carries its own link. The link sets ?tier=
+and the form arrives with that box already chosen (index.html reads it).
+
+Four merge fields, the same as the first letter minus {{link}}:
+{{first_name}}, {{email}}, {{unsubscribe_url}}, {{postal_address}}.
+
+NO PRICES HERE, deliberately, exactly as in the first letter: the figures
+live in api/app/tiers.json and on the site, and a price written into a letter
+is a price that goes stale in a drawer. The reader is one click from the
+real one.
+
+PASTE FROM THE ROW OF DASHES DOWN. Everything above it is this note, and it
+is not part of the letter.
+
+------------------------------------------------------------------------
+
+WARM SPRINGS CELLAR
+Glen Ellen - Sonoma Valley - Est. 1982
+
+
+AN INVITATION FROM GLEN ELLEN
+
+Dear {{first_name}},
+
+Cecilia Valdivia has opened her own winery, and she wanted the people she
+knows to hear it from her rather than come across it somewhere.
+
+Warm Springs Cellar is a return to the tiny winery in Glen Ellen where PJ
+and Robert began their winemaking journey over 40 years ago. Cecilia and
+Robert Rex have been collaborating on winemaking for nearly two decades. As
+Robert prepares for retirement from Deerfield Ranch Winery, Cecilia is
+stepping into the next chapter of her winemaking career; until his departure
+he is serving as consulting winemaker for Warm Springs Cellar, bringing
+decades of experience to this new venture.
+
+The first bottling features seven varietals, each from a vineyard we have
+cultivated a long relationship with, and all of them in Sonoma County:
+
+  2026 Sauvignon Blanc
+    Peterson Vineyard, Sonoma Valley
+
+  2026 Rose of Syrah
+    Deerfield Vineyard, Sonoma Valley
+
+  2024 Zinfandel
+    Los Chamizal Vineyard, Sonoma Valley
+
+  2023 Pinot Noir
+    Four Palms Vineyard, Russian River Valley
+
+  2023 Malbec
+    Running Rabbit Ranch, Sonoma Valley
+
+  2023 Sangiovese
+    Alpicella Vineyard, Fountain Grove District, Sonoma Valley
+
+  2021 Cabernet Sauvignon
+    Wolf Run Vineyard, Sonoma Valley
+
+The inaugural release is limited to 850 cases, and these wines go to wine
+club members rather than to a shelf.
+
+
+CHOOSE YOUR OWN ALLOCATION
+
+Three sizes, three shipments a year - spring, fall and Christmas. Pick the
+one that suits your table; you can change it later, and there is nothing to
+pay today.
+
+  THE TASTING CASE - three bottles
+  The smallest allocation we send, and the easiest way to find out
+  whether these are your wines. Two tastings a visit, three visits a
+  year.
+    https://warmspringscellar.com/?src=wave-6-ceci-contacts&tier=tasting-case#join
+
+  THE FOUNDER'S RESERVE - six bottles
+  Six bottles including library wines we never release publicly, the
+  annual harvest dinner with Cecilia, first access to single-barrel
+  selections, four tastings a visit, and we carry part of the shipping.
+    https://warmspringscellar.com/?src=wave-6-ceci-contacts&tier=founders-reserve#join
+
+  THE FULL CASE - twelve bottles
+  A full case of every current release, for the table that goes through
+  it. The harvest dinner, six tastings a visit, and we carry more of the
+  shipping again.
+    https://warmspringscellar.com/?src=wave-6-ceci-contacts&tier=full-case#join
+
+Each wine, and what each allocation costs, is on the site. Shipping is
+billed at the carrier's rate for your own address, and on the two larger
+allocations the winery carries part of it. Nothing is charged when you join:
+a card is saved, and it is charged when a release actually ships.
+
+Not sure yet? Start here and read about the wines first:
+
+  https://warmspringscellar.com/?src=wave-6-ceci-contacts
+
+We can only ship where direct wine shipping is permitted, and the form will
+say straight away if your state is not one of them.
+
+
+AND COFFEE
+
+An unexpected pairing, perhaps, but wine lovers tend to appreciate good
+coffee. Robert's winemaking began in the 1970s in a Berkeley garage, in the
+neighbourhood where Alfred Peet was roasting; Mr. Peet was a friend and
+mentor, and Robert has been devoted to the craft ever since. He has his own
+blend, the Rex Blend, and Cecilia has hers - Ceci's Blend.
+
+Wine club members receive samples of both with their allocation shipments,
+whole bean. We are still adding the coffee to the website, so stay tuned.
+
+We would be glad to have you with us.
+
+Sante,
+Robert and Cecilia
+Warm Springs Cellar
+warmspringscellar.com - wineclub@warmspringscellar.com
+
+------------------------------------------------------------------------
+
+You are receiving this at {{email}} because Cecilia Valdivia has your
+address among her own contacts and wanted you to know the winery has opened.
+To unsubscribe, and we will not write again:
+
+  {{unsubscribe_url}}
+
+Warm Springs Cellar - {{postal_address}}
+
+You must be 21 or older to purchase wine in the United States. An adult
+signature is required on delivery.

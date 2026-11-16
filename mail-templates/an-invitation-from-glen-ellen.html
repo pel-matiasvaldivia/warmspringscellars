@@ -1,0 +1,323 @@
+<!-- "An Invitation from Glen Ellen" — the second letter, for Cecilia's own
+     contacts. Its plain-text twin is an-invitation-from-glen-ellen.txt, and
+     the long note at the top of that file explains why this is a separate
+     letter rather than an edit of new-kid-on-the-block.html. In short:
+
+       THE FIRST LETTER'S OPENING IS NOT TRUE OF THESE READERS. It says "you
+       have received an announcement by post from Cecilia Valdivia", which is
+       the fact the whole Deerfield mailing rests on. Nobody on this list has
+       had one. Three more lines that assume a shared history went with it —
+       "that distinctive Sonoma character you've come to appreciate", "thank
+       you for your continued support", and the note that the form is already
+       filled in, which it is not: this wave builds no per-person link.
+
+     CECILIA MUST CONFIRM the sentence in the footer is true of every name on
+     the list before this is sent. It is what a reader asks first and what a
+     platform's review asks too, and it is the one claim here that cannot be
+     checked from this repository.
+
+     Four merge fields — one fewer than the first letter, which had {{link}}:
+       {{first_name}}       default it to "Wine Lover"
+       {{email}}            named in the footer
+       {{unsubscribe_url}}  the platform's own, so it feeds its suppression list
+       {{postal_address}}   CAN-SPAM
+
+     NO PRICES, exactly as in the first letter: the figures live in
+     api/app/tiers.json and on the site, and a price written into a letter is
+     a price that goes stale in a drawer.
+
+     Tables and inline styles only, no image: Outlook on Windows renders mail
+     through Word and blocks remote images until the reader allows them. -->
+<table cellpadding="0" cellspacing="0" border="0" role="presentation"
+       style="border-collapse:collapse;width:100%;max-width:560px;
+              font-family:Arial, Helvetica, sans-serif;color:#2c1e24;">
+  <tr>
+    <td style="padding:0 0 22px;">
+      <div style="font-family:Georgia, 'Times New Roman', Times, serif;font-size:17px;
+                  line-height:22px;color:#5c0037;letter-spacing:1.6px;">
+        WARM SPRINGS <span style="font-style:italic;letter-spacing:0.2px;">Cellar</span>
+      </div>
+      <div style="font-size:11px;line-height:16px;letter-spacing:1.4px;
+                  text-transform:uppercase;color:#9a8890;padding-top:4px;">
+        Glen Ellen &middot; Sonoma Valley &middot; Est. 1982
+      </div>
+    </td>
+  </tr>
+  <tr><td style="border-top:1px solid #e2d8d0;padding:22px 0 0;"></td></tr>
+
+  <tr>
+    <td style="font-family:Georgia,'Times New Roman',Times,serif;font-size:21px;
+               line-height:27px;color:#2c1e24;padding:0 0 18px;">
+      An Invitation from Glen Ellen
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Dear {{first_name}},
+    </td>
+  </tr>
+
+  <!-- ↓↓ THE SENTENCE THAT ANSWERS "WHY AM I GETTING THIS?" ↓↓
+       Every letter to a list needs one, in the first line, before the reader
+       has to ask. The Deerfield letter's is the printed announcement. This
+       one's is Cecilia herself, and it is the claim she has to confirm. -->
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Cecilia Valdivia has opened her own winery, and she wanted the people
+      she knows to hear it from her rather than come across it somewhere.
+    </td>
+  </tr>
+  <!-- ↑↑ THE SENTENCE THAT ANSWERS "WHY AM I GETTING THIS?" ↑↑ -->
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Warm Springs Cellar is a return to the tiny winery in Glen Ellen where
+      PJ and Robert began their winemaking journey over 40 years ago. Cecilia
+      and Robert Rex have been collaborating on winemaking for nearly two
+      decades. As Robert prepares for retirement from Deerfield Ranch Winery,
+      Cecilia is stepping into the next chapter of her winemaking career;
+      until his departure he is serving as consulting winemaker for Warm
+      Springs Cellar, bringing decades of experience to this new venture.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      The first bottling features seven varietals, each from a vineyard we
+      have cultivated a long relationship with, and all of them in Sonoma
+      County:
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:0 0 18px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-collapse:collapse;width:100%;border:1px solid #e2d8d0;">
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2026
+            Sauvignon Blanc</span><br>
+            <span style="color:#5c4650;">Peterson Vineyard, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2026
+            Ros&eacute; of Syrah</span><br>
+            <span style="color:#5c4650;">Deerfield Vineyard, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2024
+            Zinfandel</span><br>
+            <span style="color:#5c4650;">Los Chamizal Vineyard, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2023
+            Pinot Noir</span><br>
+            <span style="color:#5c4650;">Four Palms Vineyard, Russian River Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2023
+            Malbec</span><br>
+            <span style="color:#5c4650;">Running Rabbit Ranch, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2023
+            Sangiovese</span><br>
+            <span style="color:#5c4650;">Alpicella Vineyard, Fountain Grove District, Sonoma Valley</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:13px 18px;font-size:13px;line-height:19px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;">2021
+            Cabernet Sauvignon</span><br>
+            <span style="color:#5c4650;">Wolf Run Vineyard, Sonoma Valley</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      The inaugural release is limited to 850 cases, and these wines go to
+      wine club members rather than to a shelf.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-family:Georgia,'Times New Roman',Times,serif;font-size:18px;
+               line-height:24px;color:#2c1e24;border-top:1px solid #e2d8d0;
+               padding:24px 0 14px;">
+      Choose your own allocation
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 18px;">
+      Three sizes, three shipments a year &mdash; spring, fall and Christmas.
+      Pick the one that suits your table; you can change it later, and there
+      is nothing to pay today.
+    </td>
+  </tr>
+
+  <!-- Each allocation carries its own link. ?tier= arrives at the form with
+       that box already chosen — index.html reads it and checks it against
+       the select's own options — and ?src= is what tells the winery
+       afterwards which letter brought somebody. -->
+  <tr>
+    <td style="padding:0 0 18px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-collapse:collapse;width:100%;border:1px solid #e2d8d0;">
+        <tr>
+          <td style="padding:16px 18px;border-bottom:1px solid #f0e8e2;
+                     font-size:13px;line-height:20px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:15px;">The
+            Tasting Case</span>
+            <span style="color:#9a8890;">&nbsp;&middot;&nbsp;three bottles</span><br>
+            <span style="color:#5c4650;">The smallest allocation we send, and the
+            easiest way to find out whether these are your wines. Two tastings
+            a visit, three visits a year.</span><br>
+            <a href="https://warmspringscellar.com/?src=wave-6-ceci-contacts&amp;tier=tasting-case#join"
+               style="color:#5c0037;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Choose
+               this allocation</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 18px;border-bottom:1px solid #f0e8e2;
+                     background:#faf6f8;font-size:13px;line-height:20px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:15px;">The
+            Founder&rsquo;s Reserve</span>
+            <span style="color:#9a8890;">&nbsp;&middot;&nbsp;six bottles</span><br>
+            <span style="color:#5c4650;">Six bottles including library wines we
+            never release publicly, the annual harvest dinner with Cecilia,
+            first access to single-barrel selections, four tastings a visit,
+            and we carry part of the shipping.</span><br>
+            <a href="https://warmspringscellar.com/?src=wave-6-ceci-contacts&amp;tier=founders-reserve#join"
+               style="color:#5c0037;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Choose
+               this allocation</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 18px;font-size:13px;line-height:20px;">
+            <span style="font-family:Georgia,'Times New Roman',Times,serif;font-size:15px;">The
+            Full Case</span>
+            <span style="color:#9a8890;">&nbsp;&middot;&nbsp;twelve bottles</span><br>
+            <span style="color:#5c4650;">A full case of every current release,
+            for the table that goes through it. The harvest dinner, six
+            tastings a visit, and we carry more of the shipping again.</span><br>
+            <a href="https://warmspringscellar.com/?src=wave-6-ceci-contacts&amp;tier=full-case#join"
+               style="color:#5c0037;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Choose
+               this allocation</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Each wine, and what each allocation costs, is on the site. Shipping is
+      billed at the carrier&rsquo;s rate for your own address, and on the two
+      larger allocations the winery carries part of it. Nothing is charged
+      when you join: a card is saved, and it is charged when a release
+      actually ships.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:6px 0 24px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"
+             style="border-collapse:collapse;">
+        <tr>
+          <td style="background:#5c0037;padding:13px 26px;">
+            <a href="https://warmspringscellar.com/?src=wave-6-ceci-contacts"
+               style="color:#ffffff;text-decoration:none;font-family:Arial, Helvetica, sans-serif;
+                      font-size:12px;letter-spacing:2px;text-transform:uppercase;display:inline-block;">
+              Read about the wines
+            </a>
+          </td>
+        </tr>
+      </table>
+      <div style="font-size:12px;line-height:18px;color:#5c4650;padding-top:10px;">
+        We can only ship where direct wine shipping is permitted, and the form
+        will say straight away if your state is not one of them.
+      </div>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-family:Georgia,'Times New Roman',Times,serif;font-size:18px;
+               line-height:24px;color:#2c1e24;border-top:1px solid #e2d8d0;
+               padding:24px 0 14px;">
+      And Coffee
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      An unexpected pairing, perhaps, but wine lovers tend to appreciate good
+      coffee. Robert&rsquo;s winemaking began in the 1970s in a Berkeley garage, in
+      the neighbourhood where Alfred Peet was roasting; Mr. Peet was a friend
+      and mentor, and Robert has been devoted to the craft ever since. He has
+      his own blend, the Rex Blend, and Cecilia has hers &mdash; Ceci&rsquo;s Blend.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 16px;">
+      Wine club members receive samples of both with their allocation
+      shipments, whole bean. We are still adding the coffee to the website, so
+      stay tuned.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="font-size:14px;line-height:23px;padding:0 0 22px;">
+      We would be glad to have you with us.
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e2d8d0;padding:18px 0 0;
+               font-size:12px;line-height:19px;color:#5c4650;">
+      Sant&eacute;,<br>
+      <strong style="font-weight:normal;color:#2c1e24;">Robert and Cecilia</strong><br>
+      Warm Springs Cellar<br>
+      <a href="https://warmspringscellar.com" style="color:#5c0037;text-decoration:none;">warmspringscellar.com</a>
+      &nbsp;&middot;&nbsp;
+      <a href="mailto:wineclub@warmspringscellar.com" style="color:#5c4650;text-decoration:none;">wineclub@warmspringscellar.com</a>
+    </td>
+  </tr>
+
+  <!-- CHECK THE SEND PREVIEW for two footers, as with the first letter. If
+       the platform injects its own, delete this block rather than theirs:
+       theirs is the one wired to the suppression list. -->
+  <tr>
+    <td style="padding:16px 0 0;font-size:11px;line-height:17px;color:#9a8890;">
+      You are receiving this at {{email}} because Cecilia Valdivia has your
+      address among her own contacts and wanted you to know the winery has
+      opened.
+      <a href="{{unsubscribe_url}}" style="color:#9a8890;">Unsubscribe</a>
+      and we will not write again.<br><br>
+      Warm Springs Cellar &middot; {{postal_address}}<br>
+      You must be 21 or older to purchase wine in the United States.
+      An adult signature is required on delivery.
+    </td>
+  </tr>
+</table>
