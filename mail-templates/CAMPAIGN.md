@@ -273,3 +273,64 @@ Glen Ellen, CA 95442, and it lives in `config.POSTAL_ADDRESS`. And the
 shipping arrangement — the winery holds each state's permit and gives Crown a
 copy, so Crown ships but does not sell. That keeps Warm Springs Cellar the
 seller of record, which is what Stripe and QuickBooks already assume.
+
+---
+
+# Wave 6 — Cecilia's own contacts
+
+Added November 2026, after the six Deerfield waves had gone out. 102 names
+and addresses, from a spreadsheet Cecilia supplied. **They are not on the
+Deerfield list**: checked against the platform's 986 subscribers and its 15
+suppressions, and the overlap is zero.
+
+**None of them has had a letter.** That is the whole difference, and it is
+why this wave has a letter of its own — `an-invitation-from-glen-ellen.html`
+and `.txt` — rather than a tweak of the first one. The sentence the Deerfield
+mailing rests on ("you've received an announcement by post from Cecilia
+Valdivia") is simply untrue here, and three more lines assumed a history
+these readers do not have. The note at the top of the `.txt` lists all four.
+
+The other difference: this letter asks the reader to **choose an
+allocation**. Each of the three carries its own link with `?tier=`, and the
+form now arrives with that box already selected. `index.html` reads the
+parameter and checks it against the select's own options, so an unknown key
+is ignored rather than blanking the field.
+
+## What the list looked like
+
+| | |
+|---|---|
+| Rows in the spreadsheet | 102 |
+| Well formed, unique | 102 |
+| Already on the platform | 0 |
+| On the suppression list | 0 |
+| **Held back** | **2** |
+| To send | 100 |
+
+The two held back are at `gamil.com`, which is a typo for `gmail.com` and not
+a mail host: both are certain permanent bounces, and permanent bounces are
+the counter the sender is judged on. **They are not corrected automatically.**
+Guessing at somebody's address means mailing whoever really owns the one you
+guessed. Cecilia confirms them or they stay out.
+
+## The attribution bug this uncovered
+
+The landing page used to fill in "Deerfield Ranch Winery" as the referral for
+*any* campaign link. That was right while every wave was Deerfield's. For
+wave 6 it would have told a hundred people something untrue about themselves
+and filed every resulting join under the wrong source — which is the figure
+the winery judges a mailing by. The page now names the waves that really went
+to that list, and leaves the question unanswered for the others.
+
+## Before this is sent
+
+* **Cecilia must confirm the footer sentence is true of every name**: "because
+  Cecilia Valdivia has your address among her own contacts". It is the answer
+  to "why am I getting this?", it is what a platform's review weighs, and it
+  is the one claim that cannot be checked from this repository. If some of
+  these names are hers and others came from somewhere else, they are two
+  mailings, not one.
+* The same declare-before-you-send rule as the Deerfield list applies. This
+  provenance is *better* — a personal contact of the winemaker, not a list
+  collected by another business — but it should still be the answer given
+  when the platform asks.
