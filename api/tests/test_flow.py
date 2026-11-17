@@ -1471,6 +1471,49 @@ def test_auto_approval_invites_on_the_spot(client):
     assert "/club/offer/" in body, "the invitation, not the plain acknowledgement"
 
 
+def test_the_answer_carries_the_link_so_nobody_waits_for_an_inbox(client):
+    """The whole point. Somebody who just filled in the form is ready NOW.
+
+    Sending them to their email to find a letter is where the intention goes
+    cold, and it is the step the winery was losing people at.
+    """
+    res = _auto(client)
+
+    url = res.json()["offer_url"]
+    assert "/club/offer/" in url
+    # And it is a door that opens: the same token the letter carries.
+    token = url.rsplit("/club/offer/", 1)[1]
+    page = client.get(f"/club/offer/{token}")
+    assert page.status_code == 200
+
+
+def test_a_mailer_that_is_down_no_longer_costs_the_member_their_place(client):
+    """The offer exists either way, so the page can still carry them in."""
+    def refuse(*args, **kwargs):
+        raise RuntimeError("smtp is down")
+    client.main.send_invitation = refuse
+
+    res = _auto(client, email="nomail@example.com")
+
+    assert res.status_code == 201
+    assert "/club/offer/" in res.json()["offer_url"], "they can still join today"
+    offer = client.main.db.one("SELECT * FROM offer ORDER BY id DESC")
+    assert offer is not None
+    # And somebody is told the mailer needs fixing.
+    actions = [r["action"] for r in client.main.db.all(
+        "SELECT action FROM event WHERE subject = 'offer'")]
+    assert "invitation_failed" in actions
+
+
+def test_the_desk_is_told_when_every_application_is_waiting_for_a_person(client):
+    from app.config import Settings
+
+    off = Settings(auto_approve_applications=False).warnings()
+    assert any("AUTO_APPROVE_APPLICATIONS is off" in w for w in off)
+    on = Settings(auto_approve_applications=True).warnings()
+    assert not any("AUTO_APPROVE_APPLICATIONS" in w for w in on)
+
+
 def test_auto_approval_still_refuses_a_state_with_no_licence(client):
     """The checks before approval were never the approver's work."""
     res = _auto(client, email="kentucky@example.com", state="Kentucky")
