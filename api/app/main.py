@@ -241,29 +241,49 @@ async def create_application(request: Request) -> JSONResponse:
     # Only a new one opens a door.
     fresh = db.one("SELECT * FROM application WHERE id = ?", (app_id,))
     if settings.auto_approve_applications and fresh and fresh["status"] == "pending":
-        if invite_without_asking(app_id):
-            return JSONResponse({"ok": True, "application_id": app_id, "invited": True},
-                                status_code=201)
+        url = invite_without_asking(app_id)
+        if url:
+            # The link comes back with the answer, not only by email. Somebody
+            # who has just filled in a form is ready to carry on NOW; sending
+            # them to their inbox to find a letter is where the intention goes
+            # cold, and it is the step the winery was losing people at.
+            #
+            # It does mean the page no longer proves the address belongs to
+            # the person using it — the emailed link was the only check of
+            # that. What an impostor gets for the trouble is a membership in
+            # somebody else's name paid for with their own card, which the
+            # winery can revoke. That trade is deliberate.
+            return JSONResponse(
+                {"ok": True, "application_id": app_id, "invited": True, "offer_url": url},
+                status_code=201)
 
     acknowledge(data, app_id, "application")
     return JSONResponse({"ok": True, "application_id": app_id}, status_code=201)
 
 
-def invite_without_asking(app_id: int) -> bool:
-    """Approve and invite with nobody in the loop. True if the letter went.
+def invite_without_asking(app_id: int) -> str:
+    """Approve and invite with nobody in the loop.
+
+    Returns the offer's own URL when the letter went, and "" when it did not
+    — the caller shows that link on the page, so it is the thing worth
+    handing back rather than a bare True.
 
     The invitation is the acknowledgement here: sending both would be two
     messages about one form, and the one carrying the link is the better of
-    them. So a failure to send has to fall back rather than leave the member
-    with nothing — the application is approved either way, and a silence is
-    worse than the plainer letter.
+    them.
+
+    A letter that will not send is no longer a reason to give up. The offer
+    exists either way, and the page can carry the person straight into it —
+    so mail being down now costs them a copy for later rather than the
+    chance to join at all. The failure is logged, loudly, because somebody
+    has to fix the mailer.
     """
     try:
         offer_id, url = flow.approve_application(app_id, "auto")
     except FlowError as exc:                                   # noqa: BLE001
         with db.transaction() as con:
             log(con, "application", app_id, "auto_approve_failed", error=str(exc))
-        return False
+        return ""
 
     application = db.one("SELECT * FROM application WHERE id = ?", (app_id,))
     offer = db.one("SELECT * FROM offer WHERE id = ?", (offer_id,))
@@ -273,10 +293,10 @@ def invite_without_asking(app_id: int) -> bool:
     except Exception as exc:                                   # noqa: BLE001
         with db.transaction() as con:
             log(con, "offer", offer_id, "invitation_failed", actor="auto", error=str(exc))
-        return False
+        return url
     with db.transaction() as con:
         log(con, "offer", offer_id, "invitation_sent", actor="auto", to=where)
-    return True
+    return url
 
 
 @app.post("/api/waiting")

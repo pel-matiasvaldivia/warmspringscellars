@@ -232,6 +232,15 @@ class Settings:
             out.append("SMTP_USER is unset while OAuth2 is configured: a token says "
                        "which app is sending, not which mailbox, so the mailbox has "
                        "to be named too.")
+        if not self.auto_approve_applications:
+            # Not a misconfiguration — it is the default, and a winery may
+            # well want to read each application. It is said out loud because
+            # the cost is invisible from here: somebody who has just filled
+            # in the form sits waiting for a person, and intention does not
+            # keep. If nobody means to read them, this is the setting.
+            out.append("AUTO_APPROVE_APPLICATIONS is off: every application waits for "
+                       "somebody to press Approve before the member is sent their link. "
+                       "Set it to true and the link goes out the moment the form is sent.")
         if not self.admin_password:
             out.append("ADMIN_PASSWORD is unset: /admin is closed until it is set.")
         if self.ledger_name == "none":

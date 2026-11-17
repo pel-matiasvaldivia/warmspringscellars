@@ -2702,6 +2702,10 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
       </svg>
       <h3 id="joinSuccessTitle">Your request is with us</h3>
       <p id="joinSuccessMsg">Cecilia will be in touch within 48 hours. Watch your inbox &mdash; and keep an eye on the spam folder, just in case.</p>
+      <!-- Hidden until the answer says the offer is already open. Shown, it
+           is the whole point of the screen: the next step, now, without a
+           trip to an inbox. -->
+      <a id="joinContinue" class="hero-cta" href="#" style="display:none;margin-top:1.4rem;">Choose Your Allocation</a>
     </div>
   </div>
 </section>
@@ -3286,6 +3290,19 @@ body.menu-open .nav .nav-toggle { color: var(--c-wine); }
           waitingFor + '. We will write the day we can ship there, and nothing before it. ' +
           'If you have an address in a state we already reach — work, family, a second ' +
           'home — write to wineclub@warmspringscellar.com and we can start today.';
+      } else if (result.data && result.data.invited && result.data.offer_url) {
+        // Already approved, and the offer is open. Telling this person to
+        // wait for Cecilia would be false AND would lose them: they are
+        // ready now, and the next step is one click away. The emailed copy
+        // is mentioned second, as the thing to come back to.
+        $('#joinSuccessTitle').textContent = 'You are in — one step left';
+        $('#joinSuccessMsg').textContent =
+          (body.first_name ? body.first_name + ', your' : 'Your') + ' place is held. ' +
+          'Choose your allocation and leave a card below — nothing is charged today, ' +
+          'and the card is only charged when a release ships. We have emailed you the ' +
+          'same link, so you can finish later if now is not the moment.';
+        var go = $('#joinContinue');
+        if (go) { go.href = result.data.offer_url; go.style.display = 'inline-block'; }
       } else {
         var tier = $('#f-tier');
         var tierName = tier.options[tier.selectedIndex].textContent.split('—')[0].trim();
