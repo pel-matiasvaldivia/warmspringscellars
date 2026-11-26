@@ -6,6 +6,26 @@
 </div>
 <p class="sub">{{ rows|length }} shown · pending first, newest first</p>
 
+{# The first question this screen has to answer: is anybody waiting for me? #}
+{% if automatic %}
+<div class="notice ok" style="margin:0 0 1.2rem">
+  <b>Approval is automatic.</b> A form sent from the website is approved the
+  moment it arrives, and the member is given their link there and then &mdash;
+  on the page and by email. <b>You do not need to open these.</b>
+  {% if still_pending %}
+  The {{ still_pending }} marked <i>pending</i> came in before this was
+  switched on, or were added here by hand; those still need you.
+  {% endif %}
+</div>
+{% else %}
+<div class="notice bad" style="margin:0 0 1.2rem">
+  <b>Approval is manual.</b> Every application sits here until somebody
+  presses Approve, and nobody is sent their link until then &mdash; a person
+  who filled in the form is waiting on this screen. To have the club answer
+  them itself, set <code>AUTO_APPROVE_APPLICATIONS=true</code> and restart.
+</div>
+{% endif %}
+
 {% if not rows %}
 <div class="empty">
   Nothing has come in yet.

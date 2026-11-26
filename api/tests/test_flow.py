@@ -66,6 +66,12 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("PUBLIC_BASE_URL", "http://testserver")
     monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
     monkeypatch.delenv("SMTP_HOST", raising=False)
+    # Pinned, not inherited. Automatic approval became the default in
+    # November 2026, and the manual path it replaced is still a supported
+    # configuration -- so these tests say which one they are exercising
+    # instead of moving with whatever the default happens to be. The
+    # tests for the automatic path turn it on for themselves.
+    monkeypatch.setenv("AUTO_APPROVE_APPLICATIONS", "false")
 
     for name in [m for m in list(sys.modules) if m.startswith("app")]:
         del sys.modules[name]
@@ -1547,8 +1553,23 @@ def test_pressing_the_button_twice_does_not_send_two_invitations(client):
     assert "invited" not in second.json()
 
 
-def test_without_the_setting_nothing_changes(client):
-    """Off unless somebody turns it on."""
+def test_automatic_approval_is_what_a_club_gets_unless_it_asks_otherwise(client):
+    """The default changed in November 2026, and the default is the point.
+
+    It was off, on the reasoning that letting strangers in is the winery's
+    decision. The winery made that decision twice and the club went on
+    queueing applications anyway, because the setting lives in a file nobody
+    reads and its absence says nothing.
+    """
+    from app.config import Settings
+    import os
+
+    os.environ.pop("AUTO_APPROVE_APPLICATIONS", None)
+    assert Settings().auto_approve_applications is True
+
+
+def test_turning_it_off_puts_a_person_back_in_the_loop(client):
+    """Still supported, and still exactly as it was."""
     res = client.post("/api/applications", json=APPLICATION)
 
     assert res.status_code == 201 and "invited" not in res.json()

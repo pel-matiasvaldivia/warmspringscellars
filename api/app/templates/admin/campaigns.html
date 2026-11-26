@@ -1,10 +1,13 @@
 {% extends "admin/layout.html" %}
 {% block body %}
-<h1>Do not write to these</h1>
+{# The page was only the do-not-contact list. It now answers the question
+   the winery actually asks after a mailing — who joined — so the heading
+   says both rather than only the half that came first. #}
+<h1>Letters</h1>
 <p class="sub">
-  The winery&rsquo;s own record of who must not be written to, kept here rather
-  than only inside whichever mailing platform is paying a subscription this
-  year.
+  What each letter brought in, and the winery&rsquo;s own record of who must not
+  be written to &mdash; kept here rather than only inside whichever mailing
+  platform is paying a subscription this year.
 </p>
 
 {# The screen used to report on sends the club made itself. It no longer
@@ -18,9 +21,63 @@
     This screen does not send and does not count. Delivery, opens and
     unsubscribes belong to the mailing platform that sent the wave &mdash; see
     <code>mail-templates/CAMPAIGN.md</code>. What a wave actually <em>produced</em>
-    is counted here though: <a href="/admin">Applications</a>, filtered by
-    referral, because every wave&rsquo;s link carries its own <code>src</code>.
+    is counted below, because every wave&rsquo;s link carries its own
+    <code>src</code> and the form keeps it.
   </p>
+</div>
+
+{# The question the winery actually asks about a mailing is not how many
+   opened it. It is who joined, and who got close and stopped. #}
+<div class="card">
+  <h2>What each letter brought in</h2>
+  {% if not waves %}
+  <div class="empty">Nobody has applied yet.</div>
+  {% else %}
+  <p class="sub">
+    Counted from the application&rsquo;s referral, which carries the
+    <code>src</code> of the link the person arrived through.
+    <b>Waiting</b> is somebody with an offer still open &mdash; the ones worth
+    a telephone call.
+  </p>
+  {% for w in waves %}
+  <h3 style="font-size:.95rem;margin:1.4rem 0 .4rem">
+    {{ w.source or 'Came by another road' }}
+    <span class="pill ok">{{ w.members }} member{{ '' if w.members == 1 else 's' }}</span>
+    {% if w.waiting %}<span class="pill warn">{{ w.waiting }} waiting</span>{% endif %}
+    <span class="log">&nbsp;{{ w.people | length }} applied</span>
+  </h3>
+  <table>
+    <tr><th>Applied</th><th>Name</th><th>Email</th><th>Ships to</th>
+        <th>Allocation</th><th>Where they got to</th></tr>
+    {% for p in w.people %}
+    <tr>
+      <td class="num">{{ p.created_at[:10] }}</td>
+      <td>{{ p.first_name }} {{ p.last_name }}</td>
+      <td>{{ p.email }}</td>
+      <td>{{ [p.city, p.state] | select | join(', ') }}</td>
+      <td>{{ tier_names.get(p.tier_key, '—') }}</td>
+      <td>
+        {% if p.membership_status == 'active' %}
+          <span class="pill active">member</span>
+        {% elif p.membership_status %}
+          <span class="pill {{ p.membership_status }}">{{ p.membership_status }}</span>
+        {% elif p.offer_status == 'opened' %}
+          <span class="pill opened">opened the offer, did not finish</span>
+          {% if p.expires_at %}<span class="log">&nbsp;expires {{ p.expires_at[:10] }}</span>{% endif %}
+        {% elif p.offer_status == 'sent' %}
+          <span class="pill sent">never opened the invitation</span>
+          {% if p.expires_at %}<span class="log">&nbsp;expires {{ p.expires_at[:10] }}</span>{% endif %}
+        {% elif p.offer_status %}
+          <span class="pill {{ p.offer_status }}">offer {{ p.offer_status }}</span>
+        {% else %}
+          <span class="pill {{ p.application_status }}">{{ p.application_status }}, no offer</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endfor %}
+  {% endif %}
 </div>
 
 <div class="card">

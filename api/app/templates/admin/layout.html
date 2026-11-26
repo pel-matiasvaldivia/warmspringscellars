@@ -102,6 +102,14 @@ p.ok b{color:var(--text)}
        background:var(--surface);border:1px solid var(--border)}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8em;
      background:var(--wine-pale);padding:.1rem .3rem;border-radius:2px;word-break:break-all}
+/* A standing statement about how the desk is running, as opposed to the
+   one-off `done` message after an action. */
+.notice{background:var(--surface);border:1px solid var(--border);
+        border-left:3px solid var(--wine);padding:.9rem 1.1rem;font-size:.84rem;
+        color:var(--text-2);line-height:1.55}
+.notice.ok{border-left-color:var(--ok)}
+.notice.bad{border-left-color:var(--bad)}
+.notice b{color:var(--text)}
 .log{font-size:.76rem;color:var(--text-2)}
 .log time{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 </style>

@@ -29,6 +29,7 @@ it is uploaded. Nothing in this module sends anything.
 
 from __future__ import annotations
 
+import re
 import sqlite3
 
 from .db import now
@@ -113,3 +114,67 @@ def by_source(con: sqlite3.Connection) -> list[sqlite3.Row]:
     return con.execute(
         "SELECT source, COUNT(*) AS how_many FROM email_suppression "
         "GROUP BY source ORDER BY how_many DESC").fetchall()
+
+
+# ── what each wave actually brought in ───────────────────────────────────
+# The platform counts who opened a letter. Only the club knows who joined
+# because of it, and it knows because every wave's link carries its own
+# `src`, which the form stores on the application's referral.
+
+# The referral holds either the campaign tag alone, or the answer somebody
+# chose from the dropdown and then the tag: "Deerfield Ranch Winery ·
+# wave-4-six-bottle-a". The tag is always last, because that is where the
+# form appends it.
+_WAVE = re.compile(r"(?:^|·\s*)(wave-[a-z0-9-]+)\s*$")
+
+
+def wave_of(referral: str | None) -> str:
+    match = _WAVE.search((referral or "").strip())
+    return match.group(1) if match else ""
+
+
+def what_each_wave_brought(con: sqlite3.Connection) -> list[dict]:
+    """Every applicant, grouped by the wave whose link they arrived through.
+
+    One row per person rather than a count, because "how many" is the
+    question the winery asks first and "who, and where did they stop" is the
+    one it asks immediately afterwards — and the second one is what somebody
+    can act on. A person with an offer they never opened is a telephone call
+    worth making; a bare number is not.
+
+    People who came without a campaign link are kept, under a heading of
+    their own. They are not noise: they are the word of mouth.
+    """
+    rows = con.execute(
+        "SELECT a.id, a.created_at, a.first_name, a.last_name, a.email,"
+        " a.city, a.state, a.referral, a.status AS application_status,"
+        " o.status AS offer_status, o.expires_at,"
+        " m.status AS membership_status,"
+        # What they settled on if they joined, and what they asked for if
+        # they did not — the second is the more useful of the two when the
+        # point of the row is to telephone somebody.
+        " COALESCE(m.tier_key, a.tier_interest) AS tier_key"
+        " FROM application a"
+        " LEFT JOIN offer o ON o.application_id = a.id"
+        " LEFT JOIN membership m ON m.application_id = a.id"
+        " ORDER BY a.created_at"
+    ).fetchall()
+
+    groups: dict[str, dict] = {}
+    for row in rows:
+        key = wave_of(row["referral"])
+        group = groups.setdefault(key, {"source": key, "people": [],
+                                        "members": 0, "waiting": 0})
+        group["people"].append(row)
+        if row["membership_status"] == "active":
+            group["members"] += 1
+        elif row["offer_status"] in ("sent", "opened"):
+            # Still reachable: an offer that is open is somebody the winery
+            # can still close, and that is the whole point of listing them.
+            group["waiting"] += 1
+
+    # Waves in their own order, and the people who came by another road last.
+    def order(group: dict) -> tuple:
+        return (group["source"] == "", group["source"])
+
+    return sorted(groups.values(), key=order)
