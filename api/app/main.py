@@ -655,7 +655,13 @@ def admin_applications(request: Request, actor: str = Depends(require_admin)) ->
     rows = db.all(
         "SELECT * FROM application ORDER BY (status != 'pending'), created_at DESC LIMIT 200"
     )
-    return admin_page(request, "applications.html", "applications", rows=rows)
+    # Whether anybody has to do anything here is the first question this
+    # screen should answer, and until now it answered it nowhere: somebody
+    # went on opening applications for days because nothing said they were
+    # already handled.
+    return admin_page(request, "applications.html", "applications", rows=rows,
+                      automatic=settings.auto_approve_applications,
+                      still_pending=sum(1 for r in rows if r["status"] == "pending"))
 
 
 # How a hand-entered enquiry reached the winery. The first three are what the
@@ -1530,7 +1536,8 @@ def admin_campaigns(request: Request,
     with db.connect() as con:
         return admin_page(request, "campaigns.html", "campaigns",
                           suppressed=campaign.suppressed(con),
-                          by_source=campaign.by_source(con))
+                          by_source=campaign.by_source(con),
+                          waves=campaign.what_each_wave_brought(con))
 
 
 @app.get("/admin/campaigns/suppressions.csv")

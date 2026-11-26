@@ -99,8 +99,17 @@ class Settings:
         default_factory=lambda: int(_env("RELEASE_NOTICE_GAP_HOURS", "24")))
 
     # Approve what the public form sends, without anybody looking first, and
-    # send the invitation straight back. The winery's choice, not a default:
-    # it is off unless somebody turns it on.
+    # send the invitation straight back.
+    #
+    # ON BY DEFAULT since November 2026, and that was a change. It used to be
+    # off unless somebody turned it on, on the reasoning that letting
+    # strangers through the door is the winery's decision and not a default.
+    # The winery made that decision — twice, in writing — and twice the club
+    # went on queueing applications for a person anyway, because the setting
+    # lives in a file nobody looks at and its absence is silent. A default
+    # that has to be discovered to get the behaviour everybody already agreed
+    # on is not a safe default, it is a trap. Set it to false to put a person
+    # back in the loop; the desk says plainly which way it is running.
     #
     # What it does NOT loosen, because none of it was ever the approver's
     # work: the licensed-states check, the rate limit, the email-shape check
@@ -109,7 +118,7 @@ class Settings:
     # its door — which can still be shut afterwards, by revoking the offer or
     # pausing the membership.
     auto_approve_applications: bool = field(
-        default_factory=lambda: _bool("AUTO_APPROVE_APPLICATIONS", False))
+        default_factory=lambda: _bool("AUTO_APPROVE_APPLICATIONS", True))
 
     offer_days: int = field(default_factory=lambda: int(_env("OFFER_DAYS", "14")))
     currency: str = field(default_factory=lambda: _env("CURRENCY", "usd"))

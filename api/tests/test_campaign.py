@@ -23,6 +23,8 @@ sys.path.insert(0, str(ROOT))
 
 from app import campaign                                      # noqa: E402
 
+from .test_flow import APPLICATION, approve, join             # noqa: E402
+
 ADMIN = ("cellar", "test-password")
 SECRET = "test-secret-key-not-random"
 
@@ -36,6 +38,9 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("PUBLIC_BASE_URL", "http://testserver")
     monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
     monkeypatch.delenv("SMTP_HOST", raising=False)
+    # Pinned rather than inherited, as in test_flow: these tests are
+    # about what a wave brought in, not about who approved it.
+    monkeypatch.setenv("AUTO_APPROVE_APPLICATIONS", "false")
 
     for name in [m for m in list(sys.modules) if m.startswith("app")]:
         del sys.modules[name]
@@ -338,3 +343,72 @@ def test_the_plain_text_letter_never_ships_its_editors_note():
     _html, text = letter()
     assert "plain-text twin" not in text, "the note to the editor came too"
     assert text.lstrip().startswith("WARM SPRINGS CELLAR")
+
+
+# ── what each letter brought in ──────────────────────────────────────────
+def test_the_wave_is_read_off_the_referral_however_it_was_answered():
+    from app.campaign import wave_of
+
+    # The form appends the campaign tag after whatever they chose.
+    assert wave_of("Deerfield Ranch Winery · wave-4-six-bottle-a") == "wave-4-six-bottle-a"
+    # Wave 6 leaves the dropdown unanswered, so the tag stands alone.
+    assert wave_of("wave-6-ceci-contacts") == "wave-6-ceci-contacts"
+    # Somebody who answered and never touched a campaign link.
+    assert wave_of("Friend or Family") == ""
+    assert wave_of(None) == ""
+    assert wave_of("") == ""
+
+
+def test_each_letter_is_reported_with_the_people_it_brought(client):
+    """The count is the first question. Who, and where they stopped, is the
+    one somebody can act on."""
+    from app.campaign import what_each_wave_brought
+
+    def applicant(email, referral, **extra):
+        body = {**APPLICATION, "email": email, "referral": referral, **extra}
+        assert client.post("/api/applications", json=body).status_code == 201
+
+    applicant("a@example.com", "Deerfield Ranch Winery · wave-3-twelve-bottle")
+    applicant("b@example.com", "wave-6-ceci-contacts")
+    applicant("c@example.com", "wave-6-ceci-contacts")
+    applicant("d@example.com", "Friend or Family")
+
+    with client.main.db.connect() as con:
+        waves = {w["source"]: w for w in what_each_wave_brought(con)}
+
+    assert set(waves) == {"wave-3-twelve-bottle", "wave-6-ceci-contacts", ""}
+    assert len(waves["wave-6-ceci-contacts"]["people"]) == 2
+    # Nobody has an offer yet, so nobody is a member and nobody is waiting.
+    assert waves["wave-6-ceci-contacts"]["members"] == 0
+    assert waves["wave-6-ceci-contacts"]["waiting"] == 0
+    # Word of mouth is kept rather than dropped, under a heading of its own.
+    assert len(waves[""]["people"]) == 1
+    assert waves[""]["people"][0]["email"] == "d@example.com"
+
+
+def test_somebody_with_an_offer_still_open_counts_as_reachable(client):
+    """The ones worth a telephone call, which is why they are counted apart."""
+    from app.campaign import what_each_wave_brought
+
+    client.post("/api/applications",
+                json={**APPLICATION, "referral": "wave-5-three-bottle"})
+    token = approve(client, 1)
+
+    with client.main.db.connect() as con:
+        wave = what_each_wave_brought(con)[0]
+    assert wave["source"] == "wave-5-three-bottle"
+    assert wave["waiting"] == 1 and wave["members"] == 0
+
+    join(client, token, "founders-reserve")
+
+    with client.main.db.connect() as con:
+        wave = what_each_wave_brought(con)[0]
+    assert wave["members"] == 1 and wave["waiting"] == 0
+
+
+def test_the_screen_names_the_people_not_only_the_totals(client):
+    client.post("/api/applications",
+                json={**APPLICATION, "referral": "wave-6-ceci-contacts"})
+    page = client.get("/admin/campaigns", auth=ADMIN).text
+    assert "wave-6-ceci-contacts" in page
+    assert APPLICATION["email"] in page, "who, not only how many"
